@@ -383,6 +383,47 @@ body {
 .station-info.gps-active .proximity-info {
     display: block;  // Show when GPS is active
 }
+
+.compass {
+    width: 60px;
+    height: 60px;
+    border: 2px solid #0f0;
+    border-radius: 50%;
+    position: relative;
+    margin: 10px auto;
+    display: none; // Hidden by default
+}
+
+.compass-arrow {
+    position: absolute;
+    width: 2px;
+    height: 24px;
+    background: #0f0;
+    left: 50%;
+    top: 50%;
+    transform-origin: bottom center;
+}
+
+.compass-target {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: #f0f;
+    border-radius: 50%;
+    left: 50%;
+    top: 6px;
+    transform: translateX(-50%);
+}
+
+.closest-station-label {
+    color: #0f0;
+    font-size: 0.7em;
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+    text-shadow: 0 0 5px #0f0;
+}
 </style></head><body>
 <div class="container">
     <div class="grid"></div>
@@ -574,11 +615,16 @@ function playBeep() {
 // Start GPS tracking and adjust beep interval
 function startGPSTracking() {
     if ("geolocation" in navigator) {
+        // Check compass support when GPS tracking starts
+        checkCompassSupport().then(compassSupported => {
+            hasCompass = compassSupported;
+        });
+
         navigator.geolocation.watchPosition((position) => {
             const userLat = position.coords.latitude;
             const userLng = position.coords.longitude;
             
-            // Find closest station
+            // Find closest station and calculate bearing
             let closestStation = null;
             let minDistance = Infinity;
             
@@ -590,7 +636,13 @@ function startGPSTracking() {
                 }
             });
 
-            // Get direction to closest station
+            // Calculate bearing to closest station
+            const bearing = calculateBearing(
+                {lat: userLat, lng: userLng},
+                {lat: closestStation.lat, lng: closestStation.lng}
+            );
+
+            // Get direction text
             const direction = getDirection(
                 {lat: userLat, lng: userLng},
                 {lat: closestStation.lat, lng: closestStation.lng}
@@ -602,13 +654,22 @@ function startGPSTracking() {
             );
             const japaneseName = stationInfo ? stationInfo[0] : closestStation.name;
 
-            // Update info display
+            // Update info display with compass if supported
+            const compassHTML = hasCompass ? `
+                <div class="compass">
+                    <div class="compass-arrow"></div>
+                    <div class="compass-target"></div>
+                </div>
+            ` : '';
+
             infoDiv.innerHTML = `
                 <div class="current-station">
                     <div class="proximity-info">
+                        <div class="closest-station-label">最寄り駅 / NEAREST STATION</div>
                         ${japaneseName}
                         <div class="romaji">${closestStation.name}</div>
                         <div class="distance">${Math.round(minDistance)}m</div>
+                        ${compassHTML}
                         <div class="direction">Head ${direction}</div>
                         <div class="status ${minDistance > 100 ? 'out-of-range' : 'in-range'}">
                             ${minDistance > 100 ? '駅の範囲外です / Not within station range' : '駅の範囲内です / Within station range'}
@@ -616,6 +677,14 @@ function startGPSTracking() {
                     </div>
                 </div>
             `;
+
+            // Position the target indicator based on bearing
+            if (hasCompass) {
+                const compassTarget = document.querySelector('.compass-target');
+                if (compassTarget) {
+                    compassTarget.style.transform = `translateX(-50%) rotate(${bearing}deg)`;
+                }
+            }
 
             // Update station display if within range
             if (minDistance <= 100) {
@@ -719,4 +788,66 @@ setInterval(() => {
         }, 100);
     }
 }, 100);
+
+let hasCompass = false;
+
+// Check if device supports orientation
+function checkCompassSupport() {
+    return new Promise((resolve) => {
+        if (window.DeviceOrientationEvent) {
+            // For iOS 13+ devices
+            if (DeviceOrientationEvent.requestPermission) {
+                DeviceOrientationEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            window.addEventListener('deviceorientation', handleOrientation);
+                            resolve(true);
+                        } else {
+                            resolve(false);
+                        }
+                    })
+                    .catch(() => resolve(false));
+            } else {
+                // For non-iOS devices
+                window.addEventListener('deviceorientation', handleOrientation);
+                resolve(true);
+            }
+        } else {
+            resolve(false);
+        }
+    });
+}
+
+// Handle device orientation changes
+function handleOrientation(event) {
+    if (event.webkitCompassHeading) {
+        // iOS devices
+        updateCompass(event.webkitCompassHeading);
+    } else if (event.alpha) {
+        // Android devices
+        updateCompass(360 - event.alpha);
+    }
+}
+
+// Update compass display
+function updateCompass(heading) {
+    const compassArrow = document.querySelector('.compass-arrow');
+    if (compassArrow) {
+        compassArrow.style.transform = `translateX(-50%) rotate(${heading}deg)`;
+    }
+}
+
+// Calculate bearing between two points
+function calculateBearing(from, to) {
+    const φ1 = from.lat * Math.PI / 180;
+    const φ2 = to.lat * Math.PI / 180;
+    const Δλ = (to.lng - from.lng) * Math.PI / 180;
+
+    const y = Math.sin(Δλ) * Math.cos(φ2);
+    const x = Math.cos(φ1) * Math.sin(φ2) -
+             Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+
+    const θ = Math.atan2(y, x);
+    return (θ * 180 / Math.PI + 360) % 360;
+}
 </script></body></html>
