@@ -1,0 +1,262 @@
+<html><head><base href="https://ulayamanote.tokyo/" />
+<title>ULAYAMANOTE.TOKYO - Psychedelic Train Journey</title>
+<style>
+:root {
+  --neon-pink: #ff61ef;
+  --neon-blue: #61efff;
+  --neon-green: #61ff8b;
+}
+
+body {
+  margin: 0;
+  background: #000;
+  font-family: 'Press Start 2P', system-ui;
+  color: #fff;
+  overflow: hidden;
+}
+
+.train-container {
+  position: relative;
+  height: 100vh;
+  background: repeating-linear-gradient(
+    90deg,
+    #000 0px,
+    #000 2px,
+    transparent 2px,
+    transparent 10px
+  );
+  animation: scrollBackground 20s linear infinite;
+}
+
+.train {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.station-name {
+  position: fixed;
+  top: 20px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  font-size: 2em;
+  text-shadow: 0 0 10px var(--neon-pink),
+               0 0 20px var(--neon-blue),
+               0 0 30px var(--neon-green);
+  animation: glitch 1s infinite;
+  transition: opacity 0.5s;
+}
+
+.grid-floor {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  height: 40vh;
+  background: 
+    linear-gradient(90deg, var(--neon-pink) 1px, transparent 1px) 0 0 / 50px 50px,
+    linear-gradient(0deg, var(--neon-pink) 1px, transparent 1px) 0 0 / 50px 50px;
+  transform: perspective(500px) rotateX(60deg);
+  transform-origin: bottom;
+  animation: gridMove 10s linear infinite;
+}
+
+.visualizer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100px;
+  z-index: 10;
+}
+
+@keyframes scrollBackground {
+  from { background-position: 0 0; }
+  to { background-position: -100px 0; }
+}
+
+@keyframes glitch {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(2px); filter: hue-rotate(90deg); }
+  50% { transform: translateX(-2px); filter: hue-rotate(180deg); }
+  75% { transform: translateX(1px); filter: hue-rotate(270deg); }
+  100% { transform: translateX(0); filter: hue-rotate(360deg); }
+}
+
+@keyframes gridMove {
+  from { background-position: 0 0; }
+  to { background-position: 50px 50px; }
+}
+
+.yamanote-svg {
+  filter: drop-shadow(0 0 10px var(--neon-green));
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+.click-prompt {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.5em;
+  color: var(--neon-green);
+  text-shadow: 0 0 10px var(--neon-green);
+  opacity: 1;
+  transition: opacity 0.5s;
+  z-index: 100;
+  cursor: pointer;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<div class="click-prompt">Touch or press SPACEBAR to start the journey</div>
+
+<div class="train-container">
+  <div class="station-name">山手線 YAMANOTE LINE</div>
+  
+  <div class="train">
+    <svg class="yamanote-svg" width="200" height="100" viewBox="0 0 200 100">
+      <path d="M10,80 L190,80 L170,30 L30,30 Z" fill="none" stroke="var(--neon-green)" stroke-width="2"/>
+      <rect x="40" y="40" width="20" height="20" fill="var(--neon-pink)"/>
+      <rect x="70" y="40" width="20" height="20" fill="var(--neon-blue)"/>
+      <rect x="100" y="40" width="20" height="20" fill="var(--neon-pink)"/>
+      <rect x="130" y="40" width="20" height="20" fill="var(--neon-blue)"/>
+    </svg>
+  </div>
+
+  <div class="grid-floor"></div>
+  <canvas class="visualizer"></canvas>
+</div>
+
+<script>
+const stations = [
+  "Shinjuku", "Shibuya", "Harajuku", "Tokyo", "Akihabara", 
+  "Ueno", "Ikebukuro", "Shinagawa", "Ebisu", "Meguro"
+];
+
+let currentStation = 0;
+const stationElement = document.querySelector('.station-name');
+const clickPrompt = document.querySelector('.click-prompt');
+let audioInitialized = false;
+
+// Creating audio context first
+let audioCtx;
+let analyser;
+let source;
+
+// Create and load audio element
+const audioElement = document.createElement('audio');
+audioElement.crossOrigin = "anonymous"; // Enable CORS
+audioElement.src = 'https://raw.githubusercontent.com/pollinations/ula-yamanote.tokyo/main/convenience%20store%20-%20shabu%20shabu%20-%20please%20be%20careful.mp3';
+audioElement.preload = 'auto';
+
+function initializeAudio() {
+  if (audioInitialized) return;
+  
+  // Create audio context on user interaction
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  analyser = audioCtx.createAnalyser();
+  
+  // Connect the audio element to the analyser
+  source = audioCtx.createMediaElementSource(audioElement);
+  analyser.fftSize = 256;
+  const bufferLength = analyser.frequencyBinCount;
+  const dataArray = new Uint8Array(bufferLength);
+  
+  source.connect(analyser);
+  analyser.connect(audioCtx.destination);
+  
+  // Play audio
+  audioElement.play()
+    .then(() => {
+      clickPrompt.style.opacity = '0';
+      setTimeout(() => clickPrompt.style.display = 'none', 500);
+      audioInitialized = true;
+      
+      function draw() {
+        requestAnimationFrame(draw);
+        analyser.getByteFrequencyData(dataArray);
+        
+        const canvas = document.querySelector('.visualizer');
+        const canvasCtx = canvas.getContext('2d');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = 100;
+        
+        canvasCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        const barWidth = (canvas.width / bufferLength) * 2.5;
+        let x = 0;
+        
+        for(let i = 0; i < bufferLength; i++) {
+          const barHeight = dataArray[i] / 2;
+          const hue = (i / bufferLength) * 360;
+          canvasCtx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+          canvasCtx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+          x += barWidth + 1;
+        }
+      }
+      draw();
+    })
+    .catch(err => {
+      console.error('Audio playback failed:', err);
+      // Retry loading with alternative URL if the first one fails
+      audioElement.src = 'https://github.com/pollinations/ula-yamanote.tokyo/raw/main/convenience%20store%20-%20shabu%20shabu%20-%20please%20be%20careful.mp3';
+      audioElement.play().catch(err => console.error('Backup audio playback failed:', err));
+    });
+}
+
+// Event listeners for user interaction
+document.addEventListener('click', initializeAudio);
+document.addEventListener('touchstart', initializeAudio);
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') {
+    e.preventDefault();
+    initializeAudio();
+  }
+});
+
+const canvas = document.querySelector('.visualizer');
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = 100;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+function updateStation() {
+  stationElement.style.opacity = 0;
+  setTimeout(() => {
+    stationElement.textContent = stations[currentStation];
+    stationElement.style.opacity = 1;
+    currentStation = (currentStation + 1) % stations.length;
+  }, 500);
+}
+setInterval(updateStation, 5000);
+
+function simulateAudioVisualization() {
+  const trainContainer = document.querySelector('.train-container');
+  const hue = (Date.now() / 50) % 360;
+  trainContainer.style.filter = `hue-rotate(${hue}deg)`;
+  requestAnimationFrame(simulateAudioVisualization);
+}
+simulateAudioVisualization();
+
+document.addEventListener('mousemove', (e) => {
+  const x = e.clientX / window.innerWidth;
+  const y = e.clientY / window.innerHeight;
+  document.body.style.setProperty('--scan-line', `${y * 100}%`);
+});
+</script>
+
+</body>
+</html>

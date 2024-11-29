@@ -2,9 +2,10 @@
   from = "/"
   to = "/.netlify/functions/random-sim"
   status = 200
+  force = true
 
 [[redirects]]
-  from = "/websims/*"
+  from = "/*"
   to = "/websims/:splat"
   status = 200
 

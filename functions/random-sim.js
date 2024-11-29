@@ -15,9 +15,10 @@ exports.handler = async function(event, context) {
     const randomSim = sims[Math.floor(Math.random() * sims.length)];
     
     return {
-        statusCode: 302,
+        statusCode: 200,
         headers: {
-            Location: `/websims/${randomSim}`
-        }
+            'Content-Type': 'text/html',
+        },
+        body: await fetch(`${process.env.URL}/websims/${randomSim}`).then(res => res.text())
     };
 }; 
