@@ -486,6 +486,14 @@ body {
 const audio = new Audio('https://github.com/pollinations/ula-yamanote.tokyo/raw/refs/heads/main/convenience%20store%20-%20shabu%20shabu%20-%20please%20be%20careful.mp3');
 const audioButton = document.getElementById('audioControl');
 
+document.addEventListener('click', () => {
+    if (Tone.context.state !== 'running') {
+        Tone.context.resume().then(() => {
+            console.log('Audio context resumed');
+        });
+    }
+});
+
 audioButton.addEventListener('click', () => {
     if (audio.paused) {
         // Request GPS permissions and start tracking when play is clicked
@@ -493,15 +501,15 @@ audioButton.addEventListener('click', () => {
             navigator.geolocation.getCurrentPosition(() => {
                 infoDiv.classList.add('gps-active');
                 startGPSTracking();
-                audio.play();
+                audio.play().catch(error => console.error('Audio play error:', error));
                 audioButton.classList.add('playing');
             }, (error) => {
                 console.error("GPS Error:", error);
-                audio.play();
+                audio.play().catch(error => console.error('Audio play error:', error));
                 audioButton.classList.add('playing');
             });
         } else {
-            audio.play();
+            audio.play().catch(error => console.error('Audio play error:', error));
             audioButton.classList.add('playing');
         }
     } else {
@@ -614,7 +622,7 @@ setInterval(updateUserLocation, 50);
 
 // Initialize Tone.js with reduced volume
 const synth = new Tone.Synth().toDestination();
-synth.volume.value = -8; // Reduce volume by 20 decibels
+synth.volume.value = -12; // Reduce volume by 20 decibels
 const beepNote = 'C5'; // Use a single note for the beep sound
 
 // Function to calculate beep interval based on distance
