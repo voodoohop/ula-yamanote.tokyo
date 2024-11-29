@@ -1,0 +1,522 @@
+<html><head><base href="https://ulayamanote.tokyo">
+<title>ULA YAMANOTE - サイケデリック電車の旅</title>
+<style>
+:root {
+    --neon-pink: #ff61ef;
+    --neon-blue: #61efff;
+    --neon-green: #61ff8b;
+    --neon-red: #ff3333;
+    --kanji-color: rgba(255, 255, 255, 0.1);
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background: #000;
+    color: var(--neon-pink);
+    font-family: 'Press Start 2P', 'DotGothic16', system-ui;
+    overflow: hidden;
+}
+
+.kanji-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 80px;
+    color: var(--kanji-color);
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 20px;
+    padding: 20px;
+    animation: fadeInOut 8s infinite;
+    user-select: none;
+}
+
+.train-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(0deg, #000 0%, #1a0026 100%);
+    transition: transform 0.5s ease-out;
+}
+
+.camera-container {
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.train-track {
+    position: absolute;
+    width: 180%;
+    height: 180%;
+    top: -40%;
+    left: -40%;
+    border: 4px solid var(--neon-blue);
+    border-radius: 100px;
+    box-shadow: 0 0 20px var(--neon-blue);
+    animation: glowPulse 2s infinite;
+}
+
+.train-carriage {
+    position: absolute;
+    width: 60px;
+    height: 30px;
+    background: var(--neon-pink);
+    border-radius: 8px;
+    transform-origin: center;
+    box-shadow: 0 0 15px var(--neon-pink);
+}
+
+.carriage-connector {
+    position: absolute;
+    width: 10px;
+    height: 4px;
+    background: var(--neon-blue);
+    box-shadow: 0 0 10px var(--neon-blue);
+    transform-origin: center;
+}
+
+.player-location {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: var(--neon-green);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 15px var(--neon-green);
+    animation: playerPulse 1s infinite;
+    z-index: 100;
+}
+
+.station {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.station-name {
+    position: absolute;
+    font-size: 0.8em;
+    color: var(--neon-blue);
+    text-shadow: 0 0 5px var(--neon-blue);
+    transform: translate(-50%, -50%);
+}
+
+.announcement {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--neon-green);
+    font-size: 1.2em;
+    text-align: center;
+    text-shadow: 0 0 5px var(--neon-green);
+    z-index: 1000;
+    animation: glitch 1s infinite, slideIn 0.5s ease-out;
+}
+
+.stats {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    font-size: 0.8em;
+    color: var(--neon-green);
+    text-shadow: 0 0 5px var(--neon-green);
+}
+
+.japanese-label {
+    font-family: 'DotGothic16', sans-serif;
+    font-size: 0.7em;
+    opacity: 0.8;
+    margin-bottom: 2px;
+}
+
+.fixed-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.play-button {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--neon-green);
+    border: none;
+    padding: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-family: 'DotGothic16', sans-serif;
+    color: #000;
+    font-size: 1.2em;
+    width: 120px;
+    height: 120px;
+    box-shadow: 0 0 20px var(--neon-green);
+    transition: all 0.3s ease;
+    z-index: 2000;
+    pointer-events: auto;
+}
+
+.play-button:hover {
+    box-shadow: 0 0 30px var(--neon-green);
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+.play-button:active {
+    transform: translate(-50%, -50%) scale(0.95);
+}
+
+.play-button.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+@keyframes fadeInOut {
+    0%, 100% { opacity: 0.1; }
+    50% { opacity: 0.2; }
+}
+
+@keyframes glitch {
+    0% { transform: translateX(-50%) skew(0deg); }
+    20% { transform: translateX(-52%) skew(2deg); color: var(--neon-pink); }
+    40% { transform: translateX(-48%) skew(-2deg); color: var(--neon-blue); }
+    60% { transform: translateX(-50%) skew(0deg); }
+    80% { transform: translateX(-51%) skew(1deg); opacity: 0.8; }
+    100% { transform: translateX(-50%) skew(0deg); }
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+@keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 20px var(--neon-blue); }
+    50% { box-shadow: 0 0 40px var(--neon-blue); }
+}
+
+@keyframes playerPulse {
+    0%, 100% { transform: scale(1) translate(-50%, -50%); }
+    50% { transform: scale(1.2) translate(-50%, -50%); }
+}
+
+.retro-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        repeating-linear-gradient(
+            0deg,
+            rgba(0, 0, 0, 0.15) 0px,
+            rgba(0, 0, 0, 0.15) 1px,
+            transparent 1px,
+            transparent 2px
+        ),
+        radial-gradient(
+            circle at center,
+            transparent 0%,
+            rgba(0, 0, 0, 0.3) 100%
+        );
+    pointer-events: none;
+    z-index: 1;
+}
+
+.torii-gate {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+}
+
+.torii-gate::before,
+.torii-gate::after {
+    content: '⛩️';
+    position: absolute;
+    font-size: 30px;
+    animation: toriiBlink 4s infinite;
+}
+
+.station-icon {
+    position: absolute;
+    font-size: 1.2em;
+    color: var(--neon-red);
+    text-shadow: 0 0 5px var(--neon-red);
+    transform: translate(-50%, -50%);
+    animation: iconFloat 2s ease-in-out infinite;
+}
+
+@keyframes toriiBlink {
+    0%, 100% { opacity: 1; color: var(--neon-red); }
+    50% { opacity: 0.5; color: var(--neon-pink); }
+}
+
+@keyframes iconFloat {
+    0%, 100% { transform: translate(-50%, -50%) translateY(0); }
+    50% { transform: translate(-50%, -50%) translateY(-5px); }
+}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=DotGothic16&family=Noto+Serif+JP:wght@900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="kanji-background">
+    山手線 電車 東京 渋谷 原宿 新宿 池袋 上野 秋葉原 駅 旅 夢 運命 未来 過去 現在 光 闇
+</div>
+
+<div class="camera-container">
+    <div class="train-container">
+        <div class="train-track"></div>
+        <div id="train"></div>
+        <div class="player-location"></div>
+        <div class="retro-overlay"></div>
+    </div>
+</div>
+
+<div class="fixed-overlay">
+    <div class="stats">
+        <div class="japanese-label">スピード • SPEED</div>
+        時速 80 KM/H<br>
+        <div class="japanese-label">次の駅 • NEXT</div>
+        次は 渋谷駅<br>
+        <div class="japanese-label">時刻 • TIME</div>
+        現在 2:34
+    </div>
+    <div class="announcement">
+        ウラ山手線<br>
+        2024年12月7日<br>
+        @ トラフィッククラブ東京<br>
+        六本木
+    </div>
+</div>
+
+<button class="play-button">
+    <span style="font-size: 1.5em">▶</span><br>
+    山手線
+</button>
+
+<audio id="stationAudio" loop>
+    <source src="https://github.com/pollinations/ula-yamanote.tokyo/raw/refs/heads/main/convenience%20store%20-%20shabu%20shabu%20-%20please%20be%20careful.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+const stations = [
+    {name: "渋谷", angle: 0},
+    {name: "原宿", angle: 30},
+    {name: "新宿", angle: 60},
+    {name: "池袋", angle: 90},
+    {name: "東京", angle: 180},
+    {name: "秋葉原", angle: 240},
+    {name: "上野", angle: 300}
+];
+
+const NUM_TRAINS = 4; // Number of trains on the track
+const CARRIAGES_PER_TRAIN = 8;
+const TRAIN_SPACING = 90; // Degrees between trains
+
+const stationIcons = {
+    "渋谷": "🏬",
+    "原宿": "👗",
+    "新宿": "🌆",
+    "池袋": "🎮",
+    "東京": "🗼",
+    "秋葉原": "💻",
+    "上野": "🎨"
+};
+
+function createTrains() {
+    const trainContainer = document.getElementById('train');
+    for(let t = 0; t < NUM_TRAINS; t++) {
+        const trainGroup = document.createElement('div');
+        trainGroup.className = 'train-group';
+        trainGroup.dataset.trainId = t;
+        
+        for(let i = 0; i < CARRIAGES_PER_TRAIN; i++) {
+            const carriage = document.createElement('div');
+            carriage.className = 'train-carriage';
+            trainGroup.appendChild(carriage);
+
+            if (i < CARRIAGES_PER_TRAIN - 1) {
+                const connector = document.createElement('div');
+                connector.className = 'carriage-connector';
+                trainGroup.appendChild(connector);
+            }
+        }
+        trainContainer.appendChild(trainGroup);
+    }
+}
+
+function createStations() {
+    const container = document.querySelector('.train-container');
+    const centerX = container.offsetWidth / 2;
+    const centerY = container.offsetHeight / 2;
+    const radius = Math.min(centerX, centerY) * 0.85;
+
+    stations.forEach(station => {
+        const angle = station.angle * (Math.PI / 180);
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+
+        const stationDot = document.createElement('div');
+        stationDot.className = 'station';
+        stationDot.style.left = `${x}px`;
+        stationDot.style.top = `${y}px`;
+        container.appendChild(stationDot);
+
+        const stationName = document.createElement('div');
+        stationName.className = 'station-name';
+        stationName.textContent = station.name;
+        stationName.style.left = `${x + (Math.cos(angle) * 30)}px`;
+        stationName.style.top = `${y + (Math.sin(angle) * 30)}px`;
+        container.appendChild(stationName);
+
+        const stationIcon = document.createElement('div');
+        stationIcon.className = 'station-icon';
+        stationIcon.textContent = stationIcons[station.name];
+        stationIcon.style.left = `${x + (Math.cos(angle) * -30)}px`;
+        stationIcon.style.top = `${y + (Math.sin(angle) * -30)}px`;
+        container.appendChild(stationIcon);
+
+        const torii = document.createElement('div');
+        torii.className = 'torii-gate';
+        torii.style.left = `${x + (Math.cos(angle) * 15)}px`;
+        torii.style.top = `${y + (Math.sin(angle) * 15)}px`;
+        container.appendChild(torii);
+    });
+}
+
+function updateTrainPositions() {
+    const container = document.querySelector('.train-container');
+    const centerX = container.offsetWidth;
+    const centerY = container.offsetHeight;
+    const radius = Math.min(centerX, centerY) * 0.85;
+    
+    let mainTrainX = 0;
+    let mainTrainY = 0;
+
+    function updatePosition(time) {
+        const trainGroups = document.querySelectorAll('.train-group');
+        
+        trainGroups.forEach((trainGroup, trainIndex) => {
+            const carriages = trainGroup.querySelectorAll('.train-carriage');
+            const connectors = trainGroup.querySelectorAll('.carriage-connector');
+            
+            // Base angle for each train, spaced evenly around the track
+            const baseAngle = (time / 30000) * 360 + (trainIndex * TRAIN_SPACING);
+            
+            carriages.forEach((carriage, index) => {
+                const adjustedTime = time - (index * 500);
+                const angle = baseAngle - (index * 5); // Slight curve effect
+                const radian = angle * (Math.PI / 180);
+                
+                const x = centerX + radius * Math.cos(radian);
+                const y = centerY + radius * Math.sin(radian);
+                
+                carriage.style.left = `${x}px`;
+                carriage.style.top = `${y}px`;
+                carriage.style.transform = `translate(-50%, -50%) rotate(${angle + 90}deg)`;
+                
+                // Store main train position (first carriage of first train)
+                if (trainIndex === 0 && index === 0) {
+                    mainTrainX = x;
+                    mainTrainY = y;
+                }
+                
+                if (index < connectors.length) {
+                    const nextAngle = angle + 5;
+                    const nextRadian = nextAngle * (Math.PI / 180);
+                    const nextX = centerX + radius * Math.cos(nextRadian);
+                    const nextY = centerY + radius * Math.sin(nextRadian);
+                    
+                    const connector = connectors[index];
+                    connector.style.left = `${(x + nextX) / 2}px`;
+                    connector.style.top = `${(y + nextY) / 2}px`;
+                    connector.style.transform = `translate(-50%, -50%) rotate(${angle + 90}deg)`;
+                }
+            });
+        });
+
+        // Camera follow effect
+        const containerWidth = window.innerWidth;
+        const containerHeight = window.innerHeight;
+        const offsetX = containerWidth / 2 - mainTrainX;
+        const offsetY = containerHeight / 2 - mainTrainY;
+        
+        container.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+        
+        requestAnimationFrame(updatePosition);
+    }
+    
+    requestAnimationFrame(updatePosition);
+}
+
+function updatePlayerLocation() {
+    if ("geolocation" in navigator) {
+        navigator.geolocation.watchPosition(position => {
+            const player = document.querySelector('.player-location');
+            const container = document.querySelector('.train-container');
+            const centerX = container.offsetWidth / 2;
+            const centerY = container.offsetHeight / 2;
+            
+            const time = Date.now() / 1000;
+            const angle = (time % 30) * (360 / 30);
+            const radius = Math.min(centerX, centerY) * 0.85;
+            const x = centerX + radius * Math.cos(angle * (Math.PI / 180));
+            const y = centerY + radius * Math.sin(angle * (Math.PI / 180));
+            
+            player.style.left = `${x}px`;
+            player.style.top = `${y}px`;
+        });
+    }
+}
+
+function setupAudio() {
+    const audio = document.getElementById('stationAudio');
+    const playButton = document.querySelector('.play-button');
+
+    playButton.addEventListener('click', () => {
+        if (audio.paused) {
+            audio.play()
+                .then(() => {
+                    playButton.classList.add('hidden');
+                })
+                .catch(error => {
+                    console.error('Audio playback failed:', error);
+                });
+        } else {
+            audio.pause();
+            playButton.classList.remove('hidden');
+        }
+    });
+
+    audio.addEventListener('ended', () => {
+        playButton.classList.remove('hidden');
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    createTrains();
+    createStations();
+    updateTrainPositions();
+    updatePlayerLocation();
+    setupAudio();
+});
+</script>
+</body></html>

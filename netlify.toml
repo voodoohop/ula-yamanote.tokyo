@@ -1,0 +1,12 @@
+[[redirects]]
+  from = "/"
+  to = "/.netlify/functions/random-sim"
+  status = 200
+
+[[redirects]]
+  from = "/websims/*"
+  to = "/websims/:splat"
+  status = 200
+
+[functions]
+  directory = "functions" 

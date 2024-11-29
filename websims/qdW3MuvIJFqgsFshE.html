@@ -1,0 +1,449 @@
+<html><head><base href="https://ulayamanote.tokyo">
+<title>ULA YAMANOTE - Psychedelic Train Journey</title>
+<style>
+:root {
+    --neon-pink: #ff61ef;
+    --neon-blue: #61efff;
+    --neon-green: #61ff8b;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background: #000;
+    color: var(--neon-pink);
+    font-family: 'Press Start 2P', system-ui;
+    overflow: hidden;
+}
+
+.train-container {
+    position: relative;
+    width: 300vw;
+    height: 300vh;
+    background: linear-gradient(0deg, #000 0%, #1a0026 100%);
+    transform-origin: center;
+    transition: transform 0.5s ease-out;
+}
+
+.viewport {
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.train-track {
+    position: absolute;
+    width: 90%;
+    height: 90%;
+    top: 5%;
+    left: 5%;
+    border: 4px solid var(--neon-blue);
+    border-radius: 50px;
+    box-shadow: 0 0 20px var(--neon-blue);
+    animation: glowPulse 2s infinite;
+}
+
+.train-carriage {
+    position: absolute;
+    width: 60px;
+    height: 30px;
+    background: var(--neon-pink);
+    border-radius: 8px;
+    transform-origin: center;
+    box-shadow: 0 0 15px var(--neon-pink);
+}
+
+.carriage-connector {
+    position: absolute;
+    width: 10px;
+    height: 4px;
+    background: var(--neon-blue);
+    box-shadow: 0 0 10px var(--neon-blue);
+    transform-origin: center;
+}
+
+.player-location {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: var(--neon-green);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 15px var(--neon-green);
+    animation: playerPulse 1s infinite;
+    z-index: 100;
+}
+
+.station {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 50;
+}
+
+.station-name {
+    position: absolute;
+    font-size: 0.8em;
+    color: var(--neon-blue);
+    text-shadow: 0 0 5px var(--neon-blue);
+    transform: translate(-50%, -50%);
+    z-index: 50;
+}
+
+.announcement {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--neon-green);
+    font-size: 1.2em;
+    text-align: center;
+    text-shadow: 0 0 5px var(--neon-green);
+    z-index: 1000;
+    animation: glitch 1s infinite, slideIn 0.5s ease-out;
+}
+
+@keyframes glitch {
+    0% { transform: translateX(-50%) skew(0deg); }
+    20% { transform: translateX(-52%) skew(2deg); color: var(--neon-pink); }
+    40% { transform: translateX(-48%) skew(-2deg); color: var(--neon-blue); }
+    60% { transform: translateX(-50%) skew(0deg); }
+    80% { transform: translateX(-51%) skew(1deg); opacity: 0.8; }
+    100% { transform: translateX(-50%) skew(0deg); }
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+@keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 20px var(--neon-blue); }
+    50% { box-shadow: 0 0 40px var(--neon-blue); }
+}
+
+@keyframes playerPulse {
+    0%, 100% { transform: scale(1) translate(-50%, -50%); }
+    50% { transform: scale(1.2) translate(-50%, -50%); }
+}
+
+.retro-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.15) 0px,
+        rgba(0, 0, 0, 0.15) 1px,
+        transparent 1px,
+        transparent 2px
+    );
+    pointer-events: none;
+    z-index: 999;
+}
+
+.stats {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    font-size: 0.8em;
+    color: var(--neon-green);
+    text-shadow: 0 0 5px var(--neon-green);
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 15px;
+    border: 2px solid var(--neon-green);
+    border-radius: 8px;
+}
+
+.mode-switch {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    font-size: 0.8em;
+    color: var(--neon-pink);
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px;
+    border: 2px solid var(--neon-pink);
+    border-radius: 8px;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+.instructions {
+    position: fixed;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--neon-blue);
+    font-size: 0.8em;
+    text-align: center;
+    text-shadow: 0 0 5px var(--neon-blue);
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 15px;
+    border: 2px solid var(--neon-blue);
+    border-radius: 8px;
+    max-width: 80%;
+}
+
+.audio-trigger {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--neon-green);
+    color: black;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 25px;
+    font-family: 'Press Start 2P', system-ui;
+    font-size: 0.8em;
+    cursor: pointer;
+    z-index: 1000;
+    box-shadow: 0 0 15px var(--neon-green);
+    transition: all 0.3s ease;
+}
+
+.audio-trigger:hover {
+    background: var(--neon-pink);
+    box-shadow: 0 0 20px var(--neon-pink);
+}
+
+.audio-trigger.playing {
+    animation: audioPlaying 2s infinite;
+}
+
+@keyframes audioPlaying {
+    0% { transform: translateX(-50%) scale(1); }
+    50% { transform: translateX(-50%) scale(1.05); }
+    100% { transform: translateX(-50%) scale(1); }
+}
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="viewport">
+    <div class="train-container">
+        <div class="train-track"></div>
+        <div id="train1" class="train"></div>
+        <div id="train2" class="train"></div>
+        <div id="train3" class="train"></div>
+        <div class="player-location"></div>
+        <div class="retro-overlay"></div>
+    </div>
+</div>
+
+<div class="stats">
+    スピード: <span id="speed">80</span> KM/H<br>
+    次駅: <span id="nextStation">渋谷</span><br>
+    時刻: <span id="time">2:34</span>
+</div>
+
+<button class="mode-switch" onclick="toggleMode()">
+    モード: シミュレーション
+</button>
+
+<div class="instructions">
+    🚃 最後の車両で音楽を楽しもう!<br>
+    他のリスナーと出会うために、ライトを付けましょう<br>
+    LAST CAR = BEST EXPERIENCE
+</div>
+
+<div class="announcement">
+    ULA YAMANOTE<br>
+    LAUNCHING 12.07.2024<br>
+    @ TRAFFIC CLUB TOKYO<br>
+    ROPPONGI
+</div>
+
+<button class="audio-trigger" onclick="toggleAudio()">
+    🎧 START JOURNEY
+</button>
+
+<audio id="stationAudio" loop>
+    <source src="https://github.com/pollinations/ula-yamanote.tokyo/raw/refs/heads/main/convenience%20store%20-%20shabu%20shabu%20-%20please%20be%20careful.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+const stations = [
+    {name: "渋谷", angle: 0, time: 0},
+    {name: "原宿", angle: 30, time: 60},
+    {name: "新宿", angle: 60, time: 120},
+    {name: "池袋", angle: 90, time: 180},
+    {name: "東京", angle: 180, time: 240},
+    {name: "秋葉原", angle: 240, time: 300},
+    {name: "上野", angle: 300, time: 360}
+];
+
+const NUM_CARRIAGES = 8;
+const TRAIN_OFFSET = 120; // Degrees offset between trains
+
+let simulationMode = true;
+let currentSpeed = 80;
+let simulationTime = 0;
+let isPlaying = false;
+
+function toggleMode() {
+    simulationMode = !simulationMode;
+    const modeSwitch = document.querySelector('.mode-switch');
+    modeSwitch.textContent = `モード: ${simulationMode ? 'シミュレーション' : 'リアル GPS'}`;
+}
+
+function createTrain(trainId, offset = 0) {
+    const trainContainer = document.getElementById(trainId);
+    for(let i = 0; i < NUM_CARRIAGES; i++) {
+        const carriage = document.createElement('div');
+        carriage.className = 'train-carriage';
+        trainContainer.appendChild(carriage);
+
+        if (i < NUM_CARRIAGES - 1) {
+            const connector = document.createElement('div');
+            connector.className = 'carriage-connector';
+            trainContainer.appendChild(connector);
+        }
+    }
+}
+
+function createStations() {
+    const container = document.querySelector('.train-container');
+    const centerX = container.offsetWidth / 2;
+    const centerY = container.offsetHeight / 2;
+    const radius = Math.min(centerX, centerY) * 0.85;
+
+    stations.forEach(station => {
+        const angle = station.angle * (Math.PI / 180);
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+
+        const stationDot = document.createElement('div');
+        stationDot.className = 'station';
+        stationDot.style.left = `${x}px`;
+        stationDot.style.top = `${y}px`;
+        container.appendChild(stationDot);
+
+        const stationName = document.createElement('div');
+        stationName.className = 'station-name';
+        stationName.textContent = station.name;
+        stationName.style.left = `${x + (Math.cos(angle) * 30)}px`;
+        stationName.style.top = `${y + (Math.sin(angle) * 30)}px`;
+        container.appendChild(stationName);
+    });
+}
+
+function updateStats() {
+    simulationTime = (simulationTime + 1) % 420; // 7 minutes cycle
+    const speedElement = document.getElementById('speed');
+    const nextStationElement = document.getElementById('nextStation');
+    const timeElement = document.getElementById('time');
+    
+    // Find current and next station based on simulation time
+    const currentStation = stations.find((station, index) => {
+        const nextStation = stations[(index + 1) % stations.length];
+        return simulationTime >= station.time && simulationTime < nextStation.time;
+    });
+    
+    const nextStation = stations[(stations.indexOf(currentStation) + 1) % stations.length];
+    
+    // Update display
+    speedElement.textContent = currentSpeed;
+    nextStationElement.textContent = nextStation.name;
+    
+    const minutes = Math.floor(simulationTime / 60);
+    const seconds = simulationTime % 60;
+    timeElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+function updateTrainPositions(time) {
+    const container = document.querySelector('.train-container');
+    const viewport = document.querySelector('.viewport');
+    const centerX = container.offsetWidth / 2;
+    const centerY = container.offsetHeight / 2;
+    const radius = Math.min(centerX, centerY) * 0.85;
+
+    for(let trainNum = 1; trainNum <= 3; trainNum++) {
+        const trainContainer = document.getElementById(`train${trainNum}`);
+        const carriages = trainContainer.querySelectorAll('.train-carriage');
+        const connectors = trainContainer.querySelectorAll('.carriage-connector');
+        
+        const trainOffset = (trainNum - 1) * TRAIN_OFFSET;
+        
+        carriages.forEach((carriage, index) => {
+            const adjustedTime = time - (index * 500);
+            const angle = (adjustedTime / 30000) * 360 + trainOffset;
+            const radian = angle * (Math.PI / 180);
+            
+            const x = centerX + radius * Math.cos(radian);
+            const y = centerY + radius * Math.sin(radian);
+            
+            carriage.style.left = `${x}px`;
+            carriage.style.top = `${y}px`;
+            carriage.style.transform = `translate(-50%, -50%) rotate(${angle + 90}deg)`;
+
+            // Follow the first carriage of train1
+            if(trainNum === 1 && index === 0) {
+                const containerX = x - viewport.offsetWidth / 2;
+                const containerY = y - viewport.offsetHeight / 2;
+                container.style.transform = `translate(${-containerX}px, ${-containerY}px)`;
+            }
+            
+            if (index < connectors.length) {
+                const nextAngle = ((adjustedTime + 250) / 30000) * 360 + trainOffset;
+                const nextRadian = nextAngle * (Math.PI / 180);
+                const nextX = centerX + radius * Math.cos(nextRadian);
+                const nextY = centerY + radius * Math.sin(nextRadian);
+                
+                const connector = connectors[index];
+                connector.style.left = `${(x + nextX) / 2}px`;
+                connector.style.top = `${(y + nextY) / 2}px`;
+                connector.style.transform = `translate(-50%, -50%) rotate(${angle + 90}deg)`;
+            }
+        });
+    }
+    
+    requestAnimationFrame(updateTrainPositions);
+}
+
+function toggleAudio() {
+    const audio = document.getElementById('stationAudio');
+    const button = document.querySelector('.audio-trigger');
+    
+    if (!isPlaying) {
+        audio.play().then(() => {
+            isPlaying = true;
+            button.classList.add('playing');
+            button.textContent = '🎧 NOW PLAYING';
+        }).catch(error => {
+            console.log("Audio playback failed:", error);
+        });
+    } else {
+        audio.pause();
+        audio.currentTime = 0;
+        isPlaying = false;
+        button.classList.remove('playing');
+        button.textContent = '🎧 START JOURNEY';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    createTrain('train1', 0);
+    createTrain('train2', TRAIN_OFFSET);
+    createTrain('train3', TRAIN_OFFSET * 2);
+    createStations();
+    requestAnimationFrame(updateTrainPositions);
+    
+    setInterval(updateStats, 1000);
+    
+    // Preload audio
+    const audio = document.getElementById('stationAudio');
+    audio.load();
+});
+</script>
+</body></html>
