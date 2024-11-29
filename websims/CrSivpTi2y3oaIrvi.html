@@ -190,19 +190,23 @@ body {
 
 .play-button {
     position: fixed;
-    bottom: 40px;
+    bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
     background: #000;
     border: 2px solid #0f0;
     color: #0f0;
-    padding: 15px 30px;
+    padding: 10px 20px;
     font-family: 'DotGothic16', monospace;
-    font-size: 18px;
+    font-size: 16px;
     cursor: pointer;
     z-index: 1000;
     box-shadow: 0 0 20px #0f0;
     transition: all 0.3s ease;
+    width: auto;
+    max-width: 80%;
+    white-space: nowrap;
+    margin: 0 auto;
 }
 
 .play-button:hover {
@@ -423,6 +427,14 @@ body {
     letter-spacing: 1px;
     margin-bottom: 5px;
     text-shadow: 0 0 5px #0f0;
+}
+
+/* Add a safe area for iOS devices */
+@supports (padding: max(0px)) {
+    .play-button {
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+        bottom: max(20px, env(safe-area-inset-bottom));
+    }
 }
 </style></head><body>
 <div class="container">
