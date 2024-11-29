@@ -638,101 +638,106 @@ function playBeep() {
 // Start GPS tracking and adjust beep interval
 function startGPSTracking() {
     if ("geolocation" in navigator) {
-        // Check compass support when GPS tracking starts
+        // Initialize compass first
         checkCompassSupport().then(compassSupported => {
+            console.log("Compass support:", compassSupported);
             hasCompass = compassSupported;
-        });
-
-        navigator.geolocation.watchPosition((position) => {
-            const userLat = position.coords.latitude;
-            const userLng = position.coords.longitude;
             
-            // Find closest station and calculate bearing
-            let closestStation = null;
-            let minDistance = Infinity;
-            
-            stationCoordinates.forEach(station => {
-                const distance = calculateDistance(userLat, userLng, station.lat, station.lng);
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    closestStation = station;
-                }
-            });
+            // Then start GPS tracking
+            navigator.geolocation.watchPosition((position) => {
+                const userLat = position.coords.latitude;
+                const userLng = position.coords.longitude;
+                
+                // Find closest station and calculate bearing
+                let closestStation = null;
+                let minDistance = Infinity;
+                
+                stationCoordinates.forEach(station => {
+                    const distance = calculateDistance(userLat, userLng, station.lat, station.lng);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestStation = station;
+                    }
+                });
 
-            // Calculate bearing to closest station
-            const bearing = calculateBearing(
-                {lat: userLat, lng: userLng},
-                {lat: closestStation.lat, lng: closestStation.lng}
-            );
+                // Calculate bearing to closest station
+                const bearing = calculateBearing(
+                    {lat: userLat, lng: userLng},
+                    {lat: closestStation.lat, lng: closestStation.lng}
+                );
 
-            // Get direction text
-            const direction = getDirection(
-                {lat: userLat, lng: userLng},
-                {lat: closestStation.lat, lng: closestStation.lng}
-            );
+                // Get direction text
+                const direction = getDirection(
+                    {lat: userLat, lng: userLng},
+                    {lat: closestStation.lat, lng: closestStation.lng}
+                );
 
-            // Find Japanese name for the station
-            const stationInfo = japaneseStations.find(station => 
-                station[1].toLowerCase().includes(closestStation.name.toLowerCase())
-            );
-            const japaneseName = stationInfo ? stationInfo[0] : closestStation.name;
+                // Find Japanese name for the station
+                const stationInfo = japaneseStations.find(station => 
+                    station[1].toLowerCase().includes(closestStation.name.toLowerCase())
+                );
+                const japaneseName = stationInfo ? stationInfo[0] : closestStation.name;
 
-            // Update info display with compass if supported
-            const compassHTML = hasCompass ? `
-                <div class="compass">
-                    <div class="compass-arrow"></div>
-                    <div class="compass-target"></div>
-                </div>
-            ` : '';
+                // Update info display with compass if supported
+                const compassHTML = hasCompass ? `
+                    <div class="compass">
+                        <div class="compass-arrow"></div>
+                        <div class="compass-target"></div>
+                    </div>
+                ` : '';
 
-            infoDiv.innerHTML = `
-                <div class="current-station">
-                    <div class="proximity-info">
-                        <div class="closest-station-label">最寄り駅 / NEAREST STATION</div>
-                        ${japaneseName}
-                        <div class="romaji">${closestStation.name}</div>
-                        <div class="distance">${Math.round(minDistance)}m</div>
-                        ${compassHTML}
-                        <div class="direction">Head ${direction}</div>
-                        <div class="status ${minDistance > 100 ? 'out-of-range' : 'in-range'}">
-                            ${minDistance > 100 ? '駅の範囲外です / Not within station range' : '駅の範囲内です / Within station range'}
+                infoDiv.innerHTML = `
+                    <div class="current-station">
+                        <div class="proximity-info">
+                            <div class="closest-station-label">最寄り駅 / NEAREST STATION</div>
+                            ${japaneseName}
+                            <div class="romaji">${closestStation.name}</div>
+                            <div class="distance">${Math.round(minDistance)}m</div>
+                            ${compassHTML}
+                            <div class="direction">Head ${direction}</div>
+                            <div class="status ${minDistance > 100 ? 'out-of-range' : 'in-range'}">
+                                ${minDistance > 100 ? '駅の範囲外です / Not within station range' : '駅の範囲内です / Within station range'}
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
 
-            // Position the target indicator based on bearing
-            if (hasCompass) {
-                const compassTarget = document.querySelector('.compass-target');
-                if (compassTarget) {
-                    compassTarget.style.transform = `translateX(-50%) rotate(${bearing}deg)`;
+                // Position the target indicator based on bearing
+                if (hasCompass) {
+                    const compassTarget = document.querySelector('.compass-target');
+                    if (compassTarget) {
+                        compassTarget.style.transform = `translateX(-50%) rotate(${bearing}deg)`;
+                    }
                 }
-            }
 
-            // Update station display if within range
-            if (minDistance <= 100) {
-                const stationIndex = japaneseStations.findIndex(station => 
-                    station[1].toLowerCase().includes(closestStation.name.toLowerCase()));
-                if (stationIndex !== -1) {
-                    currentStationIndex = stationIndex;
+                // Update station display if within range
+                if (minDistance <= 100) {
+                    const stationIndex = japaneseStations.findIndex(station => 
+                        station[1].toLowerCase().includes(closestStation.name.toLowerCase()));
+                    if (stationIndex !== -1) {
+                        currentStationIndex = stationIndex;
+                    }
                 }
-            }
 
-            // Adjust beep interval based on distance
-            const beepInterval = getBeepInterval(minDistance);
-            clearInterval(beepIntervalId);
-            beepIntervalId = setInterval(playBeep, beepInterval);
+                // Adjust beep interval based on distance
+                const beepInterval = getBeepInterval(minDistance);
+                clearInterval(beepIntervalId);
+                beepIntervalId = setInterval(playBeep, beepInterval);
 
-        }, (error) => {
-            console.error("Error getting location:", error);
-            infoDiv.innerHTML = `
-                <div style="color:#f55; font-size: 1.5em;">⚠️ GPS エラー / ERROR ⚠️</div>
-                <div>位置情報サービスにアクセスできません<br>Unable to access location services</div>
-            `;
-        }, {
-            enableHighAccuracy: true,
-            maximumAge: 0,
-            timeout: 5000
+            }, (error) => {
+                console.error("Error getting location:", error);
+                infoDiv.innerHTML = `
+                    <div style="color:#f55; font-size: 1.5em;">⚠️ GPS エラー / ERROR ⚠️</div>
+                    <div>位置情報サービスにアクセスできません<br>Unable to access location services</div>
+                `;
+            }, {
+                enableHighAccuracy: true,
+                maximumAge: 0,
+                timeout: 5000
+            });
+        }).catch(error => {
+            console.error("Compass initialization error:", error);
+            hasCompass = false;
         });
     }
 }
@@ -817,39 +822,67 @@ let hasCompass = false;
 // Check if device supports orientation
 function checkCompassSupport() {
     return new Promise((resolve) => {
-        if (window.DeviceOrientationEvent) {
-            // For iOS 13+ devices
-            if (DeviceOrientationEvent.requestPermission) {
-                DeviceOrientationEvent.requestPermission()
-                    .then(permissionState => {
-                        if (permissionState === 'granted') {
-                            window.addEventListener('deviceorientation', handleOrientation);
-                            resolve(true);
-                        } else {
-                            resolve(false);
-                        }
-                    })
-                    .catch(() => resolve(false));
-            } else {
-                // For non-iOS devices
-                window.addEventListener('deviceorientation', handleOrientation);
-                resolve(true);
-            }
-        } else {
+        if (!window.DeviceOrientationEvent) {
+            console.log("No device orientation support");
             resolve(false);
+            return;
+        }
+
+        // For iOS 13+
+        if (DeviceOrientationEvent.requestPermission) {
+            DeviceOrientationEvent.requestPermission()
+                .then(permissionState => {
+                    if (permissionState === 'granted') {
+                        window.addEventListener('deviceorientation', handleOrientation, true);
+                        console.log("iOS compass enabled");
+                        resolve(true);
+                    } else {
+                        console.log("iOS permission denied");
+                        resolve(false);
+                    }
+                })
+                .catch(e => {
+                    console.log("iOS permission error:", e);
+                    resolve(false);
+                });
+        } else {
+            // For Android and older iOS
+            try {
+                window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+                window.addEventListener('deviceorientation', handleOrientation, true);
+                console.log("Android compass enabled");
+                resolve(true);
+            } catch (e) {
+                console.log("Android compass error:", e);
+                resolve(false);
+            }
         }
     });
 }
 
 // Handle device orientation changes
 function handleOrientation(event) {
+    console.log("Orientation event:", event); // Debug log
+    
+    let heading;
     if (event.webkitCompassHeading) {
         // iOS devices
-        updateCompass(event.webkitCompassHeading);
-    } else if (event.alpha) {
+        heading = event.webkitCompassHeading;
+        console.log("iOS heading:", heading);
+    } else if (event.absolute && event.alpha) {
         // Android devices
-        updateCompass(360 - event.alpha);
+        heading = 360 - event.alpha;
+        console.log("Android heading:", heading);
+    } else if (event.alpha) {
+        // Fallback
+        heading = 360 - event.alpha;
+        console.log("Fallback heading:", heading);
+    } else {
+        console.log("No heading data available");
+        return;
     }
+
+    updateCompass(heading);
 }
 
 // Update compass display
@@ -857,6 +890,7 @@ function updateCompass(heading) {
     const compassArrow = document.querySelector('.compass-arrow');
     if (compassArrow) {
         compassArrow.style.transform = `translateX(-50%) rotate(${heading}deg)`;
+        console.log("Compass updated:", heading);
     }
 }
 

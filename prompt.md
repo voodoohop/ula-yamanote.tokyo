@@ -26,6 +26,10 @@ Ulayamanote Tokyo is a psychedelic train visualizer for the Yamanote Line, offer
 - **Retro Glitch Announcement:** Display a glitchy retro-style announcement:
   > "Ula Yamanote will be launched at Traffic Club Tokyo in Roppongi on the 7th of December."
 
+### Compass and Navigation
+- **Compass Display:** Show a minimal compass indicating the user's heading and the direction to the nearest station.
+- **Dynamic Beep Sound:** Implement a distance-based beep sound that mimics a parking car, with slower beeps as the user moves further from the station.
+
 ## Style and Aesthetics
 - **Retro & 8-bit Design:** Incorporate retro and 8-bit visual elements to evoke a nostalgic gaming feel.
 - **Psychedelic Visuals:** Use vibrant, psychedelic colors and patterns to enhance the immersive experience.

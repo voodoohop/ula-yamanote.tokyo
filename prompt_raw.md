@@ -13,4 +13,8 @@ play this audio file: https://github.com/pollinations/ula-yamanote.tokyo/raw/ref
 
 please also make a button or something yamanote themed that triggers playback. 
 
+add a minimal compass that shows the user's heading and the direction to the nearest station. if the device does not support the heading property, don't show the compass. the compass should show once gps is activated only.
+
+implement a distance-based beep sound that mimics a parking car, with slower beeps as the user moves further from the station.
+
 improve this prompt for an ai website generator. give it in a markdown box
