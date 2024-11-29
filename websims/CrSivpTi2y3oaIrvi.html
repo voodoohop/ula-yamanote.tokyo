@@ -548,17 +548,104 @@ function updateUserLocation() {
 
 setInterval(updateUserLocation, 50);
 
-// Initialize Tone.js
+// Initialize Tone.js with reduced volume
 const synth = new Tone.Synth().toDestination();
-const notes = ['C5', 'D5', 'E5', 'G5', 'A5'];
+synth.volume.value = -8; // Reduce volume by 20 decibels
+const beepNote = 'C5'; // Use a single note for the beep sound
 
-// Play random notes based on movement
-setInterval(() => {
-    if (Math.random() > 0.7) {
-        const note = notes[Math.floor(Math.random() * notes.length)];
-        synth.triggerAttackRelease(note, '0.1');
+// Function to calculate beep interval based on distance
+function getBeepInterval(distance) {
+    const maxDistance = 10000; // 10 km
+    const minInterval = 500; // 0.5 seconds
+    const maxInterval = 5000; // 5 seconds
+
+    // Clamp distance to maxDistance
+    const clampedDistance = Math.min(distance, maxDistance);
+
+    // Map distance to interval
+    return minInterval + ((maxInterval - minInterval) * (clampedDistance / maxDistance));
+}
+
+// Function to play beep sound
+function playBeep() {
+    synth.triggerAttackRelease(beepNote, '0.1');
+}
+
+// Start GPS tracking and adjust beep interval
+function startGPSTracking() {
+    if ("geolocation" in navigator) {
+        navigator.geolocation.watchPosition((position) => {
+            const userLat = position.coords.latitude;
+            const userLng = position.coords.longitude;
+            
+            // Find closest station
+            let closestStation = null;
+            let minDistance = Infinity;
+            
+            stationCoordinates.forEach(station => {
+                const distance = calculateDistance(userLat, userLng, station.lat, station.lng);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestStation = station;
+                }
+            });
+
+            // Get direction to closest station
+            const direction = getDirection(
+                {lat: userLat, lng: userLng},
+                {lat: closestStation.lat, lng: closestStation.lng}
+            );
+
+            // Find Japanese name for the station
+            const stationInfo = japaneseStations.find(station => 
+                station[1].toLowerCase().includes(closestStation.name.toLowerCase())
+            );
+            const japaneseName = stationInfo ? stationInfo[0] : closestStation.name;
+
+            // Update info display
+            infoDiv.innerHTML = `
+                <div class="current-station">
+                    <div class="proximity-info">
+                        ${japaneseName}
+                        <div class="romaji">${closestStation.name}</div>
+                        <div class="distance">${Math.round(minDistance)}m</div>
+                        <div class="direction">Head ${direction}</div>
+                        <div class="status ${minDistance > 100 ? 'out-of-range' : 'in-range'}">
+                            ${minDistance > 100 ? '駅の範囲外です / Not within station range' : '駅の範囲内です / Within station range'}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Update station display if within range
+            if (minDistance <= 100) {
+                const stationIndex = japaneseStations.findIndex(station => 
+                    station[1].toLowerCase().includes(closestStation.name.toLowerCase()));
+                if (stationIndex !== -1) {
+                    currentStationIndex = stationIndex;
+                }
+            }
+
+            // Adjust beep interval based on distance
+            const beepInterval = getBeepInterval(minDistance);
+            clearInterval(beepIntervalId);
+            beepIntervalId = setInterval(playBeep, beepInterval);
+
+        }, (error) => {
+            console.error("Error getting location:", error);
+            infoDiv.innerHTML = `
+                <div style="color:#f55; font-size: 1.5em;">⚠️ GPS エラー / ERROR ⚠️</div>
+                <div>位置情報サービスにアクセスできません<br>Unable to access location services</div>
+            `;
+        }, {
+            enableHighAccuracy: true,
+            maximumAge: 0,
+            timeout: 5000
+        });
     }
-}, 500);
+}
+
+let beepIntervalId = setInterval(playBeep, 5000); // Default interval
 
 // After the japaneseStations array, add the station coordinates
 const stationCoordinates = [
@@ -619,75 +706,6 @@ infoDiv.innerHTML = `
         </div>
     </div>
 `;
-
-// The rest of the GPS tracking code remains the same, but update the HTML template
-// in startGPSTracking to preserve the system alert when showing proximity info:
-function startGPSTracking() {
-    if ("geolocation" in navigator) {
-        navigator.geolocation.watchPosition((position) => {
-            const userLat = position.coords.latitude;
-            const userLng = position.coords.longitude;
-            
-            // Find closest station
-            let closestStation = null;
-            let minDistance = Infinity;
-            
-            stationCoordinates.forEach(station => {
-                const distance = calculateDistance(userLat, userLng, station.lat, station.lng);
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    closestStation = station;
-                }
-            });
-
-            // Get direction to closest station
-            const direction = getDirection(
-                {lat: userLat, lng: userLng},
-                {lat: closestStation.lat, lng: closestStation.lng}
-            );
-
-            // Find Japanese name for the station
-            const stationInfo = japaneseStations.find(station => 
-                station[1].toLowerCase().includes(closestStation.name.toLowerCase())
-            );
-            const japaneseName = stationInfo ? stationInfo[0] : closestStation.name;
-
-            // Update info display - now without system alert
-            infoDiv.innerHTML = `
-                <div class="current-station">
-                    <div class="proximity-info">
-                        ${japaneseName}
-                        <div class="romaji">${closestStation.name}</div>
-                        <div class="distance">${Math.round(minDistance)}m</div>
-                        <div class="direction">Head ${direction}</div>
-                        <div class="status ${minDistance > 100 ? 'out-of-range' : 'in-range'}">
-                            ${minDistance > 100 ? '駅の範囲外です / Not within station range' : '駅の範囲内です / Within station range'}
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            // Update station display if within range
-            if (minDistance <= 100) {
-                const stationIndex = japaneseStations.findIndex(station => 
-                    station[1].toLowerCase().includes(closestStation.name.toLowerCase()));
-                if (stationIndex !== -1) {
-                    currentStationIndex = stationIndex;
-                }
-            }
-        }, (error) => {
-            console.error("Error getting location:", error);
-            infoDiv.innerHTML = `
-                <div style="color:#f55; font-size: 1.5em;">⚠️ GPS エラー / ERROR ⚠️</div>
-                <div>位置情報サービスにアクセスできません<br>Unable to access location services</div>
-            `;
-        }, {
-            enableHighAccuracy: true,
-            maximumAge: 0,
-            timeout: 5000
-        });
-    }
-}
 
 // Keep the glitch effect but apply it to the system-alert div
 setInterval(() => {
