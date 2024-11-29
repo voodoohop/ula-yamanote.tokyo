@@ -174,28 +174,6 @@ body {
     animation: gridMove 20s infinite linear;
 }
 
-.announcement {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.9);
-    padding: 20px;
-    border: 2px solid #0f0;
-    z-index: 1000;
-    text-align: center;
-    width: 80%;
-    max-width: 600px;
-    box-shadow: 0 0 20px #0f0;
-    animation: glitch 1s infinite;
-}
-
-.announcement-text {
-    font-size: 18px;
-    line-height: 1.5;
-    margin: 0;
-}
-
 .kanji-decorations {
     position: fixed;
     width: 100%;
@@ -308,15 +286,109 @@ body {
     80% { transform: translate(-50%, -50%) skew(-5deg); }
     100% { transform: translate(-50%, -50%) skew(0deg); }
 }
+
+.station-info {
+    animation: warning-fade 0.5s ease-in-out;
+    font-family: 'DotGothic16', monospace;
+    background: rgba(0, 0, 0, 0.85);
+    border: 2px solid #0f0;
+    box-shadow: 0 0 20px #0f0;
+    padding: 15px 20px;
+    text-align: center;
+    line-height: 1.4;
+    position: fixed;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 250px;
+    max-width: 350px;
+    backdrop-filter: blur(3px);
+    border-radius: 2px;
+    display: grid;
+    gap: 10px;
+    z-index: 1000;
+}
+
+.station-info .current-station {
+    font-size: 1.5em;
+    color: #0f0;
+    text-shadow: 0 0 8px #0f0;
+    margin-bottom: 5px;
+}
+
+.station-info .romaji {
+    color: #0f0;
+    font-size: 1em;
+    opacity: 0.8;
+}
+
+.station-info .distance {
+    color: #ff0;
+    font-size: 1.2em;
+    text-shadow: 0 0 10px #ff0;
+    font-family: monospace;
+    margin: 5px 0;
+}
+
+.station-info .direction {
+    color: #f0f;
+    text-shadow: 0 0 5px #f0f;
+    font-size: 1em;
+    padding: 5px;
+    border: 1px solid rgba(255, 0, 255, 0.3);
+    background: rgba(255, 0, 255, 0.1);
+    display: inline-block;
+    margin: 5px auto;
+}
+
+.station-info .status {
+    font-size: 0.8em;
+    padding: 3px;
+    margin-top: 3px;
+}
+
+.station-info .status.out-of-range {
+    color: #f55;
+    text-shadow: 0 0 5px #f55;
+}
+
+.station-info .status.in-range {
+    color: #5f5;
+    text-shadow: 0 0 5px #5f5;
+}
+
+.station-info .system-alert {
+    display: block;  // Show by default
+}
+
+.station-info.gps-active .system-alert {
+    display: none;  // Hide when GPS is active
+}
+
+@keyframes warning-pulse {
+    0% { border-color: #0f0; }
+    50% { border-color: #f0f; }
+    100% { border-color: #0f0; }
+}
+
+@keyframes warning-fade {
+    from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.station-info .proximity-info {
+    display: none;  // Hide by default
+}
+
+.station-info.gps-active .proximity-info {
+    display: block;  // Show when GPS is active
+}
 </style></head><body>
 <div class="container">
     <div class="grid"></div>
     <div class="effects"></div>
     <div class="kanji-decorations"></div>
     <div class="station-name" data-romaji="SHIBUYA">渋谷</div>
-    <div class="announcement">
-        <p class="announcement-text">システム アラート:<br>ULA YAMANOTE<br>ローンチング アット<br>トラフィック クラブ 東京<br>六本木<br>2024</p>
-    </div>
     <div class="train-container">
         <div class="train">
             <div class="carriage">
@@ -352,12 +424,40 @@ const audioButton = document.getElementById('audioControl');
 
 audioButton.addEventListener('click', () => {
     if (audio.paused) {
-        audio.play();
-        audioButton.classList.add('playing');
+        // Request GPS permissions and start tracking when play is clicked
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(() => {
+                infoDiv.classList.add('gps-active');
+                startGPSTracking();
+                audio.play();
+                audioButton.classList.add('playing');
+            }, (error) => {
+                console.error("GPS Error:", error);
+                audio.play();
+                audioButton.classList.add('playing');
+            });
+        } else {
+            audio.play();
+            audioButton.classList.add('playing');
+        }
     } else {
         audio.pause();
         audio.currentTime = 0;
         audioButton.classList.remove('playing');
+        infoDiv.classList.remove('gps-active');
+        infoDiv.innerHTML = `
+            <div class="current-station">
+                <div class="system-alert">
+                    システム アラート:<br>
+                    <span class="highlight">ウラ YAMANOTE</span><br>
+                    ローンチング アット<br>
+                    TRAFFIC TOKYO<br>
+                    六本木<br>
+                    12月7日 / DEC 7<br>
+                    2024
+                </div>
+            </div>
+        `;
     }
 });
 
@@ -460,12 +560,145 @@ setInterval(() => {
     }
 }, 500);
 
-// Simulated GPS location (would need to be replaced with actual GPS data)
-if ("geolocation" in navigator) {
-    navigator.geolocation.watchPosition((position) => {
-        console.log("Location updated:", position.coords.latitude, position.coords.longitude);
-    }, (error) => {
-        console.error("Error getting location:", error);
-    });
+// After the japaneseStations array, add the station coordinates
+const stationCoordinates = [
+    {name: "Ōsaki", lat: 35.6197, lng: 139.7286},
+    {name: "Gotanda", lat: 35.6264, lng: 139.7232},
+    // ... add all other stations similarly
+    {name: "Shinagawa", lat: 35.6285, lng: 139.7388}
+];
+
+// Add helper function to calculate distance
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = lat1 * Math.PI/180;
+    const φ2 = lat2 * Math.PI/180;
+    const Δφ = (lat2-lat1) * Math.PI/180;
+    const Δλ = (lon2-lon1) * Math.PI/180;
+
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+    return R * c; // Distance in meters
 }
+
+// Helper function to get direction
+function getDirection(from, to) {
+    const lat = to.lat - from.lat;
+    const lng = to.lng - from.lng;
+    
+    let direction = '';
+    if (Math.abs(lat) > Math.abs(lng)) {
+        direction = lat > 0 ? '北' : '南';
+        direction += lat > 0 ? ' (North)' : ' (South)';
+    } else {
+        direction = lng > 0 ? '東' : '西';
+        direction += lng > 0 ? ' (East)' : ' (West)';
+    }
+    return direction;
+}
+
+// Create and initialize the info div with system alert right after creating it
+const infoDiv = document.createElement('div');
+infoDiv.className = 'station-info';
+document.querySelector('.container').appendChild(infoDiv);
+
+// Initialize with system alert message
+infoDiv.innerHTML = `
+    <div class="current-station">
+        <div class="system-alert">
+            システム アラート:<br>
+            <span class="highlight">ウラ YAMANOTE</span><br>
+            ローンチング アット<br>
+            TRAFFIC TOKYO<br>
+            六本木<br>
+            12月7日 / DEC 7<br>
+            2024
+        </div>
+    </div>
+`;
+
+// The rest of the GPS tracking code remains the same, but update the HTML template
+// in startGPSTracking to preserve the system alert when showing proximity info:
+function startGPSTracking() {
+    if ("geolocation" in navigator) {
+        navigator.geolocation.watchPosition((position) => {
+            const userLat = position.coords.latitude;
+            const userLng = position.coords.longitude;
+            
+            // Find closest station
+            let closestStation = null;
+            let minDistance = Infinity;
+            
+            stationCoordinates.forEach(station => {
+                const distance = calculateDistance(userLat, userLng, station.lat, station.lng);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestStation = station;
+                }
+            });
+
+            // Get direction to closest station
+            const direction = getDirection(
+                {lat: userLat, lng: userLng},
+                {lat: closestStation.lat, lng: closestStation.lng}
+            );
+
+            // Find Japanese name for the station
+            const stationInfo = japaneseStations.find(station => 
+                station[1].toLowerCase().includes(closestStation.name.toLowerCase())
+            );
+            const japaneseName = stationInfo ? stationInfo[0] : closestStation.name;
+
+            // Update info display - now without system alert
+            infoDiv.innerHTML = `
+                <div class="current-station">
+                    <div class="proximity-info">
+                        ${japaneseName}
+                        <div class="romaji">${closestStation.name}</div>
+                        <div class="distance">${Math.round(minDistance)}m</div>
+                        <div class="direction">Head ${direction}</div>
+                        <div class="status ${minDistance > 100 ? 'out-of-range' : 'in-range'}">
+                            ${minDistance > 100 ? '駅の範囲外です / Not within station range' : '駅の範囲内です / Within station range'}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Update station display if within range
+            if (minDistance <= 100) {
+                const stationIndex = japaneseStations.findIndex(station => 
+                    station[1].toLowerCase().includes(closestStation.name.toLowerCase()));
+                if (stationIndex !== -1) {
+                    currentStationIndex = stationIndex;
+                }
+            }
+        }, (error) => {
+            console.error("Error getting location:", error);
+            infoDiv.innerHTML = `
+                <div style="color:#f55; font-size: 1.5em;">⚠️ GPS エラー / ERROR ⚠️</div>
+                <div>位置情報サービスにアクセスできません<br>Unable to access location services</div>
+            `;
+        }, {
+            enableHighAccuracy: true,
+            maximumAge: 0,
+            timeout: 5000
+        });
+    }
+}
+
+// Keep the glitch effect but apply it to the system-alert div
+setInterval(() => {
+    const alert = document.querySelector('.system-alert');
+    if (alert && Math.random() > 0.9) {
+        alert.style.transform = `skew(${Math.random() * 10 - 5}deg)`;
+        alert.style.textShadow = `${Math.random() * 10 - 5}px ${Math.random() * 10 - 5}px #f0f`;
+        setTimeout(() => {
+            alert.style.transform = 'skew(0deg)';
+            alert.style.textShadow = '0 0 5px #0f0';
+        }, 100);
+    }
+}, 100);
 </script></body></html>
