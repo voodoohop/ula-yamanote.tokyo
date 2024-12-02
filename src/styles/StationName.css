@@ -1,0 +1,25 @@
+.station-name {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  text-align: center;
+  font-size: 24px;
+  color: #0f0;
+  text-shadow: 0 0 10px #0f0;
+  animation: blink 1s infinite;
+  z-index: 1000;
+}
+
+.station-name::after {
+  content: attr(data-romaji);
+  display: block;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
