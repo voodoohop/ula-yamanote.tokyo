@@ -50,19 +50,19 @@
   width: 4px;
   height: 40px;
   background: linear-gradient(to bottom, #f0f 50%, #0f0 50%);
-  transform-origin: center bottom;
-  transform: translateX(-50%);
+  transform-origin: 50% 50%;
+  transform: translate(-50%, -50%);
 }
 
 .compass-target {
   position: absolute;
-  top: 0;
+  top: 50%;
   left: 50%;
   width: 0;
   height: 0;
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
   border-top: 12px solid #f00;
-  transform-origin: center 50px;
-  transform: translateX(-50%);
+  transform-origin: 50% 50%;
+  transform: translate(-50%, -50%) rotate(var(--bearing));
 }
