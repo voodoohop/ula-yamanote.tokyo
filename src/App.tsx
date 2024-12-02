@@ -54,7 +54,7 @@ function App() {
   };
 
   return (
-    <div className="container relative min-h-screen bg-black">
+    <div className="container relative min-h-screen">
       <YouTubeBackground videoId="5gfY-EMa1Oc" />
       <Effects isGpsActive={isGpsActive} />
       <div 
