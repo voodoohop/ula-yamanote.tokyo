@@ -65,10 +65,23 @@
   top: 50%;
   left: 50%;
   width: 4px;
-  height: 40px;
-  background: linear-gradient(to bottom, #f0f 50%, #0f0 50%);
-  transform-origin: center center;
-  transform: translate(-50%, -50%);
+  height: 20px;
+  background: #f0f;
+  transform-origin: center bottom;
+  transform: translate(-50%, -100%) rotate(0deg);
+}
+
+.compass-arrow::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 8px solid #f0f;
 }
 
 .compass-target {

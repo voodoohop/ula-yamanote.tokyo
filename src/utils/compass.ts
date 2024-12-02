@@ -40,7 +40,7 @@ function updateCompass(heading: number) {
   const arrow = document.querySelector('.compass-arrow');
   if (arrow) {
     // Make the arrow point to magnetic north
-    arrow.setAttribute('style', `transform: translate(-50%, -50%) rotate(${heading}deg)`);
+    arrow.setAttribute('style', `transform: translate(-50%, -100%) rotate(${heading}deg)`);
   }
 }
 
