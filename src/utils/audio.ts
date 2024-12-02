@@ -1,7 +1,17 @@
 import * as Tone from 'tone';
 
-const synth = new Tone.Synth().toDestination();
-synth.volume.value = -20;
+const synth = new Tone.Synth({
+  oscillator: {
+    type: 'sine'
+  },
+  envelope: {
+    attack: 0.01,
+    decay: 0.1,
+    sustain: 0.1,
+    release: 0.1
+  }
+}).toDestination();
+synth.volume.value = -30;
 
 export function initializeAudio() {
   document.addEventListener('click', () => {
@@ -26,5 +36,5 @@ export function getBeepInterval(distance: number): number {
 }
 
 export function playBeep() {
-  synth.triggerAttackRelease("C4", "32n");
+  synth.triggerAttackRelease("G5", "64n");
 }

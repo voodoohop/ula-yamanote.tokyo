@@ -39,7 +39,7 @@ export function handleOrientation(event: DeviceOrientationEvent) {
 function updateCompass(heading: number) {
   const arrow = document.querySelector('.compass-arrow');
   if (arrow) {
-    arrow.style.transform = `translateX(-50%) rotate(${heading}deg)`;
+    arrow.setAttribute('style', `transform: translate(-50%, -50%) rotate(${heading}deg)`);
   }
 }
 

@@ -41,6 +41,9 @@
   border-radius: 50%;
   position: relative;
   margin: 10px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .compass-arrow {
@@ -50,7 +53,7 @@
   width: 4px;
   height: 40px;
   background: linear-gradient(to bottom, #f0f 50%, #0f0 50%);
-  transform-origin: 50% 50%;
+  transform-origin: center center;
   transform: translate(-50%, -50%);
 }
 
@@ -63,6 +66,6 @@
   border-left: 8px solid transparent;
   border-right: 8px solid transparent;
   border-top: 12px solid #f00;
-  transform-origin: 50% 50%;
+  transform-origin: center center;
   transform: translate(-50%, -50%) rotate(var(--bearing));
 }
