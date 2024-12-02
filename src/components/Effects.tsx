@@ -1,3 +1,4 @@
+import React from 'react';
 import '../styles/Effects.css';
 
 export function Effects() {

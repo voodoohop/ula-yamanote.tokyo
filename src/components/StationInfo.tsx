@@ -1,3 +1,4 @@
+import React from 'react';
 import { useEffect, useState, useCallback } from 'react';
 import { calculateDistance, getDirection } from '../utils/location';
 import { calculateBearing, checkCompassSupport } from '../utils/compass';

@@ -1,7 +1,9 @@
+import React from 'react';
 import { useState, useEffect } from 'react';
 import { Train } from './components/Train';
 import { Effects } from './components/Effects';
 import { StationInfo } from './components/StationInfo';
+import YouTubeBackground from './components/YouTubeBackground';
 import { japaneseStations } from './data/stations';
 import './styles/global.css';
 import './styles/PlayButton.css';
@@ -53,6 +55,7 @@ function App() {
 
   return (
     <div className="container relative min-h-screen bg-black">
+      <YouTubeBackground videoId="t_HcBAO_Yas" />
       <Effects />
       <div 
         className="station-name" 
