@@ -1,0 +1,68 @@
+.station-info {
+  animation: warning-fade 0.5s ease-in-out;
+  font-family: 'DotGothic16', monospace;
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid #0f0;
+  box-shadow: 0 0 20px #0f0;
+  padding: 15px 20px;
+  text-align: center;
+  line-height: 1.4;
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 250px;
+  max-width: 350px;
+  backdrop-filter: blur(3px);
+  border-radius: 2px;
+  display: grid;
+  gap: 10px;
+  z-index: 1000;
+}
+
+.station-info .closest-station-label {
+  font-size: 0.8em;
+  color: #0f0;
+  opacity: 0.8;
+  margin-bottom: 5px;
+}
+
+.station-info .station-name-display {
+  font-size: 1.5em;
+  color: #0f0;
+  text-shadow: 0 0 8px #0f0;
+  margin-bottom: 5px;
+}
+
+.compass {
+  width: 100px;
+  height: 100px;
+  border: 2px solid #0f0;
+  border-radius: 50%;
+  position: relative;
+  margin: 10px auto;
+}
+
+.compass-arrow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4px;
+  height: 40px;
+  background: linear-gradient(to bottom, #f0f 50%, #0f0 50%);
+  transform-origin: center bottom;
+  transform: translateX(-50%);
+}
+
+.compass-target {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 12px solid #f00;
+  transform-origin: center 50px;
+  transform: translateX(-50%);
+}
