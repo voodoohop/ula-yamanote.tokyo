@@ -55,8 +55,8 @@ function App() {
 
   return (
     <div className="container relative min-h-screen bg-black">
-      <YouTubeBackground videoId="t_HcBAO_Yas" />
-      <Effects />
+      <YouTubeBackground videoId="5gfY-EMa1Oc" />
+      <Effects isGpsActive={isGpsActive} />
       <div 
         className="station-name" 
         data-romaji={japaneseStations[currentStationIndex][1]}
