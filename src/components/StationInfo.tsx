@@ -48,6 +48,9 @@ export function StationInfo({ isGpsActive }: Props) {
       { lat: closestStation.lat, lng: closestStation.lng }
     );
 
+    // Set the bearing as a CSS custom property
+    document.body.style.setProperty('--bearing', bearing.toString());
+
     const stationInfo = japaneseStations.find(station => 
       station[1].toLowerCase() === closestStation!.name.toLowerCase()
     );
@@ -56,7 +59,6 @@ export function StationInfo({ isGpsActive }: Props) {
     const compassHTML = hasCompass ? `
       <div class="compass">
         <div class="compass-arrow"></div>
-        <div class="compass-target" style="transform: translateX(-50%) rotate(${bearing}deg)"></div>
       </div>
     ` : '';
 
