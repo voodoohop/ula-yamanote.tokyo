@@ -1,46 +1,53 @@
 export function checkCompassSupport(): Promise<boolean> {
-  if (window.DeviceOrientationEvent) {
-    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-      // iOS 13+ devices
-      return DeviceOrientationEvent.requestPermission()
-        .then(response => {
-          if (response === 'granted') {
-            window.addEventListener('deviceorientation', handleOrientation);
-            return true;
-          }
-          return false;
-        })
-        .catch(() => false);
-    } else {
-      // Non iOS 13+ devices
-      window.addEventListener('deviceorientation', handleOrientation);
-      return Promise.resolve(true);
-    }
+  if (!window.DeviceOrientationEvent) {
+    return Promise.resolve(false);
   }
-  return Promise.resolve(false);
+
+  if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+    // iOS 13+ devices
+    return DeviceOrientationEvent.requestPermission()
+      .then(response => {
+        if (response === 'granted') {
+          window.addEventListener('deviceorientation', handleOrientation);
+          return true;
+        }
+        return false;
+      })
+      .catch(() => false);
+  } 
+  
+  // Non iOS devices
+  window.addEventListener('deviceorientation', handleOrientation);
+  return Promise.resolve(true);
 }
 
 export function handleOrientation(event: DeviceOrientationEvent) {
-  let heading: number;
+  let heading: number | null = null;
   
-  if ('webkitCompassHeading' in event) {
-    // iOS devices
-    heading = event.webkitCompassHeading as number;
-  } else if (event.alpha) {
-    // Android devices
-    heading = 360 - event.alpha;
-  } else {
-    return;
+  try {
+    if ('webkitCompassHeading' in event) {
+      // iOS devices - this is already correct
+      heading = event.webkitCompassHeading as number;
+    } else if (event.alpha !== null) {
+      // Android devices - simplified handling
+      heading = 360 - event.alpha;
+    }
+    
+    if (heading !== null) {
+      updateCompass(heading);
+    }
+  } catch (error) {
+    console.error('Compass error:', error);
   }
-  
-  updateCompass(heading);
 }
 
 function updateCompass(heading: number) {
   const arrow = document.querySelector('.compass-arrow');
   if (arrow) {
-    // Make the arrow point to magnetic north
-    arrow.setAttribute('style', `transform: translate(-50%, -100%) rotate(${heading}deg)`);
+    arrow.setAttribute('style', 
+      `transform: translate(-50%, -100%) rotate(${heading}deg); 
+       transition: transform 0.2s ease-out;`
+    );
   }
 }
 

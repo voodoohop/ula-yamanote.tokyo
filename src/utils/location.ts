@@ -18,17 +18,25 @@ export function calculateDistance(lat1: number, lon1: number, lat2: number, lon2
   return R * c; // Distance in meters
 }
 
+export function calculateBearing(from: Coordinates, to: Coordinates): number {
+  const φ1 = from.lat * Math.PI/180;
+  const φ2 = to.lat * Math.PI/180;
+  const Δλ = (to.lng - from.lng) * Math.PI/180;
+
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1) * Math.sin(φ2) -
+            Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  const bearing = Math.atan2(y, x);
+
+  return (bearing * 180 / Math.PI + 360) % 360;
+}
+
 export function getDirection(from: Coordinates, to: Coordinates): string {
-  const lat = to.lat - from.lat;
-  const lng = to.lng - from.lng;
+  const bearing = calculateBearing(from, to);
   
-  let direction = '';
-  if (Math.abs(lat) > Math.abs(lng)) {
-    direction = lat > 0 ? '北' : '南';
-    direction += lat > 0 ? ' (North)' : ' (South)';
-  } else {
-    direction = lng > 0 ? '東' : '西';
-    direction += lng > 0 ? ' (East)' : ' (West)';
-  }
-  return direction;
+  // Convert bearing to 8-point cardinal direction
+  const directions = ['北 (North)', '北東 (Northeast)', '東 (East)', '南東 (Southeast)', 
+                     '南 (South)', '南西 (Southwest)', '西 (West)', '北西 (Northwest)'];
+  const index = Math.round(bearing / 45) % 8;
+  return directions[index];
 }

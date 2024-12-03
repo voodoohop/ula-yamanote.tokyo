@@ -69,20 +69,21 @@
   background: #0f0;
   position: absolute;
   left: 50%;
-  top: 50%;
+  bottom: 50%;
   transform: translate(-50%, -50%) rotate(var(--bearing, 0deg));
-  transform-origin: center bottom;
+  transform-origin: bottom center;
   box-shadow: 0 0 10px #0f0;
 }
 
-.compass-arrow::after {
+.compass-arrow::before {
   content: '';
   position: absolute;
-  top: -10px;
+  top: 0;
   left: -8px;
   border-left: 10px solid transparent;
   border-right: 10px solid transparent;
-  border-bottom: 20px solid #0f0;
+  border-bottom: 16px solid #0f0;
+  transform: rotate(180deg);
 }
 
 .find-party-alert {
@@ -108,6 +109,33 @@
   border-color: #f00;
   color: #f00;
   text-shadow: 0 0 10px #f00;
+}
+
+.maintenance-alert {
+  margin: 15px auto;
+  padding: 8px 12px;
+  border: 1px dashed #f00;
+  color: #f00;
+  font-size: 0.9em;
+  text-shadow: 0 0 8px #f00;
+  max-width: 80%;
+  text-align: center;
+  word-wrap: break-word;
+  display: inline-block;
+}
+
+.maintenance-alert .glitch {
+  display: inline-block;
+  max-width: 100%;
+  white-space: normal;
+}
+
+.maintenance-alert .glitch::before {
+  text-shadow: -2px 0 #f00;
+}
+
+.maintenance-alert .glitch::after {
+  text-shadow: 2px 0 #f00;
 }
 
 /* Glitch Effects */

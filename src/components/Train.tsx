@@ -37,7 +37,6 @@ export function Train() {
         {[...Array(numCars)].map((_, i) => (
           <div key={i} className="carriage">
             <YouTubeBackground videoId="5gfY-EMa1Oc" />
-            {i < numCars - 1 && <div className="connector" />}
           </div>
         ))}
       </div>
