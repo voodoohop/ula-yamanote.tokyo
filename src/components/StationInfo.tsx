@@ -168,8 +168,8 @@ export function StationInfo({ isGpsActive }: Props) {
                 </span>
               </div>
               <div className="find-party-alert">
-                <span className="glitch" data-text="コンパスに従ってパーティーを見つけよう">
-                  コンパスに従ってパーティーを見つけよう
+                <span className="glitch" data-text="MSTRYPOT パーティーを見つけよう">
+                  MSTRYPOT パーティーを見つけよう
                 </span>
               </div>
             </>
