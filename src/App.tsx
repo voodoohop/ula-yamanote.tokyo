@@ -4,6 +4,7 @@ import { Train } from './components/Train';
 import { Effects, Track } from './components/Effects';
 import { StationInfo } from './components/StationInfo';
 import YouTubeBackground from './components/YouTubeBackground';
+import { EventInfo } from './components/EventInfo';
 import { japaneseStations } from './data/stations';
 import './styles/global.css';
 import './styles/PlayButton.css';
@@ -71,6 +72,7 @@ function App() {
       >
         山手線 SOUND
       </button>
+      <EventInfo />
       <Effects isGpsActive={isGpsActive} />
       <style>{`
         .app {
