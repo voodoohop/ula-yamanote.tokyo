@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { Train } from './components/Train';
 import { Effects, Track } from './components/Effects';
 import { StationInfo } from './components/StationInfo';
-import YouTubeBackground from './components/YouTubeBackground';
 import { EventInfo } from './components/EventInfo';
 import { japaneseStations } from './data/stations';
 import './styles/global.css';
@@ -65,7 +64,6 @@ function App() {
       <StationInfo isGpsActive={isGpsActive} />
       <Track />
       <Train />
-      <YouTubeBackground videoId="5gfY-EMa1Oc" />
       <button 
         className={`play-button ${isPlaying ? 'playing' : ''}`}
         onClick={handleAudioControl}

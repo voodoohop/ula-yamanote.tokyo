@@ -1,6 +1,7 @@
 import React from 'react';
 import { useEffect } from 'react';
 import '../styles/Train.css';
+import YouTubeBackground from './YouTubeBackground';
 
 export function Train() {
   useEffect(() => {
@@ -21,16 +22,14 @@ export function Train() {
   return (
     <div className="train-container">
       <div className="train">
-        {[...Array(4)].map((_, i) => (
+        {[...Array(3)].map((_, i) => (
           <div key={i} className="carriage">
-            <div className="window" />
-            <div className="connector" />
+            <div className="window">
+              <YouTubeBackground videoId="5gfY-EMa1Oc" />
+            </div>
+            {i < 2 && <div className="connector" />}
           </div>
         ))}
-        <div className="carriage">
-          <div className="window" />
-          <div className="location-marker" id="userLocation" />
-        </div>
       </div>
     </div>
   );
