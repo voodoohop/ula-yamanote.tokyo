@@ -1,0 +1,152 @@
+.event-info {
+  width: 100%;
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid #0f0;
+  box-shadow: 0 0 20px #0f0;
+  font-family: 'DotGothic16', monospace;
+  position: relative;
+  animation: glitch 0.3s infinite;
+  animation-play-state: paused;
+}
+
+.event-info:hover {
+  animation-play-state: running;
+}
+
+.language-toggle {
+  position: absolute;
+  top: -15px;
+  right: 20px;
+  background: #000;
+  color: #0f0;
+  border: 2px solid #0f0;
+  padding: 5px 15px;
+  font-family: 'DotGothic16', monospace;
+  cursor: pointer;
+  animation: buttonGlitch 2s infinite;
+}
+
+.language-toggle:hover {
+  background: #0f0;
+  color: #000;
+}
+
+.event-content {
+  color: #0f0;
+  line-height: 1.6;
+}
+
+.event-content h2 {
+  font-size: 1.5em;
+  margin-bottom: 10px;
+  text-shadow: 0 0 10px #0f0;
+}
+
+.date {
+  font-size: 1.2em;
+  margin-bottom: 20px;
+}
+
+.artists {
+  margin: 20px 0;
+}
+
+.artist {
+  font-size: 1.1em;
+  margin: 5px 0;
+}
+
+.artist a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.artist a:hover {
+  color: #00ff00;
+  text-decoration: underline;
+}
+
+.sound, .visual {
+  margin: 15px 0;
+}
+
+.location {
+  margin: 20px 0;
+  font-style: italic;
+}
+
+.description {
+  margin: 20px 0;
+  text-align: justify;
+  line-height: 1.8;
+}
+
+.video-container {
+  margin: 30px auto 0;
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 16/9;
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.video-container iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.footer {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #0f0;
+}
+
+.door, .contact {
+  margin: 5px 0;
+}
+
+.instagram-link {
+  display: inline-block;
+  margin-top: 10px;
+  color: #0f0;
+  text-decoration: none;
+  border-bottom: 1px solid #0f0;
+}
+
+.instagram-link:hover {
+  text-shadow: 0 0 10px #0f0;
+  animation: linkGlitch 0.3s infinite;
+}
+
+@keyframes glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+
+@keyframes buttonGlitch {
+  0%, 100% { transform: translate(0); opacity: 1; }
+  92% { transform: translate(0); opacity: 1; }
+  94% { transform: translate(-3px, 3px); opacity: 0.8; }
+  96% { transform: translate(3px, -3px); opacity: 0.9; }
+  98% { transform: translate(0); opacity: 1; }
+}
+
+@keyframes linkGlitch {
+  0% { opacity: 1; }
+  50% { opacity: 0.8; }
+  100% { opacity: 1; }
+}
