@@ -103,13 +103,22 @@ export function StationInfo({ isGpsActive }: Props) {
     return (
       <div className="current-station">
         <div className="system-alert">
-          システム アラート:<br />
-          <span className="highlight">ウラ YAMANOTE</span><br />
-          ローンチング アット<br />
-          TRAFFIC TOKYO<br />
-          六本木<br />
-          12月7日 / DEC 7<br />
-          2024
+          <div className="alert-header">システム アラート:</div>
+          <div className="highlight">ウラ YAMANOTE</div>
+          <div className="launch-info">
+            ローンチング アット<br />
+            <a 
+              href="https://www.instagram.com/traffic.tokyo/?hl=en"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="traffic-link"
+            >
+              TRAFFIC TOKYO
+            </a><br />
+            六本木<br />
+            12月7日 / DEC 7<br />
+            2024
+          </div>
         </div>
       </div>
     );

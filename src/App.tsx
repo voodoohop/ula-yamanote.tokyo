@@ -62,14 +62,14 @@ function App() {
         {japaneseStations[currentStationIndex][0]}
       </div>
       <StationInfo isGpsActive={isGpsActive} />
-      <Track />
-      <Train />
       <button 
         className={`play-button ${isPlaying ? 'playing' : ''}`}
         onClick={handleAudioControl}
       >
         山手線 SOUND
       </button>
+      <Track />
+      <Train />
       <EventInfo />
       <Effects isGpsActive={isGpsActive} />
       <style>{`

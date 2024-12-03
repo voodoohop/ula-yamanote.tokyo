@@ -16,6 +16,22 @@
   margin-top: 5px;
 }
 
+.system-alert {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto 20px;
+  text-align: center;
+  font-size: 16px;
+  color: #0f0;
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid #0f0;
+  box-shadow: 0 0 20px #0f0;
+  padding: 20px;
+  font-family: 'DotGothic16', monospace;
+  border-radius: 4px;
+  line-height: 1.6;
+}
+
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }

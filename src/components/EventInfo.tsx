@@ -130,6 +130,18 @@ export function EventInfo() {
             allowFullScreen
           ></iframe>
         </div>
+
+        <div className="video-container">
+          <iframe
+            width="100%"
+            height="315"
+            src="https://www.youtube.com/embed/mFqBSWvapDU"
+            title="Thomash Video"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          ></iframe>
+        </div>
       </div>
     </div>
   );
