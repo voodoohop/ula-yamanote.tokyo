@@ -21,6 +21,7 @@
   border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+  min-width: 0; /* Prevent flex items from overflowing */
 }
 
 .carriage > div {
@@ -86,5 +87,21 @@
   100% {
     transform: translate(-50%, -50%) scale(1);
     opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .train {
+    width: 95%;
+    gap: 15px;
+  }
+
+  .carriage {
+    min-height: 150px;
+  }
+
+  .connector {
+    width: 10px;
+    right: -12px;
   }
 }
