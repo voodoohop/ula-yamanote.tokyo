@@ -4,6 +4,7 @@ import { Train } from './components/Train';
 import { Effects, Track } from './components/Effects';
 import { StationInfo } from './components/StationInfo';
 import { EventInfo } from './components/EventInfo';
+import { SystemAlert } from './components/SystemAlert';
 import { japaneseStations } from './data/stations';
 import './styles/global.css';
 import './styles/PlayButton.css';
@@ -13,6 +14,7 @@ function App() {
   const [currentStationIndex, setCurrentStationIndex] = useState(0);
   const [isGpsActive, setIsGpsActive] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isStarted, setIsStarted] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -21,6 +23,10 @@ function App() {
 
     return () => clearInterval(interval);
   }, []);
+
+  const handleStart = () => {
+    setIsStarted(true);
+  };
 
   const handleAudioControl = () => {
     const audio = new Audio('https://github.com/pollinations/ula-yamanote.tokyo/raw/refs/heads/main/convenience%20store%20-%20shabu%20shabu%20-%20please%20be%20careful.mp3');
@@ -52,6 +58,14 @@ function App() {
       setIsGpsActive(false);
     }
   };
+
+  if (!isStarted) {
+    return (
+      <div className="app initial-screen">
+        <SystemAlert showStartButton onStart={handleStart} />
+      </div>
+    );
+  }
 
   return (
     <div className="app">
@@ -88,6 +102,11 @@ function App() {
           flex-direction: column;
           align-items: center;
           overflow-y: auto;
+        }
+
+        .initial-screen {
+          justify-content: center;
+          background: #000;
         }
       `}</style>
     </div>

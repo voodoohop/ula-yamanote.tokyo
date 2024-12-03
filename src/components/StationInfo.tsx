@@ -4,14 +4,8 @@ import { calculateDistance, getDirection } from '../utils/location';
 import { calculateBearing, checkCompassSupport } from '../utils/compass';
 import { getBeepInterval, playBeep } from '../utils/audio';
 import { stationCoordinates, japaneseStations } from '../data/stations';
+import { SystemAlert } from './SystemAlert';
 import '../styles/StationInfo.css';
-
-interface Position {
-  coords: {
-    latitude: number;
-    longitude: number;
-  };
-}
 
 interface Props {
   isGpsActive: boolean;
@@ -29,6 +23,23 @@ export function StationInfo({ isGpsActive }: Props) {
   const [stationData, setStationData] = useState<StationData | null>(null);
   const [hasCompass, setHasCompass] = useState(false);
   const [beepIntervalId, setBeepIntervalId] = useState<number>();
+  const [glitchText, setGlitchText] = useState('');
+  const [glitchClass, setGlitchClass] = useState('');
+
+  useEffect(() => {
+    const glitchInterval = setInterval(() => {
+      if (Math.random() > 0.8) {
+        setGlitchText(Math.random().toString(36).substring(2, 4));
+        setGlitchClass('glitch-active');
+        setTimeout(() => setGlitchClass(''), 100);
+      } else {
+        setGlitchText('');
+        setGlitchClass('');
+      }
+    }, 200);
+
+    return () => clearInterval(glitchInterval);
+  }, []);
 
   const updateInfo = useCallback((position: Position) => {
     const userLat = position.coords.latitude;
@@ -57,7 +68,6 @@ export function StationInfo({ isGpsActive }: Props) {
       { lat: closestStation.lat, lng: closestStation.lng }
     );
 
-    // Set the bearing as a CSS custom property
     document.body.style.setProperty('--bearing', bearing.toString());
 
     const stationInfo = japaneseStations.find(station => 
@@ -74,7 +84,6 @@ export function StationInfo({ isGpsActive }: Props) {
       hasCompass
     });
 
-    // Update beep interval
     if (beepIntervalId) {
       clearInterval(beepIntervalId);
     }
@@ -102,17 +111,7 @@ export function StationInfo({ isGpsActive }: Props) {
   if (!isGpsActive) {
     return (
       <div className="current-station">
-        <div className="system-alert">
-          <div className="alert-header">システム アラート:</div>
-          <div className="highlight">ウラ YAMANOTE</div>
-          <div className="launch-info">
-            ローンチング アット<br />
-            裏 Roppongi<br />
-            六本木<br />
-            12月7日 / DEC 7<br />
-            2024
-          </div>
-        </div>
+        <SystemAlert />
       </div>
     );
   }
@@ -122,33 +121,64 @@ export function StationInfo({ isGpsActive }: Props) {
   }
 
   return (
-    <div className={`station-info ${isGpsActive ? 'gps-active' : ''}`}>
+    <div className={`station-info ${isGpsActive ? 'gps-active' : ''} ${glitchClass}`}>
+      <div className="scanline"></div>
+      <div className="noise"></div>
+      <div className="crt-effect"></div>
+      
       <div className="current-station">
         <div className="proximity-info">
-          <div className="closest-station-label">最寄り駅 / NEAREST STATION</div>
-          <div className="station-name-display">
-            {stationData.japaneseName} ({stationData.name})
+          <div className="closest-station-label">
+            <span className="glitch" data-text="最寄り駅 / NEAREST STATION">最寄り駅 / NEAREST STATION</span>
+            <span className="glitch-text">{glitchText}</span>
           </div>
-          <div>{stationData.distance}m</div>
+          
+          <div className="station-name-display">
+            <span className="glitch" data-text={`${stationData.japaneseName} (${stationData.name})`}>
+              {stationData.japaneseName} ({stationData.name})
+            </span>
+          </div>
+          
+          <div className="distance">
+            <span className="glitch" data-text={`${stationData.distance}m`}>{stationData.distance}m</span>
+          </div>
+
           {stationData.hasCompass ? (
             <>
               <div className="compass">
                 <div className="compass-arrow" />
               </div>
-              <div>{stationData.direction}</div>
-              <div className="find-party-alert">コンパスに従ってパーティーを見つけよう</div>
+              <div className="direction">
+                <span className="glitch" data-text={stationData.direction}>{stationData.direction}</span>
+              </div>
+              <div className="find-party-alert">
+                <span className="glitch" data-text="コンパスに従ってパーティーを見つけよう">
+                  コンパスに従ってパーティーを見つけよう
+                </span>
+              </div>
             </>
           ) : (
             <>
-              <div>コンパスが利用できません</div>
-              <div>{stationData.direction}へ進んでください</div>
-              <div className="find-party-alert">コンパスに従ってパーティーを見つけよう</div>
+              <div className="direction">
+                <span className="glitch" data-text="コンパスが利用できません">コンパスが利用できません</span>
+              </div>
+              <div className="direction">
+                <span className="glitch" data-text={`${stationData.direction}へ進んでください`}>
+                  {stationData.direction}へ進んでください
+                </span>
+              </div>
+              <div className="find-party-alert">
+                <span className="glitch" data-text="コンパスに従ってパーティーを見つけよう">
+                  コンパスに従ってパーティーを見つけよう
+                </span>
+              </div>
             </>
           )}
+          
           <div className={`status ${stationData.distance > 100 ? 'out-of-range' : 'in-range'}`}>
-            {stationData.distance > 100 
-              ? '駅の範囲外です' 
-              : '駅の範囲内です'}
+            <span className="glitch" data-text={stationData.distance > 100 ? '駅の範囲外です' : '駅の範囲内です'}>
+              {stationData.distance > 100 ? '駅の範囲外です' : '駅の範囲内です'}
+            </span>
           </div>
         </div>
       </div>
