@@ -129,7 +129,7 @@ export function StationInfo({ isGpsActive }: Props) {
       <div className="current-station">
         <div className="proximity-info">
           <div className="closest-station-label">
-            <span className="glitch" data-text="最寄り駅 / NEAREST STATION">最寄り駅 / NEAREST STATION</span>
+            <span className="glitch" data-text="パーティー会場 / LAUNCH PARTY">パーティー会場 / LAUNCH PARTY</span>
             <span className="glitch-text">{glitchText}</span>
           </div>
           
