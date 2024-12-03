@@ -275,6 +275,16 @@
   animation: shake 0.1s linear;
 }
 
+.traffic-animation {
+  width: auto;
+  max-width: 400px;
+  max-height: 250px;
+  margin: 20px auto 0;
+  display: block;
+  border-radius: 4px;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+}
+
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-2px); }

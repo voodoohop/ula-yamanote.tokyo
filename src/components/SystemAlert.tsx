@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/SystemAlert.css';
+import bonnapotTraffic from '../assets/bonnapot-traffic-animated.webp';
 
 interface SystemAlertProps {
   showStartButton?: boolean;
@@ -54,6 +55,11 @@ export function SystemAlert({ showStartButton, onStart }: SystemAlertProps) {
           <div className="button-glitch-effect"></div>
         </button>
       )}
+      <img 
+        src={bonnapotTraffic} 
+        alt="Bonnapot Traffic Animation" 
+        className="traffic-animation"
+      />
       <div className="noise"></div>
       <div className="crt-effect"></div>
     </div>
