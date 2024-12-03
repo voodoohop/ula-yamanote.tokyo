@@ -17,8 +17,16 @@ interface Props {
   isGpsActive: boolean;
 }
 
+interface StationData {
+  name: string;
+  japaneseName: string;
+  distance: number;
+  direction: string;
+  hasCompass: boolean;
+}
+
 export function StationInfo({ isGpsActive }: Props) {
-  const [info, setInfo] = useState<string>('');
+  const [stationData, setStationData] = useState<StationData | null>(null);
   const [hasCompass, setHasCompass] = useState(false);
   const [beepIntervalId, setBeepIntervalId] = useState<number>();
 
@@ -56,32 +64,15 @@ export function StationInfo({ isGpsActive }: Props) {
       station[1].toLowerCase() === closestStation!.name.toLowerCase()
     );
     const japaneseName = stationInfo ? stationInfo[0] : closestStation.name;
-
-    const compassHTML = hasCompass ? `
-      <div class="compass">
-        <div class="compass-arrow"></div>
-      </div>
-    ` : '';
-
     const distanceInMeters = Math.round(minDistance);
 
-    setInfo(`
-      <div class="current-station">
-        <div class="proximity-info">
-          <div class="closest-station-label">最寄り駅 / NEAREST STATION</div>
-          <div class="station-name-display">
-            ${japaneseName}
-            <div class="romaji">${closestStation.name}</div>
-          </div>
-          <div class="distance">${distanceInMeters}m</div>
-          ${compassHTML}
-          <div class="direction">Head ${direction}</div>
-          <div class="status ${distanceInMeters > 100 ? 'out-of-range' : 'in-range'}">
-            ${distanceInMeters > 100 ? '駅の範囲外です / Not within station range' : '駅の範囲内です / Within station range'}
-          </div>
-        </div>
-      </div>
-    `);
+    setStationData({
+      name: closestStation.name,
+      japaneseName,
+      distance: distanceInMeters,
+      direction,
+      hasCompass
+    });
 
     // Update beep interval
     if (beepIntervalId) {
@@ -93,24 +84,11 @@ export function StationInfo({ isGpsActive }: Props) {
 
   useEffect(() => {
     if (!isGpsActive) {
-      setInfo(`
-        <div class="current-station">
-          <div class="system-alert">
-            システム アラート:<br>
-            <span class="highlight">ウラ YAMANOTE</span><br>
-            ローンチング アット<br>
-            TRAFFIC TOKYO<br>
-            六本木<br>
-            12月7日 / DEC 7<br>
-            2024
-          </div>
-        </div>
-      `);
+      setStationData(null);
       return;
     }
 
     checkCompassSupport().then(setHasCompass);
-
     const watchId = navigator.geolocation.watchPosition(updateInfo);
 
     return () => {
@@ -119,12 +97,51 @@ export function StationInfo({ isGpsActive }: Props) {
         clearInterval(beepIntervalId);
       }
     };
-  }, [isGpsActive, updateInfo]);
+  }, [isGpsActive, updateInfo, beepIntervalId]);
+
+  if (!isGpsActive) {
+    return (
+      <div className="current-station">
+        <div className="system-alert">
+          システム アラート:<br />
+          <span className="highlight">ウラ YAMANOTE</span><br />
+          ローンチング アット<br />
+          TRAFFIC TOKYO<br />
+          六本木<br />
+          12月7日 / DEC 7<br />
+          2024
+        </div>
+      </div>
+    );
+  }
+
+  if (!stationData) {
+    return <div className="station-info">Loading...</div>;
+  }
 
   return (
-    <div 
-      className={`station-info ${isGpsActive ? 'gps-active' : ''}`}
-      dangerouslySetInnerHTML={{ __html: info }}
-    />
+    <div className={`station-info ${isGpsActive ? 'gps-active' : ''}`}>
+      <div className="current-station">
+        <div className="proximity-info">
+          <div className="closest-station-label">最寄り駅 / NEAREST STATION</div>
+          <div className="station-name-display">
+            {stationData.japaneseName}
+            <div className="romaji">{stationData.name}</div>
+          </div>
+          <div className="distance">{stationData.distance}m</div>
+          {stationData.hasCompass && (
+            <div className="compass">
+              <div className="compass-arrow" />
+            </div>
+          )}
+          <div className="direction">Head {stationData.direction}</div>
+          <div className={`status ${stationData.distance > 100 ? 'out-of-range' : 'in-range'}`}>
+            {stationData.distance > 100 
+              ? '駅の範囲外です / Not within station range' 
+              : '駅の範囲内です / Within station range'}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

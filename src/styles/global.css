@@ -4,10 +4,21 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
+html, body {
   margin: 0;
   padding: 0;
   color: #0f0;
   font-family: 'DotGothic16', monospace;
-  overflow: hidden;
+  min-height: 100%;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  z-index: -2;
 }

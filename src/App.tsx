@@ -1,7 +1,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { Train } from './components/Train';
-import { Effects } from './components/Effects';
+import { Effects, Track } from './components/Effects';
 import { StationInfo } from './components/StationInfo';
 import YouTubeBackground from './components/YouTubeBackground';
 import { japaneseStations } from './data/stations';
@@ -54,23 +54,35 @@ function App() {
   };
 
   return (
-    <div className="container relative min-h-screen">
-      <YouTubeBackground videoId="5gfY-EMa1Oc" />
-      <Effects isGpsActive={isGpsActive} />
+    <div className="app">
       <div 
         className="station-name" 
         data-romaji={japaneseStations[currentStationIndex][1]}
       >
         {japaneseStations[currentStationIndex][0]}
       </div>
+      <StationInfo isGpsActive={isGpsActive} />
+      <Track />
       <Train />
+      <YouTubeBackground videoId="5gfY-EMa1Oc" />
       <button 
         className={`play-button ${isPlaying ? 'playing' : ''}`}
         onClick={handleAudioControl}
       >
         山手線 SOUND
       </button>
-      <StationInfo isGpsActive={isGpsActive} />
+      <Effects isGpsActive={isGpsActive} />
+      <style>{`
+        .app {
+          width: 100%;
+          min-height: 100vh;
+          padding: 20px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          overflow-y: auto;
+        }
+      `}</style>
     </div>
   );
 }

@@ -1,7 +1,11 @@
 .grid {
-  position: absolute;
-  width: 100%;
-  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: -1;
   background: 
     linear-gradient(transparent 0%, rgba(0,255,0,0.2) 2%, transparent 5%),
     linear-gradient(90deg, transparent 0%, rgba(0,255,0,0.2) 2%, transparent 5%);
@@ -10,11 +14,9 @@
 }
 
 .effects {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
-  height: 100%;
+  height: 200px;
+  margin: 20px 0;
   background: 
     radial-gradient(circle at 30% 30%, rgba(255,0,255,0.1) 0%, transparent 50%),
     radial-gradient(circle at 70% 70%, rgba(0,255,255,0.1) 0%, transparent 50%);
@@ -23,18 +25,18 @@
 }
 
 .track {
-  position: absolute;
-  bottom: 15%;
   width: 100%;
-  height: 10px;
+  height: 8px;
+  margin: -10px 0 20px 0;
   background: repeating-linear-gradient(
     90deg,
     #0f0 0px,
-    #0f0 20px,
-    transparent 20px,
-    transparent 40px
+    #0f0 15px,
+    transparent 15px,
+    transparent 30px
   );
   animation: trackMove 10s infinite linear;
+  opacity: 0.7;
 }
 
 @keyframes effectShift {
@@ -44,10 +46,10 @@
 
 @keyframes trackMove {
   0% { background-position: 0 0; }
-  100% { background-position: -800px 0; }
+  100% { background-position: -600px 0; }
 }
 
 @keyframes gridMove {
   0% { transform: translateY(0); }
-  100% { transform: translateY(1000px); }
+  100% { transform: translateY(50px); }
 }

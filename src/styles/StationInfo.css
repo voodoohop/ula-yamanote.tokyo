@@ -7,17 +7,13 @@
   padding: 15px 20px;
   text-align: center;
   line-height: 1.4;
-  position: fixed;
-  top: 10%;
-  left: 50%;
-  transform: translateX(-50%);
-  min-width: 250px;
+  width: 100%;
   max-width: 350px;
+  margin: 20px auto;
   backdrop-filter: blur(3px);
   border-radius: 2px;
   display: grid;
   gap: 10px;
-  z-index: 1000;
 }
 
 .station-info .closest-station-label {
@@ -86,4 +82,49 @@
 
 .compass-target {
   display: none;
+}
+
+.distance {
+  font-size: 2em;
+  color: #0f0;
+  margin: 10px 0;
+}
+
+.direction {
+  font-size: 1.2em;
+  color: #0f0;
+  margin: 5px 0;
+}
+
+.status {
+  font-size: 0.9em;
+  padding: 5px;
+  border-radius: 2px;
+  margin-top: 10px;
+}
+
+.status.in-range {
+  color: #0f0;
+  border: 1px solid #0f0;
+}
+
+.status.out-of-range {
+  color: #f00;
+  border: 1px solid #f00;
+}
+
+.system-alert {
+  color: #0f0;
+  font-size: 1.2em;
+  line-height: 1.6;
+}
+
+.highlight {
+  color: #fff;
+  text-shadow: 0 0 10px #fff;
+}
+
+@keyframes warning-fade {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
