@@ -63,14 +63,26 @@
   box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
 }
 
+.compass::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 6px;
+  background: #0f0;
+  border-radius: 6px 6px 0 0;
+  box-shadow: 0 0 10px #0f0;
+}
+
 .compass-arrow {
   width: 4px;
-  height: 50px;
+  height: 50%;
   background: #0f0;
   position: absolute;
   left: 50%;
-  bottom: 50%;
-  transform: translate(-50%, -50%) rotate(var(--bearing, 0deg));
+  top: 0;
   transform-origin: bottom center;
   box-shadow: 0 0 10px #0f0;
 }

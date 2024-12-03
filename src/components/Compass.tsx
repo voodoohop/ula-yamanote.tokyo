@@ -27,7 +27,7 @@ export function Compass({ direction, hasCompass, heading }: CompassProps) {
       <div className="compass">
         <div
           className="compass-arrow"
-          style={{ transform: `rotate(${heading}deg)` }}
+          style={{ transform: `translateX(-50%) rotate(${heading}deg)` }}
         />
       </div>
       <div className="direction">
