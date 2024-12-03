@@ -24,9 +24,7 @@ export function Train() {
       <div className="train">
         {[...Array(3)].map((_, i) => (
           <div key={i} className="carriage">
-            <div className="window">
-              <YouTubeBackground videoId="5gfY-EMa1Oc" />
-            </div>
+            <YouTubeBackground videoId="5gfY-EMa1Oc" />
             {i < 2 && <div className="connector" />}
           </div>
         ))}
