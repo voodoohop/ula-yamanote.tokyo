@@ -5,6 +5,7 @@ import { calculateBearing, checkCompassSupport } from '../utils/compass';
 import { getBeepInterval, playBeep } from '../utils/audio';
 import { stationCoordinates, japaneseStations } from '../data/stations';
 import { SystemAlert } from './SystemAlert';
+import { Compass } from './Compass';
 import '../styles/StationInfo.css';
 
 interface Props {
@@ -143,37 +144,7 @@ export function StationInfo({ isGpsActive }: Props) {
             <span className="glitch" data-text={`${stationData.distance}m`}>{stationData.distance}m</span>
           </div>
 
-          {stationData.hasCompass ? (
-            <>
-              <div className="compass">
-                <div className="compass-arrow" />
-              </div>
-              <div className="direction">
-                <span className="glitch" data-text={stationData.direction}>{stationData.direction}</span>
-              </div>
-              <div className="find-party-alert">
-                <span className="glitch" data-text="コンパスに従ってパーティーを見つけよう">
-                  コンパスに従ってパーティーを見つけよう
-                </span>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="direction">
-                <span className="glitch" data-text="コンパスが利用できません">コンパスが利用できません</span>
-              </div>
-              <div className="direction">
-                <span className="glitch" data-text={`${stationData.direction}へ進んでください`}>
-                  {stationData.direction}へ進んでください
-                </span>
-              </div>
-              <div className="find-party-alert">
-                <span className="glitch" data-text="MSTRYPOT パーティーを見つけよう">
-                  MSTRYPOT パーティーを見つけよう
-                </span>
-              </div>
-            </>
-          )}
+          <Compass direction={stationData.direction} hasCompass={stationData.hasCompass} />
           
           <div className={`status ${stationData.distance > 100 ? 'out-of-range' : 'in-range'}`}>
             <span className="glitch" data-text={stationData.distance > 100 ? '駅の範囲外です' : '駅の範囲内です'}>
