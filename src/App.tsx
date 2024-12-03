@@ -55,11 +55,18 @@ function App() {
 
   return (
     <div className="app">
-      <div 
-        className="station-name" 
-        data-romaji={japaneseStations[currentStationIndex][1]}
-      >
-        {japaneseStations[currentStationIndex][0]}
+      <div className="station-header">
+        <div className="header-video">
+          <iframe
+            width="100%"
+            height="100%"
+            src={`https://www.youtube.com/embed/anPV_7yrekE?autoplay=1&mute=1&controls=0&loop=1&playlist=anPV_7yrekE&start=${Math.floor(Math.random() * 100)}`}
+            title="Header Video"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          ></iframe>
+        </div>
       </div>
       <StationInfo isGpsActive={isGpsActive} />
       <button 

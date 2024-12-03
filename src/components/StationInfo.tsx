@@ -107,14 +107,7 @@ export function StationInfo({ isGpsActive }: Props) {
           <div className="highlight">ウラ YAMANOTE</div>
           <div className="launch-info">
             ローンチング アット<br />
-            <a 
-              href="https://www.instagram.com/traffic.tokyo/?hl=en"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="traffic-link"
-            >
-              TRAFFIC TOKYO
-            </a><br />
+            裏 Roppongi<br />
             六本木<br />
             12月7日 / DEC 7<br />
             2024
@@ -134,20 +127,28 @@ export function StationInfo({ isGpsActive }: Props) {
         <div className="proximity-info">
           <div className="closest-station-label">最寄り駅 / NEAREST STATION</div>
           <div className="station-name-display">
-            {stationData.japaneseName}
-            <div className="romaji">{stationData.name}</div>
+            {stationData.japaneseName} ({stationData.name})
           </div>
-          <div className="distance">{stationData.distance}m</div>
-          {stationData.hasCompass && (
-            <div className="compass">
-              <div className="compass-arrow" />
-            </div>
+          <div>{stationData.distance}m</div>
+          {stationData.hasCompass ? (
+            <>
+              <div className="compass">
+                <div className="compass-arrow" />
+              </div>
+              <div>{stationData.direction}</div>
+              <div className="find-party-alert">コンパスに従ってパーティーを見つけよう</div>
+            </>
+          ) : (
+            <>
+              <div>コンパスが利用できません</div>
+              <div>{stationData.direction}へ進んでください</div>
+              <div className="find-party-alert">コンパスに従ってパーティーを見つけよう</div>
+            </>
           )}
-          <div className="direction">Head {stationData.direction}</div>
           <div className={`status ${stationData.distance > 100 ? 'out-of-range' : 'in-range'}`}>
             {stationData.distance > 100 
-              ? '駅の範囲外です / Not within station range' 
-              : '駅の範囲内です / Within station range'}
+              ? '駅の範囲外です' 
+              : '駅の範囲内です'}
           </div>
         </div>
       </div>
