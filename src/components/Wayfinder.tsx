@@ -48,10 +48,8 @@ export function Wayfinder({ direction }: WayfinderProps) {
     );
   }
 
-  // The bearing (direction) is clockwise from north
-  // The heading is also clockwise from north
-  // To get the relative angle, we need heading - direction
-  let wayfinderRelativeAngle = ((heading || 0) - direction + 360) % 360;
+  // Correct the relative angle calculation to point towards the station
+  let wayfinderRelativeAngle = ((direction - (heading || 0)) + 360) % 360;
   // Ensure we always use the smallest angle (no more than 180 degrees)
   if (wayfinderRelativeAngle > 180) {
     wayfinderRelativeAngle -= 360;
