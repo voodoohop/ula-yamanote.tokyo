@@ -87,7 +87,7 @@ function App() {
         className={`play-button ${isPlaying ? 'playing' : ''}`}
         onClick={handleAudioControl}
       >
-        山手線 SOUND
+        発車 START
       </button>
       <Track />
       <Train />

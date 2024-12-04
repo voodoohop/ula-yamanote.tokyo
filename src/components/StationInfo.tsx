@@ -1,11 +1,11 @@
 import React from 'react';
 import { useEffect, useState, useCallback } from 'react';
 import { calculateDistance, getDirection } from '../utils/location';
-import { calculateBearing, checkCompassSupport } from '../utils/compass';
+import { calculateBearing, checkWayfinderSupport } from '../utils/wayfinder';
 import { getBeepInterval, playBeep } from '../utils/audio';
 import { stationCoordinates, japaneseStations } from '../data/stations';
 import { SystemAlert } from './SystemAlert';
-import { Compass } from './Compass';
+import { Wayfinder } from './Wayfinder';
 import '../styles/StationInfo.css';
 
 interface Props {
@@ -17,12 +17,13 @@ interface StationData {
   japaneseName: string;
   distance: number;
   direction: string;
-  hasCompass: boolean;
+  hasWayfinder: boolean;
+  bearing: number;
 }
 
 export function StationInfo({ isGpsActive }: Props) {
   const [stationData, setStationData] = useState<StationData | null>(null);
-  const [hasCompass, setHasCompass] = useState(false);
+  const [hasWayfinder, setHasWayfinder] = useState(false);
   const [beepIntervalId, setBeepIntervalId] = useState<number>();
   const [glitchText, setGlitchText] = useState('');
   const [glitchClass, setGlitchClass] = useState('');
@@ -82,7 +83,8 @@ export function StationInfo({ isGpsActive }: Props) {
       japaneseName,
       distance: distanceInMeters,
       direction,
-      hasCompass
+      hasWayfinder,
+      bearing
     });
 
     if (beepIntervalId) {
@@ -90,7 +92,7 @@ export function StationInfo({ isGpsActive }: Props) {
     }
     const newIntervalId = window.setInterval(playBeep, getBeepInterval(distanceInMeters));
     setBeepIntervalId(newIntervalId);
-  }, [hasCompass, beepIntervalId]);
+  }, [hasWayfinder, beepIntervalId]);
 
   useEffect(() => {
     if (!isGpsActive) {
@@ -98,7 +100,7 @@ export function StationInfo({ isGpsActive }: Props) {
       return;
     }
 
-    checkCompassSupport().then(setHasCompass);
+    checkWayfinderSupport().then(setHasWayfinder);
     const watchId = navigator.geolocation.watchPosition(updateInfo);
 
     return () => {
@@ -144,7 +146,9 @@ export function StationInfo({ isGpsActive }: Props) {
             <span className="glitch" data-text={`${stationData.distance}m`}>{stationData.distance}m</span>
           </div>
 
-          <Compass direction={stationData.direction} hasCompass={stationData.hasCompass} />
+          {stationData && (
+            <Wayfinder direction={stationData.bearing} hasWayfinder={stationData.hasWayfinder} />
+          )}
           
           <div className={`status ${stationData.distance > 100 ? 'out-of-range' : 'in-range'}`}>
             <span className="glitch" data-text={stationData.distance > 100 ? '駅の範囲外です' : '駅の範囲内です'}>

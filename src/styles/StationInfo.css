@@ -53,55 +53,32 @@
   text-shadow: 0 0 20px #0f0;
 }
 
-.compass {
-  width: 100px;
-  height: 100px;
+.wayfinder {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.wayfinder svg {
+  display: block;
   margin: 20px auto;
-  border: 2px solid #0f0;
-  border-radius: 50%;
-  position: relative;
-  box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
 }
 
-.compass::after {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 12px;
-  height: 6px;
-  background: #0f0;
-  border-radius: 6px 6px 0 0;
-  box-shadow: 0 0 10px #0f0;
-}
-
-.compass-arrow {
-  width: 4px;
-  height: 50%;
-  background: #0f0;
-  position: absolute;
-  left: 50%;
-  top: 0;
-  transform-origin: bottom center;
-  box-shadow: 0 0 10px #0f0;
-}
-
-.compass-arrow::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -8px;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-bottom: 16px solid #0f0;
-  transform: rotate(180deg);
+.direction {
+  font-size: 1.5em;
+  margin: 15px 0;
+  color: #4AFF4A;
 }
 
 .find-party-alert {
-  margin: 20px 0;
-  font-size: 1.2em;
-  text-shadow: 0 0 10px #0f0;
+  margin: 10px;
+  padding: 10px;
+  font-family: 'DotGothic16', monospace;
+  color: #0f0;
+}
+
+.find-party-alert .glitch {
+  color: #0f0;
+  text-shadow: 0 0 5px #0f0;
 }
 
 .status {
@@ -124,22 +101,18 @@
 }
 
 .maintenance-alert {
-  margin: 15px auto;
-  padding: 8px 12px;
-  border: 1px dashed #f00;
-  color: #f00;
-  font-size: 0.9em;
-  text-shadow: 0 0 8px #f00;
-  max-width: 80%;
-  text-align: center;
-  word-wrap: break-word;
-  display: inline-block;
+  margin: 10px;
+  padding: 10px;
+  font-family: 'DotGothic16', monospace;
+  color: #ff0;
 }
 
 .maintenance-alert .glitch {
   display: inline-block;
   max-width: 100%;
   white-space: normal;
+  color: #ff0;
+  text-shadow: 0 0 5px #ff0;
 }
 
 .maintenance-alert .glitch::before {
@@ -148,6 +121,20 @@
 
 .maintenance-alert .glitch::after {
   text-shadow: 2px 0 #f00;
+}
+
+.alert {
+  margin: 10px;
+  padding: 10px;
+  font-family: 'DotGothic16', monospace;
+}
+
+.alert.maintenance {
+  color: #ff0;
+}
+
+.alert.party {
+  color: #0f0;
 }
 
 /* Glitch Effects */
