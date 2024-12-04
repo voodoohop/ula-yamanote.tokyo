@@ -48,7 +48,7 @@ export function Wayfinder({ direction }: WayfinderProps) {
     );
   }
 
-  const wayfinderRelativeAngle = ((heading || 0) + direction) % 360;
+  const wayfinderRelativeAngle = ((direction - (heading || 0)) + 360) % 360;
 
   // Convert bearing to cardinal direction
   const getCardinalDirection = (angle: number) => {

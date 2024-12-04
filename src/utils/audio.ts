@@ -24,14 +24,14 @@ export function initializeAudio() {
 }
 
 export function getBeepInterval(distance: number): number {
-  const baseInterval = 2000;
-  const maxInterval = 5000;
-  const minInterval = 200;
-  
-  if (distance > 1000) { // distance is in meters
-    return maxInterval;
+  const baseInterval = 1000;  
+  const maxInterval = 2000;   
+  const minInterval = 100;    
+    
+  if (distance > 500) { 
+    return Infinity;    
   } else {
-    return Math.max(minInterval, Math.min(maxInterval, baseInterval * (distance / 1000)));
+    return Math.max(minInterval, Math.min(maxInterval, baseInterval * (distance / 500))); 
   }
 }
 
