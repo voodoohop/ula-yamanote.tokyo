@@ -36,11 +36,12 @@ export const japaneseStations = [
 
 export const stationCoordinates = [
   {
-    name: 'Roppongi',
-    lat: 35.6624129,
-    lng: 139.7263978
+    name: '裏 Roppongi',
+    lat: 35.6624375,
+    lng: 139.7264375
   }
   /*
+  , )
   {
     name: 'Osaki',
     lat: 35.6197, 
