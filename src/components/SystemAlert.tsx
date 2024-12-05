@@ -44,6 +44,21 @@ export function SystemAlert({ showStartButton, onStart }: SystemAlertProps) {
         <div className="date glitch" data-text="12月7日 / DEC 7">12月7日 / DEC 7</div>
         <div className="year glitch" data-text="2024">2024</div>
       </div>
+      <div className="artwork-container">
+        <a 
+          href="https://www.instagram.com/microworld_________/" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="instagram-credit"
+        >
+          <img 
+            src={bonnapotTraffic} 
+            alt="Bonnapot Traffic Animation" 
+            className="traffic-animation"
+          />
+          <span className="instagram-handle">@microworld_________</span>
+        </a>
+      </div>
       {showStartButton && (
         <button 
           className="start-button" 
@@ -55,19 +70,6 @@ export function SystemAlert({ showStartButton, onStart }: SystemAlertProps) {
           <div className="button-glitch-effect"></div>
         </button>
       )}
-      <a 
-        href="https://www.instagram.com/microworld_________/" 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="instagram-credit"
-      >
-        <img 
-          src={bonnapotTraffic} 
-          alt="Bonnapot Traffic Animation" 
-          className="traffic-animation"
-        />
-        <span className="instagram-handle">@microworld_________</span>
-      </a>
       <div className="noise"></div>
       <div className="crt-effect"></div>
     </div>

@@ -53,7 +53,8 @@
 }
 
 .system-alert .start-button {
-  margin-top: 30px;
+  display: block;
+  margin: 20px auto 0;
   padding: 15px 40px;
   font-size: 24px;
   background: transparent;
@@ -64,7 +65,6 @@
   transition: all 0.3s ease;
   text-shadow: 0 0 10px #0f0;
   box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
-  position: relative;
   overflow: hidden;
 }
 
@@ -77,6 +77,38 @@
 .system-alert .start-button .divider {
   margin: 0 10px;
   opacity: 0.7;
+}
+
+.artwork-container {
+  margin: 20px 0;
+  position: relative;
+}
+
+.instagram-credit {
+  display: block;
+  text-decoration: none;
+}
+
+.instagram-handle {
+  display: block;
+  color: #0f0;
+  padding: 4px 8px;
+  margin-top: 10px;
+  font-size: 0.9em;
+  opacity: 0.8;
+  transition: opacity 0.3s;
+  text-align: center;
+}
+
+.instagram-credit:hover .instagram-handle {
+  opacity: 1;
+}
+
+.traffic-animation {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
 }
 
 .glitch {
@@ -148,27 +180,15 @@
   animation: crt-effect 10ms infinite;
 }
 
-.instagram-credit {
-  position: relative;
-  display: inline-block;
-  text-decoration: none;
-}
-
-.instagram-handle {
+.button-glitch-effect {
   position: absolute;
-  bottom: 10px;
-  right: 10px;
-  background: rgba(0, 0, 0, 0.7);
-  color: #0f0;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.8em;
-  opacity: 0.8;
-  transition: opacity 0.3s;
-}
-
-.instagram-credit:hover .instagram-handle {
-  opacity: 1;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, transparent 65%, rgba(0, 255, 0, 0.3) 70%, transparent 75%);
+  background-size: 200% 200%;
+  animation: button-glitch 1s infinite linear;
 }
 
 @keyframes glitch-anim {
@@ -276,17 +296,6 @@
   0% { opacity: 0.7; }
   50% { opacity: 0.9; }
   100% { opacity: 0.7; }
-}
-
-.button-glitch-effect {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(45deg, transparent 65%, rgba(0, 255, 0, 0.3) 70%, transparent 75%);
-  background-size: 200% 200%;
-  animation: button-glitch 1s infinite linear;
 }
 
 @keyframes button-glitch {
