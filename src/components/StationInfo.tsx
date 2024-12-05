@@ -1,11 +1,9 @@
 import React from 'react';
 import { useEffect, useState, useCallback } from 'react';
 import { calculateDistance, getDirection } from '../utils/location';
-import { calculateBearing, checkWayfinderSupport } from '../utils/wayfinder';
 import { getBeepInterval, playBeep } from '../utils/audio';
 import { stationCoordinates, japaneseStations } from '../data/stations';
 import { SystemAlert } from './SystemAlert';
-import { Wayfinder } from './Wayfinder';
 import '../styles/StationInfo.css';
 
 interface Props {
@@ -17,13 +15,10 @@ interface StationData {
   japaneseName: string;
   distance: number;
   direction: string;
-  hasWayfinder: boolean;
-  bearing: number;
 }
 
 export function StationInfo({ isGpsActive }: Props) {
   const [stationData, setStationData] = useState<StationData | null>(null);
-  const [hasWayfinder, setHasWayfinder] = useState(false);
   const [beepIntervalId, setBeepIntervalId] = useState<number>();
   const [glitchText, setGlitchText] = useState('');
   const [glitchClass, setGlitchClass] = useState('');
@@ -43,56 +38,41 @@ export function StationInfo({ isGpsActive }: Props) {
     return () => clearInterval(glitchInterval);
   }, []);
 
-  const updateInfo = useCallback((position: Position) => {
+  const updateInfo = useCallback((position: GeolocationPosition) => {
     const userLat = position.coords.latitude;
     const userLng = position.coords.longitude;
     
     let closestStation = null;
     let minDistance = Infinity;
     
-    stationCoordinates.forEach(station => {
+    stationCoordinates.forEach((station, index) => {
       const distance = calculateDistance(userLat, userLng, station.lat, station.lng);
       if (distance < minDistance) {
         minDistance = distance;
-        closestStation = station;
+        closestStation = index;
       }
     });
 
-    if (!closestStation) return;
-
-    const bearing = calculateBearing(
-      { lat: userLat, lng: userLng },
-      { lat: closestStation.lat, lng: closestStation.lng }
-    );
+    if (closestStation === null) return;
 
     const direction = getDirection(
       { lat: userLat, lng: userLng },
-      { lat: closestStation.lat, lng: closestStation.lng }
+      { lat: stationCoordinates[closestStation].lat, lng: stationCoordinates[closestStation].lng }
     );
-
-    document.body.style.setProperty('--bearing', bearing.toString());
-
-    const stationInfo = japaneseStations.find(station => 
-      station[1].toLowerCase() === closestStation!.name.toLowerCase()
-    );
-    const japaneseName = stationInfo ? stationInfo[0] : closestStation.name;
-    const distanceInMeters = Math.round(minDistance);
 
     setStationData({
-      name: closestStation.name,
-      japaneseName,
-      distance: distanceInMeters,
+      name: stationCoordinates[closestStation].name,
+      japaneseName: japaneseStations[closestStation][0],
+      distance: Math.round(minDistance),
       direction,
-      hasWayfinder,
-      bearing
     });
 
     if (beepIntervalId) {
       clearInterval(beepIntervalId);
     }
-    const newIntervalId = window.setInterval(playBeep, getBeepInterval(distanceInMeters));
+    const newIntervalId = window.setInterval(playBeep, getBeepInterval(Math.round(minDistance)));
     setBeepIntervalId(newIntervalId);
-  }, [hasWayfinder, beepIntervalId]);
+  }, [beepIntervalId]);
 
   useEffect(() => {
     if (!isGpsActive) {
@@ -100,8 +80,17 @@ export function StationInfo({ isGpsActive }: Props) {
       return;
     }
 
-    checkWayfinderSupport().then(setHasWayfinder);
-    const watchId = navigator.geolocation.watchPosition(updateInfo);
+    // First get the initial position
+    navigator.geolocation.getCurrentPosition(updateInfo, (error) => {
+      console.error('GPS Error:', error);
+      setStationData(null);
+    });
+
+    // Then watch for position updates
+    const watchId = navigator.geolocation.watchPosition(updateInfo, (error) => {
+      console.error('GPS Watch Error:', error);
+      setStationData(null);
+    });
 
     return () => {
       navigator.geolocation.clearWatch(watchId);
@@ -146,9 +135,11 @@ export function StationInfo({ isGpsActive }: Props) {
             <span className="glitch" data-text={`${stationData.distance}m`}>{stationData.distance}m</span>
           </div>
 
-          {stationData && (
-            <Wayfinder direction={stationData.bearing} hasWayfinder={stationData.hasWayfinder} />
-          )}
+          <div className="direction">
+            <span className="glitch" data-text={`${stationData.direction}へ進んでください`}>
+              {stationData.direction}へ進んでください
+            </span>
+          </div>
           
           <div className={`status ${stationData.distance > 100 ? 'out-of-range' : 'in-range'}`}>
             <span className="glitch" data-text={stationData.distance > 100 ? '駅の範囲外です' : '駅の範囲内です'}>

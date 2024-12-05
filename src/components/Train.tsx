@@ -18,7 +18,7 @@ export function Train() {
     };
 
     const handleResize = () => {
-      setNumCars(window.innerWidth < 768 ? 2 : 3);
+      setNumCars(window.innerWidth < 768 ? 1 : 2);
     };
 
     handleResize(); // Initial check

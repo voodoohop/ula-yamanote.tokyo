@@ -33,16 +33,21 @@ function App() {
     
     if (!isPlaying) {
       if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(() => {
-          setIsGpsActive(true);
-          audio.play();
-          setIsPlaying(true);
-        }, (error) => {
-          console.error("GPS Error:", error);
-          audio.play();
-          setIsPlaying(true);
-        });
+        navigator.geolocation.getCurrentPosition(
+          () => {
+            setIsGpsActive(true);
+            audio.play();
+            setIsPlaying(true);
+          },
+          () => {
+            setIsGpsActive(false);
+            audio.play();
+            setIsPlaying(true);
+          },
+          { enableHighAccuracy: true }
+        );
       } else {
+        setIsGpsActive(false);
         audio.play();
         setIsPlaying(true);
       }
