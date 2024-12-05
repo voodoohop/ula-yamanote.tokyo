@@ -15,6 +15,7 @@ function App() {
   const [isGpsActive, setIsGpsActive] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isStarted, setIsStarted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -29,39 +30,43 @@ function App() {
   };
 
   const handleAudioControl = () => {
-    const audio = new Audio('https://github.com/pollinations/ula-yamanote.tokyo/raw/refs/heads/main/convenience%20store%20-%20shabu%20shabu%20-%20please%20be%20careful.mp3');
-    
-    if (!isPlaying) {
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          () => {
-            setIsGpsActive(true);
-            audio.play();
-            setIsPlaying(true);
-          },
-          () => {
-            setIsGpsActive(false);
-            audio.play();
-            setIsPlaying(true);
-          },
-          { enableHighAccuracy: true }
-        );
-      } else {
-        setIsGpsActive(false);
-        audio.play();
-        setIsPlaying(true);
-      }
-
-      audio.addEventListener('ended', () => {
-        audio.currentTime = 0;
-        audio.play();
-      });
-    } else {
-      audio.pause();
-      audio.currentTime = 0;
+    if (isPlaying) {
       setIsPlaying(false);
       setIsGpsActive(false);
+      // Add any cleanup logic here if needed
+      return;
     }
+
+    setIsLoading(true);
+    const audio = new Audio('https://github.com/pollinations/ula-yamanote.tokyo/raw/refs/heads/main/convenience%20store%20-%20shabu%20shabu%20-%20please%20be%20careful.mp3');
+    
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        () => {
+          setIsGpsActive(true);
+          audio.play();
+          setIsPlaying(true);
+          setIsLoading(false);
+        },
+        () => {
+          setIsGpsActive(false);
+          audio.play();
+          setIsPlaying(true);
+          setIsLoading(false);
+        },
+        { enableHighAccuracy: true }
+      );
+    } else {
+      setIsGpsActive(false);
+      audio.play();
+      setIsPlaying(true);
+      setIsLoading(false);
+    }
+
+    audio.addEventListener('ended', () => {
+      audio.currentTime = 0;
+      audio.play();
+    });
   };
 
   if (!isStarted) {
@@ -87,13 +92,12 @@ function App() {
           ></iframe>
         </div>
       </div>
-      <StationInfo isGpsActive={isGpsActive} />
-      <button 
-        className={`play-button ${isPlaying ? 'playing' : ''}`}
-        onClick={handleAudioControl}
-      >
-        発車 START
-      </button>
+      <StationInfo 
+        isGpsActive={isGpsActive} 
+        onAudioControl={handleAudioControl}
+        isPlaying={isPlaying}
+        isLoading={isLoading}
+      />
       <Track />
       <Train />
       <EventInfo />

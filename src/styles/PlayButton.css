@@ -1,33 +1,72 @@
 .play-button {
   display: block;
   margin: 20px auto;
-  background: #000;
-  border: 2px solid #0f0;
-  color: #0f0;
   padding: 15px 30px;
-  font-family: 'DotGothic16', monospace;
   font-size: 18px;
+  border: 2px solid #0f0;
+  background: #000;
+  color: #0f0;
   cursor: pointer;
-  box-shadow: 0 0 20px #0f0;
   transition: all 0.3s ease;
+  font-family: 'DotGothic16', monospace;
+  box-shadow: 0 0 20px #0f0;
+  text-transform: uppercase;
 }
 
-.play-button:hover {
+.play-button:hover:not(:disabled) {
   background: #0f0;
   color: #000;
+  box-shadow: 0 0 40px #0f0;
 }
 
-.play-button::before {
-  content: '▶';
-  margin-right: 10px;
+.play-button.loading {
+  border-color: #666;
+  color: #666;
+  box-shadow: 0 0 20px #666;
+  cursor: wait;
+  animation: pulse 1.5s infinite;
 }
 
 .play-button.playing {
+  border-color: #f00;
+  color: #f00;
+  box-shadow: 0 0 20px #f00;
   animation: button-pulse 2s infinite;
 }
 
+.play-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.play-button::before {
+  content: "⏵";
+  margin-right: 10px;
+}
+
+.play-button.playing::before {
+  content: "⏹";
+}
+
+.play-button.loading::before {
+  content: "↻";
+  display: inline-block;
+  animation: spin 1s infinite linear;
+}
+
 @keyframes button-pulse {
-  0% { box-shadow: 0 0 20px #0f0; }
-  50% { box-shadow: 0 0 40px #0f0; }
-  100% { box-shadow: 0 0 20px #0f0; }
+  0% { box-shadow: 0 0 20px #f00; }
+  50% { box-shadow: 0 0 40px #f00; }
+  100% { box-shadow: 0 0 20px #f00; }
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }

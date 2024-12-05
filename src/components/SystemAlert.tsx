@@ -55,11 +55,19 @@ export function SystemAlert({ showStartButton, onStart }: SystemAlertProps) {
           <div className="button-glitch-effect"></div>
         </button>
       )}
-      <img 
-        src={bonnapotTraffic} 
-        alt="Bonnapot Traffic Animation" 
-        className="traffic-animation"
-      />
+      <a 
+        href="https://www.instagram.com/microworld_________/" 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className="instagram-credit"
+      >
+        <img 
+          src={bonnapotTraffic} 
+          alt="Bonnapot Traffic Animation" 
+          className="traffic-animation"
+        />
+        <span className="instagram-handle">@microworld_________</span>
+      </a>
       <div className="noise"></div>
       <div className="crt-effect"></div>
     </div>
