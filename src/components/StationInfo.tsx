@@ -8,9 +8,6 @@ import '../styles/StationInfo.css';
 
 interface Props {
   isGpsActive: boolean;
-  onAudioControl: () => void;
-  isPlaying: boolean;
-  isLoading: boolean;
 }
 
 interface StationData {
@@ -20,7 +17,7 @@ interface StationData {
   direction: string;
 }
 
-export function StationInfo({ isGpsActive, onAudioControl, isPlaying, isLoading }: Props) {
+export function StationInfo({ isGpsActive }: Props) {
   const [stationData, setStationData] = useState<StationData | null>(null);
   const [beepIntervalId, setBeepIntervalId] = useState<number>();
   const [glitchText, setGlitchText] = useState('');
@@ -150,13 +147,7 @@ export function StationInfo({ isGpsActive, onAudioControl, isPlaying, isLoading 
             </span>
           </div>
           
-          <button 
-            onClick={onAudioControl}
-            className={`play-button ${isLoading ? 'loading' : ''} ${isPlaying ? 'playing' : ''}`}
-            disabled={isLoading}
-          >
-            {isLoading ? '読み込み中...' : isPlaying ? '停止 STOP' : '発車 START'}
-          </button>
+
         </div>
       </div>
     </div>

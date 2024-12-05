@@ -94,14 +94,18 @@ function App() {
       </div>
       <StationInfo 
         isGpsActive={isGpsActive} 
-        onAudioControl={handleAudioControl}
-        isPlaying={isPlaying}
-        isLoading={isLoading}
       />
+      <button 
+            onClick={handleAudioControl}
+            className={`play-button ${isLoading ? 'loading' : ''} ${isPlaying ? 'playing' : ''}`}
+            disabled={isLoading}
+          >
+            {isLoading ? '読み込み中...' : isPlaying ? '停止 STOP' : '発車 START'}
+        </button>
       <Track />
       <Train />
       <EventInfo />
-      <Effects isGpsActive={isGpsActive} />
+      <Effects />
       <style>{`
         .app {
           width: 100%;
