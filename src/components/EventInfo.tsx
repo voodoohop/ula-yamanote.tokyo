@@ -123,7 +123,7 @@ export function EventInfo() {
           <iframe
             width="100%"
             height="315"
-            src="https://www.youtube.com/embed/AEsRs1DUSOs"
+            src="https://www.youtube.com/embed/R0-0EsLw2A8"
             title="Saeko Killy Video"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
