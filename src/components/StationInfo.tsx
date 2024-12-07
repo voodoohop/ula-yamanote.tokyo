@@ -1,7 +1,6 @@
 import React from 'react';
 import { useEffect, useState, useCallback } from 'react';
 import { calculateDistance, getDirection } from '../utils/location';
-import { getBeepInterval, playBeep } from '../utils/audio';
 import { stationCoordinates, japaneseStations } from '../data/stations';
 import { SystemAlert } from './SystemAlert';
 import '../styles/StationInfo.css';
@@ -19,7 +18,6 @@ interface StationData {
 
 export function StationInfo({ isGpsActive }: Props) {
   const [stationData, setStationData] = useState<StationData | null>(null);
-  const [beepIntervalId, setBeepIntervalId] = useState<number>();
   const [glitchText, setGlitchText] = useState('');
   const [glitchClass, setGlitchClass] = useState('');
 
@@ -66,13 +64,7 @@ export function StationInfo({ isGpsActive }: Props) {
       distance: Math.round(minDistance),
       direction,
     });
-
-    if (beepIntervalId) {
-      clearInterval(beepIntervalId);
-    }
-    const newIntervalId = window.setInterval(playBeep, getBeepInterval(Math.round(minDistance)));
-    setBeepIntervalId(newIntervalId);
-  }, [beepIntervalId]);
+  }, []);
 
   useEffect(() => {
     if (!isGpsActive) {
@@ -94,11 +86,8 @@ export function StationInfo({ isGpsActive }: Props) {
 
     return () => {
       navigator.geolocation.clearWatch(watchId);
-      if (beepIntervalId) {
-        clearInterval(beepIntervalId);
-      }
     };
-  }, [isGpsActive, updateInfo, beepIntervalId]);
+  }, [isGpsActive, updateInfo]);
 
   if (!isGpsActive) {
     return (
