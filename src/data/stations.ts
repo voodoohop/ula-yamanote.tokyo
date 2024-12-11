@@ -1,6 +1,5 @@
 export const japaneseStations = [
-  ['六本木', 'Roppongi']
-  /*
+  ['六本木', 'Roppongi'],
   ['大崎', 'Osaki'],
   ['五反田', 'Gotanda'],
   ['目黒', 'Meguro'],
@@ -31,17 +30,9 @@ export const japaneseStations = [
   ['田町', 'Tamachi'],
   ['高輪ゲートウェイ', 'Takanawa Gateway'],
   ['品川', 'Shinagawa']
-  */
 ] as const;
 
 export const stationCoordinates = [
-  {
-    name: '裏 Roppongi',
-    lat: 35.6624375,
-    lng: 139.7264375
-  }
-  /*
-  , )
   {
     name: 'Osaki',
     lat: 35.6197, 
@@ -192,5 +183,4 @@ export const stationCoordinates = [
     lat: 35.6285, 
     lng: 139.7388
   }
-  */
 ] as const;
