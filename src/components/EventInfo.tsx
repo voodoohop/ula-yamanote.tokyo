@@ -4,12 +4,12 @@ import '../styles/EventInfo.css';
 const eventContent = {
   en: {
     title: 'ウラ YAMANOTE',
-    description: `A hidden frequency resonates through Tokyo's central loop. As you traverse the steel arteries of the city, phantom soundscapes emerge from the electromagnetic field. Each station holds a key to unlock the parallel audio dimension of the Yamanote Line. Your physical presence activates the invisible sound gates.`,
+    description: `A parallel dimension resonates beneath Tokyo's central loop. The electromagnetic field pulses with phantom frequencies, creating an invisible audio landscape that mirrors the physical world. As you traverse the steel arteries of the city, each station becomes a gateway to this hidden realm. Your presence activates these sonic portals, revealing the unseen rhythms of the Yamanote Line.`,
     contact: 'contact@ula-yamanote.tokyo'
   },
   jp: {
     title: 'ウラ YAMANOTE',
-    description: `東京の中心ループに隠された周波数が共鳴する。都市の鋼鉄の動脈を進むと、電磁場からゴーストサウンドスケープが浮かび上がる。各駅には山手線のパラレルオーディオディメンションを解き放つ鍵が隠されている。あなたの存在が不可視の音響ゲートを起動させる。`,
+    description: `東京の中心ループの下に、もう一つの次元が共鳴している。電磁場は幽霊周波数で脈動し、物理世界を映し出す不可視のオーディオ風景を生み出す。都市の鋼鉄の動脈を進むと、各駅がこの隠された領域への入り口となる。あなたの存在がこれらの音響ポータルを活性化させ、山手線の見えないリズムを明らかにする。`,
     contact: 'contact@ula-yamanote.tokyo'
   }
 };
@@ -49,17 +49,6 @@ export function EventInfo() {
         >
           {language === 'en' ? '日本語' : 'English'}
         </button>
-      </div>
-      <div className="video-container">
-        <iframe
-          width="100%"
-          height="315"
-          src="https://www.youtube.com/embed/mFqBSWvapDU"
-          title="AI Video"
-          frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        ></iframe>
       </div>
     </div>
   );
