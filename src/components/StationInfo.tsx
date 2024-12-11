@@ -15,6 +15,7 @@ interface StationData {
   japaneseName: string;
   distance: number;
   direction: string;
+  speed: number | null;
 }
 
 export function StationInfo({ isGpsActive }: Props) {
@@ -65,6 +66,7 @@ export function StationInfo({ isGpsActive }: Props) {
       japaneseName: japaneseStations[closestStation][0],
       distance: Math.round(minDistance),
       direction,
+      speed: position.coords.speed !== null ? Math.round(position.coords.speed * 3.6) : null, // Convert m/s to km/h
     });
   }, []);
 
@@ -147,6 +149,14 @@ export function StationInfo({ isGpsActive }: Props) {
             </span>
           </div>
           
+          {stationData.speed !== null && (
+            <div className="speed">
+              <span className="glitch" data-text={`現在速度: ${stationData.speed} km/h`}>
+                現在速度: {stationData.speed} km/h
+              </span>
+            </div>
+          )}
+
           <div className={`status ${stationData.distance > 100 ? 'out-of-range' : 'in-range'}`}>
             <span className="glitch" data-text={stationData.distance > 100 ? '駅の範囲外です' : '駅の範囲内です'}>
               {stationData.distance > 100 ? '駅の範囲外です' : '駅の範囲内です'}
