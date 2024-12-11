@@ -33,24 +33,20 @@ function App() {
     if (isPlaying) {
       setIsPlaying(false);
       setIsGpsActive(false);
-      // Add any cleanup logic here if needed
       return;
     }
 
     setIsLoading(true);
-    const audio = new Audio('https://github.com/pollinations/ula-yamanote.tokyo/raw/refs/heads/main/convenience%20store%20-%20shabu%20shabu%20-%20please%20be%20careful.mp3');
     
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         () => {
           setIsGpsActive(true);
-          audio.play();
           setIsPlaying(true);
           setIsLoading(false);
         },
         () => {
           setIsGpsActive(false);
-          audio.play();
           setIsPlaying(true);
           setIsLoading(false);
         },
@@ -58,15 +54,9 @@ function App() {
       );
     } else {
       setIsGpsActive(false);
-      audio.play();
       setIsPlaying(true);
       setIsLoading(false);
     }
-
-    audio.addEventListener('ended', () => {
-      audio.currentTime = 0;
-      audio.play();
-    });
   };
 
   if (!isStarted) {

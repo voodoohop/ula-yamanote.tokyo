@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { calculateDistance, getDirection } from '../utils/location';
 import { stationCoordinates, japaneseStations } from '../data/stations';
 import { SystemAlert } from './SystemAlert';
+import { stationPlayer, initializeAudio } from '../utils/audio';
 import '../styles/StationInfo.css';
 
 interface Props {
@@ -20,6 +21,7 @@ export function StationInfo({ isGpsActive }: Props) {
   const [stationData, setStationData] = useState<StationData | null>(null);
   const [glitchText, setGlitchText] = useState('');
   const [glitchClass, setGlitchClass] = useState('');
+  const [currentPlayingStation, setCurrentPlayingStation] = useState<string | null>(null);
 
   useEffect(() => {
     const glitchInterval = setInterval(() => {
@@ -65,6 +67,21 @@ export function StationInfo({ isGpsActive }: Props) {
       direction,
     });
   }, []);
+
+  useEffect(() => {
+    initializeAudio();
+  }, []);
+
+  useEffect(() => {
+    if (stationData && stationData.name !== currentPlayingStation) {
+      const playStationTrack = async () => {
+        await stationPlayer.loadTrack(stationData.name);
+        await stationPlayer.play();
+        setCurrentPlayingStation(stationData.name);
+      };
+      playStationTrack();
+    }
+  }, [stationData?.name, currentPlayingStation]);
 
   useEffect(() => {
     if (!isGpsActive) {

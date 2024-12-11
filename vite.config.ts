@@ -17,4 +17,5 @@ export default defineConfig({
       },
     },
   },
+  assetsInclude: ['**/*.mp3'], // Add MP3 files to asset handling
 });
