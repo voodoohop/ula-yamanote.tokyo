@@ -3,20 +3,20 @@
   margin: 20px auto;
   padding: 15px 30px;
   font-size: 18px;
-  border: 2px solid #0f0;
-  background: #000;
-  color: #0f0;
+  border: 2px solid #2e7d32; /* Softer green border */
+  background: #fff; /* Lighter background */
+  color: #2e7d32; /* Softer green text */
   cursor: pointer;
   transition: all 0.3s ease;
   font-family: 'DotGothic16', monospace;
-  box-shadow: 0 0 20px #0f0;
+  box-shadow: 0 0 20px #2e7d32;
   text-transform: uppercase;
 }
 
 .play-button:hover:not(:disabled) {
-  background: #0f0;
-  color: #000;
-  box-shadow: 0 0 40px #0f0;
+  background: #2e7d32;
+  color: #fff;
+  box-shadow: 0 0 40px #2e7d32;
 }
 
 .play-button.loading {

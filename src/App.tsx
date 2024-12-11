@@ -71,7 +71,7 @@ function App() {
 
   if (!isStarted) {
     return (
-      <div className="app initial-screen">
+      <div className="app" style={{ background: '#e0f7e9' }}>
         <SystemAlert showStartButton onStart={handleStart} />
       </div>
     );

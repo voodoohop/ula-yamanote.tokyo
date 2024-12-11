@@ -13,8 +13,8 @@
   flex: 1;
   text-align: center;
   font-size: 24px;
-  color: #0f0;
-  text-shadow: 0 0 10px #0f0;
+  color: #2e7d32; /* Softer green text */
+  text-shadow: 0 0 10px #2e7d32;
   animation: blink 1s infinite;
 }
 
@@ -28,11 +28,11 @@
 .header-video {
   width: 300px;
   height: 169px; /* 16:9 aspect ratio */
-  border: 2px solid #0f0;
-  box-shadow: 0 0 10px #0f0;
+  border: 2px solid #2e7d32;
+  box-shadow: 0 0 10px #2e7d32;
   overflow: hidden;
   border-radius: 4px;
-  background: rgba(0, 0, 0, 0.85);
+  background: #e0f7e9; /* Softer background */
 }
 
 .header-video iframe {
@@ -47,8 +47,8 @@
   margin: 0 auto 20px;
   text-align: center;
   font-size: 16px;
-  color: #0f0;
-  background: rgba(0, 0, 0, 0.85);
+  color: #333; /* Adjust font color for better readability on the lighter background */
+  background: rgba(240, 255, 240, 0.95); /* Change to a lighter background color */
   border: 2px solid #0f0;
   box-shadow: 0 0 20px #0f0;
   padding: 20px;

@@ -37,12 +37,10 @@ export function SystemAlert({ showStartButton, onStart }: SystemAlertProps) {
         <span className="glitch" data-text="ウラ YAMANOTE">ウラ YAMANOTE</span>
       </div>
       <div className="launch-info">
-        <div className="glitch" data-text="MSTRYPOT">MSTRYPOT</div>
-        <div className="glitch" data-text="ローンチング アット">ローンチング アット</div>
-        <div className="location glitch" data-text="裏 Roppongi">裏 Roppongi</div>
-        <div className="location-jp glitch" data-text="六本木">六本木</div>
-        <div className="date glitch" data-text="12月7日 / DEC 7">12月7日 / DEC 7</div>
-        <div className="year glitch" data-text="2024">2024</div>
+        <div className="glitch" data-text="サイバーゾーン">サイバーゾーン</div>
+        <div className="glitch" data-text="アクティベート">アクティベート</div>
+        <div className="location glitch" data-text="山手線">山手線</div>
+        <div className="location-jp glitch" data-text="LOOP 01">LOOP 01</div>
       </div>
       <div className="artwork-container">
         <a 

@@ -14,9 +14,9 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100%;
-  color: #0f0;
+  color: #222; /* Darker text for better readability */
   font-family: 'DotGothic16', monospace;
-  background: #000;
+  background: #e0f7e9; /* Softer green background */
   position: relative;
 }
 
@@ -27,7 +27,7 @@ body::before {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: #000;
+  background: #e0f7e9; /* Match the new background color */
   z-index: -2;
   pointer-events: none;
 }

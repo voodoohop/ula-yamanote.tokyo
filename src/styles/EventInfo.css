@@ -3,9 +3,9 @@
   max-width: 600px;
   margin: 20px auto;
   padding: 20px;
-  background: rgba(0, 0, 0, 0.85);
-  border: 2px solid #0f0;
-  box-shadow: 0 0 20px #0f0;
+  background: rgba(224, 247, 233, 0.85);
+  border: 2px solid #2e7d32;
+  box-shadow: 0 0 20px #2e7d32;
   font-family: 'DotGothic16', monospace;
   position: relative;
   animation: glitch 0.3s infinite;
@@ -20,9 +20,9 @@
   position: absolute;
   top: -15px;
   right: 20px;
-  background: #000;
-  color: #0f0;
-  border: 2px solid #0f0;
+  background: #2e7d32;
+  color: #fff;
+  border: 2px solid #2e7d32;
   padding: 5px 15px;
   font-family: 'DotGothic16', monospace;
   cursor: pointer;
@@ -30,19 +30,19 @@
 }
 
 .language-toggle:hover {
-  background: #0f0;
-  color: #000;
+  background: #2e7d32;
+  color: #fff;
 }
 
 .event-content {
-  color: #0f0;
+  color: #222;
   line-height: 1.6;
 }
 
 .event-content h2 {
   font-size: 1.5em;
   margin-bottom: 10px;
-  text-shadow: 0 0 10px #0f0;
+  text-shadow: 0 0 10px #2e7d32;
 }
 
 .date {
@@ -108,7 +108,7 @@
 .footer {
   margin-top: 20px;
   padding-top: 20px;
-  border-top: 1px solid #0f0;
+  border-top: 1px solid #2e7d32;
 }
 
 .door, .contact {
@@ -118,13 +118,13 @@
 .instagram-link {
   display: inline-block;
   margin-top: 10px;
-  color: #0f0;
+  color: #2e7d32;
   text-decoration: none;
-  border-bottom: 1px solid #0f0;
+  border-bottom: 1px solid #2e7d32;
 }
 
 .instagram-link:hover {
-  text-shadow: 0 0 10px #0f0;
+  text-shadow: 0 0 10px #2e7d32;
   animation: linkGlitch 0.3s infinite;
 }
 
