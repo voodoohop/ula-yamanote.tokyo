@@ -4,6 +4,7 @@ import { stationPlayer, initializeAudio } from '../utils/audio';
 import { wakeLockManager } from '../utils/wakeLock';
 import { useGPSTracking } from '../hooks/useGPSTracking';
 import { useSpeedRate } from '../hooks/useSpeedRate';
+import stationDisplayImage from '../assets/glitchstationdisplaysmaller.webp';
 import '../styles/StationInfo.css';
 
 interface Props {
@@ -94,7 +95,7 @@ export function StationInfo({ isGpsActive }: Props) {
         <div className="current-station">
           <div className="proximity-info">
             <div className="closest-station-label">
-              <img src="/src/assets/glitchstationdisplaysmaller.webp" alt="Station Display" className="station-display-image" />
+              <img src={stationDisplayImage} alt="Station Display" className="station-display-image" />
             </div>
           </div>
         </div>
@@ -111,8 +112,7 @@ export function StationInfo({ isGpsActive }: Props) {
       <div className="current-station">
         <div className="proximity-info">
           <div className="closest-station-label">
-            <img src="/src/assets/glitchstationdisplaysmaller.webp" alt="Station Display" className="station-display-image" />
-            <span className="glitch-text">{glitchText}</span>
+            <img src={stationDisplayImage} alt="Station Display" className="station-display-image" />
           </div>
           
           <div className="station-name-display">
