@@ -40,12 +40,24 @@ function App() {
           setIsPlaying(true);
           setIsLoading(false);
         },
-        () => {
-          setIsGpsActive(false);
-          setIsPlaying(true);
+        (error) => {
+          console.error('Geolocation error:', error);
+          // If permission denied, don't start playing
+          if (error.code === 1) { // PERMISSION_DENIED
+            setIsGpsActive(false);
+            setIsPlaying(false);
+          } else {
+            // For other errors, continue without GPS
+            setIsGpsActive(false);
+            setIsPlaying(true);
+          }
           setIsLoading(false);
         },
-        { enableHighAccuracy: true }
+        { 
+          enableHighAccuracy: true,
+          maximumAge: 0,
+          timeout: 5000
+        }
       );
     } else {
       setIsGpsActive(false);
