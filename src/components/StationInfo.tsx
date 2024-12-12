@@ -4,6 +4,7 @@ import { calculateDistance, getDirection } from '../utils/location';
 import { stationCoordinates, japaneseStations } from '../data/stations';
 import { SystemAlert } from './SystemAlert';
 import { stationPlayer, initializeAudio } from '../utils/audio';
+import { wakeLockManager } from '../utils/wakeLock';
 import '../styles/StationInfo.css';
 
 interface Props {
@@ -81,6 +82,7 @@ export function StationInfo({ isGpsActive }: Props) {
           console.log(`Transitioning from ${currentPlayingStation} to ${stationData.name}`);
           await stationPlayer.loadTrack(stationData.name);
           await stationPlayer.play();
+          await wakeLockManager.acquire(); // Acquire wake lock when playing
           setCurrentPlayingStation(stationData.name);
           console.log(`Successfully transitioned to ${stationData.name}`);
         } catch (error) {
@@ -90,6 +92,18 @@ export function StationInfo({ isGpsActive }: Props) {
       playStationTrack();
     }
   }, [stationData?.name, currentPlayingStation]);
+
+  useEffect(() => {
+    return () => {
+      wakeLockManager.release();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isGpsActive) {
+      wakeLockManager.release();
+    }
+  }, [isGpsActive]);
 
   useEffect(() => {
     if (!isGpsActive) {
