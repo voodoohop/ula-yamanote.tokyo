@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { stationCoordinates } from '../data/stations';
+import { stations } from '../data/stations';
 import '../styles/YamanoteLine.css';
 
 interface Props {
@@ -53,8 +53,8 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
 
     // Get coordinates for Yamanote line stations in correct order
     const yamanoteCoordinates = yamanoteStations
-      .map(name => stationCoordinates.find(s => s.name === name))
-      .filter((station): station is typeof stationCoordinates[number] => station !== undefined);
+      .map(name => stations.find(s => s.name === name))
+      .filter((station): station is typeof stations[number] => station !== undefined);
 
     console.log('Yamanote coordinates:', yamanoteCoordinates);
     console.log('User position:', userPosition);

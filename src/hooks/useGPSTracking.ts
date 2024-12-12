@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { calculateDistance, getDirection } from '../utils/location';
-import { stationCoordinates, japaneseStations } from '../data/stations';
+import { stations } from '../data/stations';
 
 export interface StationData {
   name: string;
@@ -22,24 +22,24 @@ export function useGPSTracking(isGpsActive: boolean) {
     let closestStation = null;
     let minDistance = Infinity;
     
-    stationCoordinates.forEach((station, index) => {
+    stations.forEach((station) => {
       const distance = calculateDistance(userLat, userLng, station.lat, station.lng);
       if (distance < minDistance) {
         minDistance = distance;
-        closestStation = index;
+        closestStation = station;
       }
     });
 
-    if (closestStation === null) return;
+    if (!closestStation) return;
 
     const direction = getDirection(
       { lat: userLat, lng: userLng },
-      { lat: stationCoordinates[closestStation].lat, lng: stationCoordinates[closestStation].lng }
+      { lat: closestStation.lat, lng: closestStation.lng }
     );
 
     setStationData({
-      name: stationCoordinates[closestStation].name,
-      japaneseName: japaneseStations[closestStation][0],
+      name: closestStation.name,
+      japaneseName: closestStation.japaneseName,
       distance: Math.round(minDistance),
       direction,
       speed: position.coords.speed !== null ? Math.round(position.coords.speed * 3.6) : null, // Convert m/s to km/h

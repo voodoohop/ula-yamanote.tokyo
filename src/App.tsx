@@ -4,7 +4,7 @@ import { Effects, Track } from './components/Effects';
 import { StationInfo } from './components/StationInfo';
 import { EventInfo } from './components/EventInfo';
 import { Info } from './components/Info';
-import { japaneseStations } from './data/stations';
+import { stations } from './data/stations';
 import { fullscreenManager } from './utils/fullscreen';
 import { stationPlayer } from './utils/audio';
 import './styles/global.css';
