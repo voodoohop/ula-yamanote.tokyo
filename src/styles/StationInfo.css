@@ -341,3 +341,40 @@
   50% { transform: translateX(2px); }
   75% { transform: translateX(-1px); }
 }
+
+:fullscreen .station-info {
+  max-width: 100%;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+:fullscreen .current-station {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2vh;
+}
+
+:fullscreen .station-display-image {
+  max-height: 30vh;
+  width: auto;
+}
+
+:fullscreen .station-name-display {
+  font-size: 5vh;
+}
+
+:fullscreen .distance,
+:fullscreen .direction,
+:fullscreen .speed,
+:fullscreen .status {
+  font-size: 3vh;
+}

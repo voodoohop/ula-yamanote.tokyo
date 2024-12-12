@@ -41,7 +41,7 @@ export function StationInfo({ isGpsActive }: Props) {
           console.log(`Transitioning from ${currentPlayingStation} to ${stationData.name}`);
           await stationPlayer.loadTrack(stationData.name);
           await stationPlayer.play();
-          await wakeLockManager.acquire(); // Acquire wake lock when playing
+          await wakeLockManager.acquire();
           setCurrentPlayingStation(stationData.name);
           console.log(`Successfully transitioned to ${stationData.name}`);
         } catch (error) {
@@ -51,6 +51,18 @@ export function StationInfo({ isGpsActive }: Props) {
       playStationTrack();
     }
   }, [stationData?.name, currentPlayingStation]);
+
+  useEffect(() => {
+    return () => {
+      wakeLockManager.release();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isGpsActive) {
+      wakeLockManager.release();
+    }
+  }, [isGpsActive]);
 
   useEffect(() => {
     const glitchInterval = setInterval(() => {
@@ -66,18 +78,6 @@ export function StationInfo({ isGpsActive }: Props) {
 
     return () => clearInterval(glitchInterval);
   }, []);
-
-  useEffect(() => {
-    return () => {
-      wakeLockManager.release();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!isGpsActive) {
-      wakeLockManager.release();
-    }
-  }, [isGpsActive]);
 
   // Only show system alert if GPS is not active AND we have no previous station data
   if (!isGpsActive && !stationData) {

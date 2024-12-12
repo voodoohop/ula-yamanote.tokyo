@@ -1,11 +1,12 @@
-import React from 'react';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { Effects, Track } from './components/Effects';
 import { StationInfo } from './components/StationInfo';
 import { EventInfo } from './components/EventInfo';
 import { Info } from './components/Info';
 import { japaneseStations } from './data/stations';
+import { fullscreenManager } from './utils/fullscreen';
+import { stationPlayer } from './utils/audio';
 import './styles/global.css';
 import './styles/PlayButton.css';
 import './styles/StationName.css';
@@ -15,6 +16,7 @@ function App() {
   const [isGpsActive, setIsGpsActive] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -24,14 +26,31 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   const handleAudioControl = async () => {
     if (isPlaying) {
+      stationPlayer.stop();
       setIsPlaying(false);
       setIsGpsActive(false);
       return;
     }
 
     setIsLoading(true);
+    
+    try {
+      // Try to request fullscreen first
+      await fullscreenManager.requestFullscreen();
+    } catch (error) {
+      console.log('Fullscreen request was denied or failed');
+    }
     
     if ("geolocation" in navigator) {
       try {
@@ -89,16 +108,18 @@ function App() {
   };
 
   const MainContent = () => (
-    <div className="app">
-      <Link to="/info" className="info-link">情報 Info</Link>
+    <div className={`app ${isFullscreen ? 'fullscreen' : ''}`}>
+      {!isFullscreen && <Link to="/info" className="info-link">情報 Info</Link>}
       <StationInfo isGpsActive={isGpsActive} />
-      <button 
-        onClick={handleAudioControl}
-        className={`play-button ${isLoading ? 'loading' : ''} ${isPlaying ? 'playing' : ''}`}
-        disabled={isLoading}
-      >
-        {isLoading ? '読み込み中...' : isPlaying ? '停止 STOP' : '発車 START'}
-      </button>
+      {!isFullscreen && (
+        <button 
+          onClick={handleAudioControl}
+          className={`play-button ${isLoading ? 'loading' : ''} ${isPlaying ? 'playing' : ''}`}
+          disabled={isLoading}
+        >
+          {isLoading ? '読み込み中...' : isPlaying ? '停止 STOP' : '発車 START'}
+        </button>
+      )}
       <Track />
       <EventInfo />
       <Effects />
