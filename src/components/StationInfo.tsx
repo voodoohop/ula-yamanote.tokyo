@@ -1,5 +1,4 @@
-import React from 'react';
-import { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { calculateDistance, getDirection } from '../utils/location';
 import { stationCoordinates, japaneseStations } from '../data/stations';
 import { SystemAlert } from './SystemAlert';
@@ -24,6 +23,7 @@ export function StationInfo({ isGpsActive }: Props) {
   const [glitchText, setGlitchText] = useState('');
   const [glitchClass, setGlitchClass] = useState('');
   const [currentPlayingStation, setCurrentPlayingStation] = useState<string | null>(null);
+  const [smoothedRate, setSmoothedRate] = useState(1.0);
 
   useEffect(() => {
     const glitchInterval = setInterval(() => {
@@ -95,6 +95,38 @@ export function StationInfo({ isGpsActive }: Props) {
 
   useEffect(() => {
     if (!stationData) {
+      // If no station data, gradually return to normal rate
+      const targetRate = 1.0;
+      const smoothing = 0.95; // High smoothing for slower changes
+      setSmoothedRate(prev => smoothing * prev + (1 - smoothing) * targetRate);
+      stationPlayer.setPlaybackRate(smoothedRate);
+      return;
+    }
+
+    if (stationData.speed !== null) {
+      // Calculate target playback rate based on speed
+      // 0 km/h -> 0.5 rate
+      // 5 km/h or more -> 1.0 rate
+      // Linear interpolation between these points
+      const minSpeed = 0;
+      const maxSpeed = 5;
+      const minRate = 0.5;
+      const maxRate = 1.0;
+      
+      const speed = stationData.speed;
+      const targetRate = speed >= maxSpeed ? maxRate :
+                  speed <= minSpeed ? minRate :
+                  minRate + (maxRate - minRate) * (speed / maxSpeed);
+      
+      // Apply smoothing
+      const smoothing = 0.95; // High smoothing for slower changes
+      setSmoothedRate(prev => smoothing * prev + (1 - smoothing) * targetRate);
+      stationPlayer.setPlaybackRate(smoothedRate);
+    }
+  }, [stationData?.speed, smoothedRate]);
+
+  useEffect(() => {
+    if (!stationData) {
       // If no station data, play at normal rate
       stationPlayer.setPlaybackRate(1.0);
       return;
@@ -120,6 +152,29 @@ export function StationInfo({ isGpsActive }: Props) {
       // If no speed information, play at normal rate
       stationPlayer.setPlaybackRate(1.0);
     }
+  }, [stationData?.speed]);
+
+  useEffect(() => {
+    const smoothingInterval = setInterval(() => {
+      if (stationData?.speed !== null) {
+        const minSpeed = 0;
+        const maxSpeed = 5;
+        const minRate = 0.5;
+        const maxRate = 1.0;
+        
+        const speed = stationData.speed;
+        const targetRate = speed >= maxSpeed ? maxRate :
+                    speed <= minSpeed ? minRate :
+                    minRate + (maxRate - minRate) * (speed / maxSpeed);
+        
+        // Apply smoothing
+        const smoothing = 0.95;
+        setSmoothedRate(prev => smoothing * prev + (1 - smoothing) * targetRate);
+        stationPlayer.setPlaybackRate(smoothedRate);
+      }
+    }, 100); // Update every 100ms
+
+    return () => clearInterval(smoothingInterval);
   }, [stationData?.speed]);
 
   useEffect(() => {
