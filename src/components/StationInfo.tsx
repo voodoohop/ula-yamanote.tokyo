@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { calculateDistance, getDirection } from '../utils/location';
-import { stationCoordinates, japaneseStations } from '../data/stations';
+import React, { useEffect, useState } from 'react';
 import { SystemAlert } from './SystemAlert';
 import { stationPlayer, initializeAudio } from '../utils/audio';
 import { wakeLockManager } from '../utils/wakeLock';
+import { useGPSTracking } from '../hooks/useGPSTracking';
+import { useSpeedRate } from '../hooks/useSpeedRate';
 import '../styles/StationInfo.css';
 
 interface Props {
@@ -19,57 +19,12 @@ interface StationData {
 }
 
 export function StationInfo({ isGpsActive }: Props) {
-  const [stationData, setStationData] = useState<StationData | null>(null);
   const [glitchText, setGlitchText] = useState('');
   const [glitchClass, setGlitchClass] = useState('');
   const [currentPlayingStation, setCurrentPlayingStation] = useState<string | null>(null);
-  const [smoothedRate, setSmoothedRate] = useState(1.0);
-
-  useEffect(() => {
-    const glitchInterval = setInterval(() => {
-      if (Math.random() > 0.8) {
-        setGlitchText(Math.random().toString(36).substring(2, 4));
-        setGlitchClass('glitch-active');
-        setTimeout(() => setGlitchClass(''), 100);
-      } else {
-        setGlitchText('');
-        setGlitchClass('');
-      }
-    }, 200);
-
-    return () => clearInterval(glitchInterval);
-  }, []);
-
-  const updateInfo = useCallback((position: GeolocationPosition) => {
-    const userLat = position.coords.latitude;
-    const userLng = position.coords.longitude;
-    
-    let closestStation = null;
-    let minDistance = Infinity;
-    
-    stationCoordinates.forEach((station, index) => {
-      const distance = calculateDistance(userLat, userLng, station.lat, station.lng);
-      if (distance < minDistance) {
-        minDistance = distance;
-        closestStation = index;
-      }
-    });
-
-    if (closestStation === null) return;
-
-    const direction = getDirection(
-      { lat: userLat, lng: userLng },
-      { lat: stationCoordinates[closestStation].lat, lng: stationCoordinates[closestStation].lng }
-    );
-
-    setStationData({
-      name: stationCoordinates[closestStation].name,
-      japaneseName: japaneseStations[closestStation][0],
-      distance: Math.round(minDistance),
-      direction,
-      speed: position.coords.speed !== null ? Math.round(position.coords.speed * 3.6) : null, // Convert m/s to km/h
-    });
-  }, []);
+  
+  const stationData = useGPSTracking(isGpsActive);
+  useSpeedRate(stationData?.speed ?? null);
 
   useEffect(() => {
     initializeAudio();
@@ -94,32 +49,19 @@ export function StationInfo({ isGpsActive }: Props) {
   }, [stationData?.name, currentPlayingStation]);
 
   useEffect(() => {
-    const updateRate = () => {
-      let targetRate = 1.0;
-      
-      if (stationData?.speed !== null) {
-        const speed = stationData.speed;
-        if (speed <= 0) {
-          targetRate = 0.5;  // Minimum rate
-        } else if (speed >= 5) {
-          targetRate = 1.0;  // Maximum rate
-        } else {
-          targetRate = 0.5 + (speed / 5) * 0.5;  // Linear interpolation
-        }
+    const glitchInterval = setInterval(() => {
+      if (Math.random() > 0.8) {
+        setGlitchText(Math.random().toString(36).substring(2, 4));
+        setGlitchClass('glitch-active');
+        setTimeout(() => setGlitchClass(''), 100);
+      } else {
+        setGlitchText('');
+        setGlitchClass('');
       }
+    }, 200);
 
-      const smoothing = 0.99;  // Less aggressive smoothing (1% of new value each update)
-      const newRate = smoothing * smoothedRate + (1 - smoothing) * targetRate;
-      
-      if (Math.abs(newRate - smoothedRate) > 0.0001) {
-        setSmoothedRate(newRate);
-        stationPlayer.setPlaybackRate(newRate);
-      }
-    };
-
-    const interval = setInterval(updateRate, 50);  // Update every 50ms
-    return () => clearInterval(interval);
-  }, [stationData?.speed, smoothedRate]);
+    return () => clearInterval(glitchInterval);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -132,31 +74,6 @@ export function StationInfo({ isGpsActive }: Props) {
       wakeLockManager.release();
     }
   }, [isGpsActive]);
-
-  useEffect(() => {
-    if (!isGpsActive) {
-      // Don't clear station data when GPS is deactivated
-      // This keeps the last known state visible
-      return;
-    }
-
-    const watchId = navigator.geolocation.watchPosition(
-      updateInfo,
-      (error) => {
-        // Just log the error but keep the last known state
-        console.error('GPS Error:', error);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 0
-      }
-    );
-
-    return () => {
-      navigator.geolocation.clearWatch(watchId);
-    };
-  }, [isGpsActive, updateInfo]);
 
   // Only show system alert if GPS is not active AND we have no previous station data
   if (!isGpsActive && !stationData) {
