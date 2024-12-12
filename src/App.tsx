@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { Effects, Track } from './components/Effects';
 import { StationInfo } from './components/StationInfo';
@@ -19,23 +19,15 @@ function App() {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentStationIndex((prev) => (prev + 1) % japaneseStations.length);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      setIsFullscreen(document.fullscreenElement !== null);
     };
     
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  const handleAudioControl = async () => {
+  const handleAudioControl = useCallback(async () => {
     if (isPlaying) {
       stationPlayer.stop();
       setIsPlaying(false);
@@ -46,7 +38,6 @@ function App() {
     setIsLoading(true);
     
     try {
-      // Try to request fullscreen first
       await fullscreenManager.requestFullscreen();
     } catch (error) {
       console.log('Fullscreen request was denied or failed');
@@ -54,26 +45,24 @@ function App() {
     
     if ("geolocation" in navigator) {
       try {
-        // Check for existing permissions first
         const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
         
         if (permissionStatus.state === 'denied') {
-          console.error('Geolocation permission is denied. Please enable it in your browser settings.');
+          console.error('Geolocation permission is denied');
           setIsGpsActive(false);
           setIsPlaying(false);
           setIsLoading(false);
           return;
         }
 
-        // Request location with a longer timeout
         await new Promise((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(
             resolve,
             reject,
             { 
               enableHighAccuracy: true,
-              maximumAge: 0,
-              timeout: 10000 // Increased timeout to 10 seconds
+              maximumAge: 2000, // Cache location for 2 seconds
+              timeout: 10000
             }
           );
         });
@@ -82,18 +71,10 @@ function App() {
         setIsPlaying(true);
       } catch (error: any) {
         console.error('Geolocation error:', error);
-        // If permission denied or timeout
-        if (error.code === 1) { // PERMISSION_DENIED
-          console.error('Location permission denied by user or system');
+        if (error.code === 1) {
           setIsGpsActive(false);
           setIsPlaying(false);
-        } else if (error.code === 3) { // TIMEOUT
-          console.error('Location request timed out');
-          setIsGpsActive(false);
-          setIsPlaying(true);
         } else {
-          // For other errors, continue without GPS
-          console.error('Other location error:', error.message);
           setIsGpsActive(false);
           setIsPlaying(true);
         }
@@ -105,7 +86,7 @@ function App() {
       setIsPlaying(true);
       setIsLoading(false);
     }
-  };
+  }, [isPlaying]);
 
   const MainContent = () => (
     <div className={`app ${isFullscreen ? 'fullscreen' : ''}`}>
