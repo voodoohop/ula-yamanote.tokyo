@@ -94,7 +94,13 @@ export function StationInfo({ isGpsActive }: Props) {
   }, [stationData?.name, currentPlayingStation]);
 
   useEffect(() => {
-    if (stationData?.speed !== null) {
+    if (!stationData) {
+      // If no station data, play at normal rate
+      stationPlayer.setPlaybackRate(1.0);
+      return;
+    }
+
+    if (stationData.speed !== null) {
       // Calculate playback rate based on speed
       // 0 km/h -> 0.5 rate
       // 5 km/h or more -> 1.0 rate
