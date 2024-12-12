@@ -94,6 +94,29 @@ export function StationInfo({ isGpsActive }: Props) {
   }, [stationData?.name, currentPlayingStation]);
 
   useEffect(() => {
+    if (stationData?.speed !== null) {
+      // Calculate playback rate based on speed
+      // 0 km/h -> 0.5 rate
+      // 5 km/h or more -> 1.0 rate
+      // Linear interpolation between these points
+      const minSpeed = 0;
+      const maxSpeed = 5;
+      const minRate = 0.5;
+      const maxRate = 1.0;
+      
+      const speed = stationData.speed;
+      const rate = speed >= maxSpeed ? maxRate :
+                  speed <= minSpeed ? minRate :
+                  minRate + (maxRate - minRate) * (speed / maxSpeed);
+      
+      stationPlayer.setPlaybackRate(rate);
+    } else {
+      // If no speed information, play at normal rate
+      stationPlayer.setPlaybackRate(1.0);
+    }
+  }, [stationData?.speed]);
+
+  useEffect(() => {
     return () => {
       wakeLockManager.release();
     };
