@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { SystemAlert } from './SystemAlert';
+import { YamanoteLine } from './YamanoteLine';
 import { stationPlayer, initializeAudio } from '../utils/audio';
 import { wakeLockManager } from '../utils/wakeLock';
 import { useGPSTracking } from '../hooks/useGPSTracking';
@@ -17,6 +18,8 @@ interface StationData {
   distance: number;
   direction: string;
   speed: number | null;
+  userLat: number;
+  userLng: number;
 }
 
 export function StationInfo({ isGpsActive }: Props) {
@@ -147,6 +150,12 @@ export function StationInfo({ isGpsActive }: Props) {
           
 
         </div>
+        <YamanoteLine 
+          width={280} 
+          height={280} 
+          userPosition={stationData ? { lat: stationData.userLat, lng: stationData.userLng } : undefined}
+          closestStation={stationData?.name}
+        />
       </div>
     </div>
   );

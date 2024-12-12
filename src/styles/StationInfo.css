@@ -11,6 +11,10 @@
   font-family: 'DotGothic16', monospace;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
 }
 
 .station-info::before {

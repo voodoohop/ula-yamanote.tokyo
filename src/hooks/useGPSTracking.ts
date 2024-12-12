@@ -8,6 +8,8 @@ export interface StationData {
   distance: number;
   direction: string;
   speed: number | null;
+  userLat: number;
+  userLng: number;
 }
 
 export function useGPSTracking(isGpsActive: boolean) {
@@ -41,6 +43,8 @@ export function useGPSTracking(isGpsActive: boolean) {
       distance: Math.round(minDistance),
       direction,
       speed: position.coords.speed !== null ? Math.round(position.coords.speed * 3.6) : null, // Convert m/s to km/h
+      userLat,
+      userLng
     });
   }, []);
 
