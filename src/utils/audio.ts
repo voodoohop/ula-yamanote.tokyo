@@ -26,7 +26,7 @@ class StationPlayer {
       return;
     }
 
-    const trackPath = `/assets/tracks/low/${trackFilename.replace('.mp3', '-low.mp3')}`;
+    const trackPath = `/assets/tracks/low/${trackFilename}-low.mp3`;
     console.log(`Loading track from path: ${trackPath}`);
     
     this.isLoading = true;
@@ -66,17 +66,28 @@ class StationPlayer {
   }
 
   async play() {
-    if (!this.player) return;
+    if (!this.player) {
+      console.error('No audio player available');
+      return;
+    }
     
     try {
+      console.log('Audio context state:', Tone.context.state);
+      console.log('Attempting to start Tone.js...');
       await Tone.start();
-      console.log('Starting playback...');
+      console.log('Tone.js started successfully');
+      
       if (this.player.state !== 'started') {
-        this.player.start();
-        console.log('Playback started');
+        console.log('Player state before start:', this.player.state);
+        await this.player.start();
+        console.log('Player state after start:', this.player.state);
+      } else {
+        console.log('Player already started');
       }
     } catch (error) {
       console.error('Error playing track:', error);
+      console.error('Audio context state:', Tone.context.state);
+      console.error('Player state:', this.player?.state);
     }
   }
 

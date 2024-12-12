@@ -27,7 +27,7 @@ export const japaneseStations = [
   ['新橋', 'Shimbashi'],
   ['有楽町', 'Yurakucho'],
   ['東京', 'Tokyo'],
-  ['日暮里', 'Nippori']
+  // ['日暮里', 'Nippori']
 ] as const;
 
 export const stationCoordinates = [
@@ -77,11 +77,11 @@ export const stationCoordinates = [
     lat: 35.7324,
     lng: 139.7687
   },
-  {
-    name: 'Nippori',
-    lat: 35.7281,
-    lng: 139.7707
-  },
+  // {
+  //   name: 'Nippori',
+  //   lat: 35.7281,
+  //   lng: 139.7707
+  // },
   {
     name: 'Tabata',
     lat: 35.7380,
@@ -181,33 +181,33 @@ export const stationCoordinates = [
 
 export const stationTrackMap: { [key: string]: string } = {
   // Yamanote Line station mappings
-  'Shimbashi': '01shimbashi.mp3',
-  'Yurakucho': '02yurakucho.mp3',
-  'Tokyo': '03tokyo.mp3',
-  'Kanda': '04kanda.mp3',
-  'Akihabara': '05akihabara.mp3',
-  'Okachimachi': '06okachimachi.mp3',
-  'Ueno': '07ueno.mp3',
-  'Uguisudani': '08uguisudani.mp3',
-  'Nishi-Nippori': '09nishinippori.mp3',
-  'Nippori': '10nippori.mp3',
-  'Tabata': '11tabata.mp3',
-  'Komagome': '12komagome.mp3',
-  'Sugamo': '13sugamo.mp3',
-  'Otsuka': '14otsuka.mp3',
-  'Ikebukuro': '15ikebukuro.mp3',
-  'Mejiro': '16mejiro.mp3',
-  'Takadanobaba': '17takadanobaba.mp3',
-  'Shin-Okubo': '18shinokubo.mp3',
-  'Shinjuku': '19shinjuku.mp3',
-  'Yoyogi': '20yoyogi.mp3',
-  'Harajuku': '21harajuku.mp3',
-  'Shibuya': '22shibuya.mp3',
-  'Ebisu': '23ebisu.mp3',
-  'Meguro': '24meguro.mp3',
-  'Gotanda': '25gotanda.mp3',
-  'Osaki': '26osaki.mp3',
-  'Shinagawa': '27shinagawa.mp3',
-  'Tamachi': '28tamachi.mp3',
-  'Hamamatsucho': '29hamamatsucho.mp3'
+  'Ebisu': '01ebisu',
+  'Shibuya': '02shibuya',
+  'Harajuku': '03harajuku',
+  'Yoyogi': '04yoyogi',
+  'Shinjuku': '05shinjuku',
+  'Shin-Okubo': '06shinokubo',
+  'Takadanobaba': '07takadanobaba',
+  'Mejiro': '08mejiro',
+  'Ikebukuro': '09ikebukuro',
+  'Otsuka': '10otsuka',
+  'Sugamo': '11sugamo',
+  'Komagome': '12komagome',
+  'Tabata': '13tabata',
+  'Nishi-Nippori': '14nishinippori',
+  // 'Nippori': '15nippori',
+  'Uguisudani': '16uguisudani',
+  'Ueno': '17ueno',
+  'Okachimachi': '18okachimachi',
+  'Akihabara': '19akihabara',
+  'Kanda': '20kanda',
+  'Tokyo': '21tokyo',
+  'Yurakucho': '22yurakucho',
+  'Shimbashi': '23shimbashi',
+  'Hamamatsucho': '24hamamatsucho',
+  'Tamachi': '25tamachi',
+  'Shinagawa': '26shinagawa',
+  'Osaki': '27osaki',
+  'Gotanda': '28gotanda',
+  'Meguro': '29meguro'
 };

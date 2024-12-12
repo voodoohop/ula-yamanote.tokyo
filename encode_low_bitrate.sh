@@ -14,6 +14,12 @@ for file in public/assets/tracks/*.mp3; do
     # Create the output filename with -low suffix
     output_file="public/assets/tracks/low/${filename%.*}-low.mp3"
     
+    # Skip if the low bitrate version already exists
+    if [ -f "$output_file" ]; then
+        echo "Skipping $filename (already encoded)"
+        continue
+    fi
+    
     echo "Converting $filename to low bitrate version..."
     
     # Convert using ffmpeg with VBR encoding, quality level 7 (around 96kbps VBR)
