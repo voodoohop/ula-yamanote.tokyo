@@ -77,9 +77,15 @@ export function StationInfo({ isGpsActive }: Props) {
   useEffect(() => {
     if (stationData && stationData.name !== currentPlayingStation) {
       const playStationTrack = async () => {
-        await stationPlayer.loadTrack(stationData.name);
-        await stationPlayer.play();
-        setCurrentPlayingStation(stationData.name);
+        try {
+          console.log(`Transitioning from ${currentPlayingStation} to ${stationData.name}`);
+          await stationPlayer.loadTrack(stationData.name);
+          await stationPlayer.play();
+          setCurrentPlayingStation(stationData.name);
+          console.log(`Successfully transitioned to ${stationData.name}`);
+        } catch (error) {
+          console.error('Error during station transition:', error);
+        }
       };
       playStationTrack();
     }

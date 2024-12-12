@@ -5,8 +5,20 @@ import { stationTrackMap } from '../data/stations';
 class StationPlayer {
   private player: Tone.Player | null = null;
   private currentTrack: string | null = null;
+  private isLoading: boolean = false;
+  private shouldPlay: boolean = false;
 
   async loadTrack(stationName: string) {
+    // Don't reload if we're already playing this track
+    if (this.currentTrack === stationName && this.player) {
+      return;
+    }
+
+    // Don't start another load if we're already loading
+    if (this.isLoading) {
+      return;
+    }
+
     console.log(`Attempting to load track for station: ${stationName}`);
     const trackFilename = stationTrackMap[stationName];
     if (!trackFilename) {
@@ -17,35 +29,51 @@ class StationPlayer {
     const trackPath = `/assets/tracks/${trackFilename}`;
     console.log(`Loading track from path: ${trackPath}`);
     
-    // Stop current track if playing
-    if (this.player) {
-      this.player.stop();
-      this.player.dispose();
-    }
-
+    this.isLoading = true;
+    this.shouldPlay = this.player !== null; // Remember if we should autoplay
+    
     try {
-      // Create new player
-      this.player = new Tone.Player({
+      // Create new player but don't dispose the old one yet
+      const newPlayer = new Tone.Player({
         url: trackPath,
         loop: true,
         autostart: false,
       }).toDestination();
 
-      this.currentTrack = stationName;
+      // Wait for the new player to load
       await Tone.loaded();
+
+      // Only after new player is loaded, stop and dispose the old one
+      if (this.player) {
+        this.player.stop();
+        this.player.dispose();
+      }
+
+      this.player = newPlayer;
+      this.currentTrack = stationName;
+      
+      // Start playing the new track if we should autoplay
+      if (this.shouldPlay) {
+        await this.play();
+      }
     } catch (error) {
       console.error(`Error loading track for ${stationName}:`, error);
       this.player = null;
       this.currentTrack = null;
+    } finally {
+      this.isLoading = false;
     }
   }
 
   async play() {
     if (!this.player) return;
+    
     try {
       await Tone.start();
+      console.log('Starting playback...');
       if (this.player.state !== 'started') {
         this.player.start();
+        console.log('Playback started');
       }
     } catch (error) {
       console.error('Error playing track:', error);
