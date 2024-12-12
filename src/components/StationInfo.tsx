@@ -140,17 +140,20 @@ export function StationInfo({ isGpsActive }: Props) {
       return;
     }
 
-    // First get the initial position
-    navigator.geolocation.getCurrentPosition(updateInfo, (error) => {
-      console.error('GPS Error:', error);
-      setStationData(null);
-    });
-
-    // Then watch for position updates
-    const watchId = navigator.geolocation.watchPosition(updateInfo, (error) => {
-      console.error('GPS Watch Error:', error);
-      setStationData(null);
-    });
+    // Watch for position updates
+    const watchId = navigator.geolocation.watchPosition(
+      updateInfo,
+      (error) => {
+        console.error('GPS Error:', error);
+        // Don't set stationData to null on every error
+        // Only log the error for debugging
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+      }
+    );
 
     return () => {
       navigator.geolocation.clearWatch(watchId);
@@ -166,7 +169,23 @@ export function StationInfo({ isGpsActive }: Props) {
   }
 
   if (!stationData) {
-    return <div className="station-info">Loading...</div>;
+    return (
+      <div className="station-info">
+        <div className="scanline"></div>
+        <div className="noise"></div>
+        <div className="crt-effect"></div>
+        <div className="current-station">
+          <div className="proximity-info">
+            <div className="closest-station-label">
+              <img src="/src/assets/glitchstationdisplaysmaller.webp" alt="Station Display" className="station-display-image" />
+            </div>
+            <div className="status">
+              <span className="glitch" data-text="位置情報を取得中...">位置情報を取得中...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
