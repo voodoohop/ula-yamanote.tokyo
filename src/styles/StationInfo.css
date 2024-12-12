@@ -208,18 +208,18 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
-  opacity: 0.1;
+  opacity: 0.05;
   z-index: 2;
-  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4wYPDiQFHd8EFQAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAANkSURBVGje7ZpLaFxVGMd/3zl3JpM0aWJtY2JbK9UQBYtVEaGKVtGiVtGNglZEBDe6dCEuxIULQRBBFy5cCFYUXIgbceHKhYq0RQQRWqpWqthKqW1jk5k7mTv3nO/z4dzQJOSkuTNJZiYz58Aw3Hvu/Z//+Z7nKaqgqhQtIvJyxbEXVPXMQgQi8jTwBPBYxbH3VfXUvw4iIqeBJ4HjwNaK4++p6jN1AyIiZ4EngIeAeyuO/wA8rqrfzgfkrHPuKPBQxbEfgUdV9ZtaQc4BjwD3A3dVHP8JOKaq52cL8gVwBDgI3FFx/GfgqKp+XQ3kPHAYOABsqzj+K3BEVS/MBPIlcAjYD2ytOP4bcFhVv6oGchE4COwD7qw4/jtwSFUvVgO5BBwA9gJbKo7/ARxU1UvVQH4A9gN7gM0Vx/8EDqjqD9VAfgL2AruBTRXHR4D9qvpTNZDLwD3ALmBjxfER4F5VvVwN5AqwC9gJbKg4/hewV1WvVAMZBXYAO4D1Fcd7gR2qOloNZAzYDmwH1lUcHwK2q+pYNZBxYBuwDVhbcXwY2Kaq49VA/ga2AFuBNRXHrwFbVPXvaiCTwGZgM7C64vg1YLOqTlYDuQ5sAjYBqyqOXwc2qer1aiATwEZgI7Cy4vgEsFFVJ6qBTAHrgfXAioo5k8B6VZ2qBpICXcA6oKPi+BTQpappNZAM6AQ6K+ZkQKeqZtVAHNAOtFfMcUC7qrpqIAFQAtpEJPwPSImIBECQzwkr5oQiEuZzgnxOac4gIUSBSDhPkHlLNBdXC0UkqjVrNXO1GhYkbEaQsBlBwmYECZsRJGxGkLAZQcJmBAmb0YhGq6HNbkN7rYZ2W1W1oQ+1hn601YePtqo29EGsoR/XVbWhL0QNfclS1Ya+uDf0bVJVG/qGr6oNfeup2tC386ra0A8oqtrQj4yq2tCPsSLS0I/WRaShH/CLSEPvYkSkoXeTItLQ+3IRaej9TxFp6B6JiDR0n0lEGrpXJyIN3S8VkYbu+YpIQ+8bi0hD7+CLSEPvqYtIQ3cHRKShuyQi0tCdJBFp6G6biDR0R1JEGrofKyIN3SEWkYbu8ff0LrGINPQXEkSkoT8zISIN/dEOEWnoz56ISEP/vIyINPQPAIlIQ/9SQ0Qa+icnROR5Vf0H+0CBe5H8B4wAAAAASUVORK5CYII=');
-  animation: noise 0.2s infinite;
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH4wYPDiQFHd8EFQAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAANkSURBVGje7ZpLaFxVGMd/3zl3JpM0aWJtY2JbK9UQBYtVEaGKVtGiVtGNglZEBDe6dCEuxIULQRBBFy5cCFYUXIgbceHKhYq0RQQRWqpWqthKqW1jk5k7mTv3nO/z4dzQJOSkuTNJZiYz58Aw3Hvu/Z//+Z7nKaqgqhQtIvJyxbEXVPXMQgQi8jTwBPBYxbH3VfXUvw4iIqeBJ4HjwNaK4++p6jN1AyIiZ4EngIeAeyuO/wA8rqrfzgfkrHPuKPBQxbEfgUdV9ZtaQc4BjwD3A3dVHP8JOKaq52cL8gVwBDgI3FFx/GfgqKp+XQ3kPHAYOABsqzj+K3BEVS/MBPIlcAjYD2ytOP4bcFhVv6oGchE4COwD7qw4/jtwSFUvVgO5BBwA9gJbKo7/ARxU1UvVQH4A9gN7gM0Vx/8EDqjqD9VAfgL2AruBTRXHR4D9qvpTNZDLwD3ALmBjxfER4F5VvVwN5AqwC9gJbKg4/hewV1WvVAMZBXYAO4D1Fcd7gR2qOloNZAzYDmwH1lUcHwK2q+pYNZBxYBuwDVhbcXwY2Kaq49VA/ga2AFuBNRXHrwFbVPXvaiCTwGZgM7C64vg1YLOqTlYDuQ5sAjYBqyqOXwc2qer1aiATwEZgI7Cy4vgEsFFVJ6qBTAHrgfXAioo5k8B6VZ2qBpICXcA6oKPi+BTQpappNZAM6AQ6K+ZkQKeqZtVAHNAOtFfMcUC7qrpqIAFQAtpEJPwPSImIBECQzwkr5oQiEuZzgnxOac4gIUSBSDhPkHlLNBdXC0UkqjVrNXO1GhYkbEaQsBlBwmYECZsRJGxGkLAZQcJmBAmb0YhGq6HNbkN7rYZ2W1W1oQ+1hn601YePtqo29EGsoR/XVbWhL0QNfclS1Ya+uDf0bVJVG/qGr6oNfeuq2tC386ra0A8oqtrQj4yq2tCPsSLS0I/WRaShH/CLSEPvYkSkoXeTItLQ+3IRaej9TxFp6B6JiDR0n0lEGrpXJyIN3S8VkYbu+YpIQ+8bi0hD7+CLSEPvqYtIQ3cHRKShuyQi0tCdJBFp6G6biDR0R1JEGrofKyIN3SEWkYbu8ff0LrGINPQXEkSkoT8zISIN/dEOEWnoz56ISEP/vIyINPQPAIlIQ/9SQ0Qa+icnROR5Vf0H+0CBe5H8B4wAAAAASUVORK5CYII=');
+  animation: noise 0.5s steps(2) infinite;
 }
 
 .scanline {
   width: 100%;
   height: 4px;
   position: absolute;
-  background: rgba(46, 125, 50, 0.3);
-  animation: scanning 4s linear infinite;
+  background: rgba(46, 125, 50, 0.2);
+  animation: scanning 6s linear infinite;
   z-index: 2;
 }
 
@@ -230,11 +230,11 @@
   width: 100%;
   height: 100%;
   background: linear-gradient(
-    rgba(46, 125, 50, 0.1) 50%,
-    rgba(224, 247, 233, 0.1) 50%
+    rgba(46, 125, 50, 0.05) 50%,
+    rgba(224, 247, 233, 0.05) 50%
   );
   background-size: 100% 4px;
-  animation: crt-effect 10ms infinite;
+  animation: crt-effect 50ms steps(2) infinite;
   z-index: 1;
   pointer-events: none;
 }
@@ -242,69 +242,21 @@
 @keyframes glitch-anim {
   0% {
     clip: rect(31px, 9999px, 94px, 0);
-    transform: skew(0.85deg);
-  }
-  5% {
-    clip: rect(56px, 9999px, 30px, 0);
-    transform: skew(0.85deg);
+    transform: skew(0.4deg);
   }
   10% {
     clip: rect(90px, 9999px, 98px, 0);
-    transform: skew(-0.85deg);
-  }
-  15% {
-    clip: rect(71px, 9999px, 46px, 0);
-    transform: skew(0.4deg);
+    transform: skew(-0.4deg);
   }
   20% {
     clip: rect(23px, 9999px, 67px, 0);
-    transform: skew(-0.4deg);
-  }
-}
-
-@keyframes glitch-anim2 {
-  0% {
-    clip: rect(65px, 9999px, 119px, 0);
-    transform: skew(0.85deg);
-  }
-  5% {
-    clip: rect(76px, 9999px, 87px, 0);
-    transform: skew(-0.85deg);
-  }
-  10% {
-    clip: rect(29px, 9999px, 45px, 0);
-    transform: skew(0.4deg);
-  }
-  15% {
-    clip: rect(83px, 9999px, 92px, 0);
-    transform: skew(-0.4deg);
-  }
-  20% {
-    clip: rect(57px, 9999px, 70px, 0);
-    transform: skew(0.85deg);
-  }
-}
-
-@keyframes scanning {
-  0% {
-    top: 0%;
-  }
-  100% {
-    top: 100%;
+    transform: skew(-0.2deg);
   }
 }
 
 @keyframes noise {
   0%, 100% { transform: translate(0, 0); }
-  10% { transform: translate(-2px, -2px); }
-  20% { transform: translate(2px, 2px); }
-  30% { transform: translate(-2px, 2px); }
-  40% { transform: translate(2px, -2px); }
-  50% { transform: translate(-2px, 2px); }
-  60% { transform: translate(2px, 2px); }
-  70% { transform: translate(-2px, -2px); }
-  80% { transform: translate(2px, 2px); }
-  90% { transform: translate(-2px, 2px); }
+  50% { transform: translate(-1px, 1px); }
 }
 
 @keyframes scanlines {
@@ -317,17 +269,17 @@
 }
 
 @keyframes crt-effect {
-  0% { opacity: 0.7; }
+  0% { opacity: 0.8; }
   50% { opacity: 0.9; }
-  100% { opacity: 0.7; }
+  100% { opacity: 0.8; }
 }
 
 @keyframes pulse {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(46, 125, 50, 0.3);
+    box-shadow: 0 0 20px rgba(46, 125, 50, 0.2);
   }
   50% {
-    box-shadow: 0 0 40px rgba(46, 125, 50, 0.5);
+    box-shadow: 0 0 30px rgba(46, 125, 50, 0.3);
   }
 }
 
