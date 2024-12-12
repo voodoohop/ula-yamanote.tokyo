@@ -24,7 +24,7 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleAudioControl = () => {
+  const handleAudioControl = async () => {
     if (isPlaying) {
       setIsPlaying(false);
       setIsGpsActive(false);
@@ -34,31 +34,53 @@ function App() {
     setIsLoading(true);
     
     if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        () => {
-          setIsGpsActive(true);
-          setIsPlaying(true);
+      try {
+        // Check for existing permissions first
+        const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
+        
+        if (permissionStatus.state === 'denied') {
+          console.error('Geolocation permission is denied. Please enable it in your browser settings.');
+          setIsGpsActive(false);
+          setIsPlaying(false);
           setIsLoading(false);
-        },
-        (error) => {
-          console.error('Geolocation error:', error);
-          // If permission denied, don't start playing
-          if (error.code === 1) { // PERMISSION_DENIED
-            setIsGpsActive(false);
-            setIsPlaying(false);
-          } else {
-            // For other errors, continue without GPS
-            setIsGpsActive(false);
-            setIsPlaying(true);
-          }
-          setIsLoading(false);
-        },
-        { 
-          enableHighAccuracy: true,
-          maximumAge: 0,
-          timeout: 5000
+          return;
         }
-      );
+
+        // Request location with a longer timeout
+        await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+            resolve,
+            reject,
+            { 
+              enableHighAccuracy: true,
+              maximumAge: 0,
+              timeout: 10000 // Increased timeout to 10 seconds
+            }
+          );
+        });
+
+        setIsGpsActive(true);
+        setIsPlaying(true);
+      } catch (error: any) {
+        console.error('Geolocation error:', error);
+        // If permission denied or timeout
+        if (error.code === 1) { // PERMISSION_DENIED
+          console.error('Location permission denied by user or system');
+          setIsGpsActive(false);
+          setIsPlaying(false);
+        } else if (error.code === 3) { // TIMEOUT
+          console.error('Location request timed out');
+          setIsGpsActive(false);
+          setIsPlaying(true);
+        } else {
+          // For other errors, continue without GPS
+          console.error('Other location error:', error.message);
+          setIsGpsActive(false);
+          setIsPlaying(true);
+        }
+      } finally {
+        setIsLoading(false);
+      }
     } else {
       setIsGpsActive(false);
       setIsPlaying(true);

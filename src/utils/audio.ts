@@ -26,7 +26,7 @@ class StationPlayer {
       return;
     }
 
-    const trackPath = `/assets/tracks/${trackFilename}`;
+    const trackPath = `/assets/tracks/low/${trackFilename.replace('.mp3', '-low.mp3')}`;
     console.log(`Loading track from path: ${trackPath}`);
     
     this.isLoading = true;
