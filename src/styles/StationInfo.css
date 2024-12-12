@@ -34,10 +34,8 @@
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  padding: 20px;
+  padding: 10px 20px 20px;
   background: rgba(224, 247, 233, 0.8);
-  border: 2px solid #2e7d32;
-  box-shadow: 0 0 20px #2e7d32;
   margin-bottom: 20px;
   position: relative;
   overflow: hidden;
@@ -53,12 +51,23 @@
   font-size: 1.2em;
   margin-bottom: 10px;
   text-shadow: 0 0 10px #2e7d32;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 0;
 }
 
 .station-name-display {
   font-size: 2em;
   margin: 20px 0;
   text-shadow: 0 0 15px #2e7d32;
+}
+
+.station-display-image {
+  display: block;
+  margin: 0 auto;
+  max-width: 50%;
+  height: auto;
 }
 
 .distance {

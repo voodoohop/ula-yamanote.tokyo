@@ -135,7 +135,7 @@ export function StationInfo({ isGpsActive }: Props) {
       <div className="current-station">
         <div className="proximity-info">
           <div className="closest-station-label">
-            <span className="glitch" data-text="パーティー会場 / LAUNCH PARTY">パーティー会場 / LAUNCH PARTY</span>
+            <img src="/src/assets/glitchstationdisplaysmaller.webp" alt="Station Display" className="station-display-image" />
             <span className="glitch-text">{glitchText}</span>
           </div>
           
