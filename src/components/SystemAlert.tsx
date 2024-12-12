@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/SystemAlert.css';
-import uraYamanoteQr from '../assets/ura-yamanote-animated-qr.webp';
+import uraYamanoteQr from '../assets/ura-yamanote-animated-qr-square.webp';
 
 interface SystemAlertProps {
   showStartButton?: boolean;
