@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/SystemAlert.css';
-import bonnapotTraffic from '../assets/bonnapot-traffic-animated.webp';
+import uraYamanoteQr from '../assets/ura-yamanote-animated-qr.webp';
 
 interface SystemAlertProps {
   showStartButton?: boolean;
@@ -43,19 +43,11 @@ export function SystemAlert({ showStartButton, onStart }: SystemAlertProps) {
         <div className="location-jp glitch" data-text="LOOP 01">LOOP 01</div>
       </div>
       <div className="artwork-container">
-        <a 
-          href="https://www.instagram.com/microworld_________/" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="instagram-credit"
-        >
-          <img 
-            src={bonnapotTraffic} 
-            alt="Bonnapot Traffic Animation" 
-            className="traffic-animation"
-          />
-          <span className="instagram-handle">@microworld_________</span>
-        </a>
+        <img 
+          src={uraYamanoteQr} 
+          alt="Ura Yamanote QR Animation" 
+          className="traffic-animation"
+        />
       </div>
       {showStartButton && (
         <button 

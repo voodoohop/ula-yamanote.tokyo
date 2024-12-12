@@ -104,10 +104,13 @@
 }
 
 .traffic-animation {
-  max-width: 100%;
-  height: auto;
+  width: auto;
+  max-width: 500px;
+  max-height: 350px;
+  margin: 20px auto 0;
   display: block;
-  margin: 0 auto;
+  border-radius: 4px;
+  box-shadow: 0 0 20px rgba(46, 125, 50, 0.3);
 }
 
 .glitch {
@@ -304,16 +307,6 @@
 
 .glitch-active {
   animation: shake 0.1s linear;
-}
-
-.traffic-animation {
-  width: auto;
-  max-width: 400px;
-  max-height: 250px;
-  margin: 20px auto 0;
-  display: block;
-  border-radius: 4px;
-  box-shadow: 0 0 20px rgba(46, 125, 50, 0.3);
 }
 
 @keyframes shake {
