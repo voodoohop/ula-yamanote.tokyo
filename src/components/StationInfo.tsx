@@ -108,7 +108,7 @@ export function StationInfo({ isGpsActive }: Props) {
         }
       }
 
-      const smoothing = 0.995;  // Much higher smoothing factor for slower changes
+      const smoothing = 0.99;  // Less aggressive smoothing (1% of new value each update)
       const newRate = smoothing * smoothedRate + (1 - smoothing) * targetRate;
       
       if (Math.abs(newRate - smoothedRate) > 0.0001) {
@@ -117,7 +117,7 @@ export function StationInfo({ isGpsActive }: Props) {
       }
     };
 
-    const interval = setInterval(updateRate, 50);
+    const interval = setInterval(updateRate, 50);  // Update every 50ms
     return () => clearInterval(interval);
   }, [stationData?.speed, smoothedRate]);
 
@@ -135,13 +135,15 @@ export function StationInfo({ isGpsActive }: Props) {
 
   useEffect(() => {
     if (!isGpsActive) {
-      setStationData(null);
+      // Don't clear station data when GPS is deactivated
+      // This keeps the last known state visible
       return;
     }
 
     const watchId = navigator.geolocation.watchPosition(
       updateInfo,
       (error) => {
+        // Just log the error but keep the last known state
         console.error('GPS Error:', error);
       },
       {
@@ -156,7 +158,8 @@ export function StationInfo({ isGpsActive }: Props) {
     };
   }, [isGpsActive, updateInfo]);
 
-  if (!isGpsActive) {
+  // Only show system alert if GPS is not active AND we have no previous station data
+  if (!isGpsActive && !stationData) {
     return (
       <div className="current-station">
         <SystemAlert />
@@ -164,6 +167,7 @@ export function StationInfo({ isGpsActive }: Props) {
     );
   }
 
+  // Only show loading state on initial load
   if (!stationData) {
     return (
       <div className="station-info">
@@ -174,9 +178,6 @@ export function StationInfo({ isGpsActive }: Props) {
           <div className="proximity-info">
             <div className="closest-station-label">
               <img src="/src/assets/glitchstationdisplaysmaller.webp" alt="Station Display" className="station-display-image" />
-            </div>
-            <div className="status">
-              <span className="glitch" data-text="位置情報を取得中...">位置情報を取得中...</span>
             </div>
           </div>
         </div>
