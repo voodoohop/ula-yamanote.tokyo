@@ -94,88 +94,32 @@ export function StationInfo({ isGpsActive }: Props) {
   }, [stationData?.name, currentPlayingStation]);
 
   useEffect(() => {
-    if (!stationData) {
-      // If no station data, gradually return to normal rate
-      const targetRate = 1.0;
-      const smoothing = 0.95; // High smoothing for slower changes
-      setSmoothedRate(prev => smoothing * prev + (1 - smoothing) * targetRate);
-      stationPlayer.setPlaybackRate(smoothedRate);
-      return;
-    }
-
-    if (stationData.speed !== null) {
-      // Calculate target playback rate based on speed
-      // 0 km/h -> 0.5 rate
-      // 5 km/h or more -> 1.0 rate
-      // Linear interpolation between these points
-      const minSpeed = 0;
-      const maxSpeed = 5;
-      const minRate = 0.5;
-      const maxRate = 1.0;
+    const updateRate = () => {
+      let targetRate = 1.0;
       
-      const speed = stationData.speed;
-      const targetRate = speed >= maxSpeed ? maxRate :
-                  speed <= minSpeed ? minRate :
-                  minRate + (maxRate - minRate) * (speed / maxSpeed);
-      
-      // Apply smoothing
-      const smoothing = 0.95; // High smoothing for slower changes
-      setSmoothedRate(prev => smoothing * prev + (1 - smoothing) * targetRate);
-      stationPlayer.setPlaybackRate(smoothedRate);
-    }
-  }, [stationData?.speed, smoothedRate]);
-
-  useEffect(() => {
-    if (!stationData) {
-      // If no station data, play at normal rate
-      stationPlayer.setPlaybackRate(1.0);
-      return;
-    }
-
-    if (stationData.speed !== null) {
-      // Calculate playback rate based on speed
-      // 0 km/h -> 0.5 rate
-      // 5 km/h or more -> 1.0 rate
-      // Linear interpolation between these points
-      const minSpeed = 0;
-      const maxSpeed = 5;
-      const minRate = 0.5;
-      const maxRate = 1.0;
-      
-      const speed = stationData.speed;
-      const rate = speed >= maxSpeed ? maxRate :
-                  speed <= minSpeed ? minRate :
-                  minRate + (maxRate - minRate) * (speed / maxSpeed);
-      
-      stationPlayer.setPlaybackRate(rate);
-    } else {
-      // If no speed information, play at normal rate
-      stationPlayer.setPlaybackRate(1.0);
-    }
-  }, [stationData?.speed]);
-
-  useEffect(() => {
-    const smoothingInterval = setInterval(() => {
       if (stationData?.speed !== null) {
-        const minSpeed = 0;
-        const maxSpeed = 5;
-        const minRate = 0.5;
-        const maxRate = 1.0;
-        
         const speed = stationData.speed;
-        const targetRate = speed >= maxSpeed ? maxRate :
-                    speed <= minSpeed ? minRate :
-                    minRate + (maxRate - minRate) * (speed / maxSpeed);
-        
-        // Apply smoothing
-        const smoothing = 0.95;
-        setSmoothedRate(prev => smoothing * prev + (1 - smoothing) * targetRate);
-        stationPlayer.setPlaybackRate(smoothedRate);
+        if (speed <= 0) {
+          targetRate = 0.5;  // Minimum rate
+        } else if (speed >= 5) {
+          targetRate = 1.0;  // Maximum rate
+        } else {
+          targetRate = 0.5 + (speed / 5) * 0.5;  // Linear interpolation
+        }
       }
-    }, 100); // Update every 100ms
 
-    return () => clearInterval(smoothingInterval);
-  }, [stationData?.speed]);
+      const smoothing = 0.995;  // Much higher smoothing factor for slower changes
+      const newRate = smoothing * smoothedRate + (1 - smoothing) * targetRate;
+      
+      if (Math.abs(newRate - smoothedRate) > 0.0001) {
+        setSmoothedRate(newRate);
+        stationPlayer.setPlaybackRate(newRate);
+      }
+    };
+
+    const interval = setInterval(updateRate, 50);
+    return () => clearInterval(interval);
+  }, [stationData?.speed, smoothedRate]);
 
   useEffect(() => {
     return () => {
@@ -195,13 +139,10 @@ export function StationInfo({ isGpsActive }: Props) {
       return;
     }
 
-    // Watch for position updates
     const watchId = navigator.geolocation.watchPosition(
       updateInfo,
       (error) => {
         console.error('GPS Error:', error);
-        // Don't set stationData to null on every error
-        // Only log the error for debugging
       },
       {
         enableHighAccuracy: true,
