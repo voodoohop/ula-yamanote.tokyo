@@ -14,16 +14,6 @@ function App() {
   const [isGpsActive, setIsGpsActive] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(document.fullscreenElement !== null);
-    };
-    
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, []);
 
   const handleAudioControl = useAudioControl({
     isPlaying,
@@ -33,9 +23,9 @@ function App() {
   });
 
   const MainContent = () => {
-    if (isFullscreen) {
+    if (isPlaying) {
       return (
-        <div className="app fullscreen">
+        <div className="app playing">
           <StationInfo 
             currentStationIndex={currentStationIndex}
             setCurrentStationIndex={setCurrentStationIndex}
@@ -45,8 +35,6 @@ function App() {
             setIsPlaying={setIsPlaying}
             isLoading={isLoading}
             setIsLoading={setIsLoading}
-            isFullscreen={isFullscreen}
-            setIsFullscreen={setIsFullscreen}
           />
         </div>
       );
@@ -64,8 +52,6 @@ function App() {
           setIsPlaying={setIsPlaying}
           isLoading={isLoading}
           setIsLoading={setIsLoading}
-          isFullscreen={isFullscreen}
-          setIsFullscreen={setIsFullscreen}
         />
         <PlayButton 
           onClick={handleAudioControl}

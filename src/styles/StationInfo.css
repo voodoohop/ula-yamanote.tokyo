@@ -10,7 +10,6 @@
   box-shadow: 0 0 15px rgba(46, 125, 50, 0.2);
   font-family: 'DotGothic16', monospace;
   position: relative;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -43,7 +42,6 @@
   background: rgba(224, 247, 233, 0.8);
   margin-bottom: 20px;
   position: relative;
-  overflow: hidden;
 }
 
 .proximity-info .play-button {
@@ -145,6 +143,22 @@
   will-change: opacity;
 }
 
+.current-station {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 0;
+}
+
+.yamanote-map-container {
+  display: block;
+  width: 280px;
+  height: 280px;
+  margin: 20px auto;
+}
+
 @keyframes noise {
   0%, 100% { transform: translate(0, 0); }
   50% { transform: translate(-1px, 1px); }
@@ -168,41 +182,4 @@
   0% { opacity: 0.9; }
   50% { opacity: 0.95; }
   100% { opacity: 0.9; }
-}
-
-:fullscreen .station-info {
-  max-height: 100vh;
-  margin: 0;
-  border: none;
-  border-radius: 0;
-  background: rgba(224, 247, 233, 0.98);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  overflow: hidden;
-}
-
-:fullscreen .current-station {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 2vh;
-}
-
-:fullscreen .station-display-image {
-  max-height: 30vh;
-  width: auto;
-}
-
-:fullscreen .station-name-display {
-  font-size: 5vh;
-}
-
-:fullscreen .distance,
-:fullscreen .direction,
-:fullscreen .speed,
-:fullscreen .status {
-  font-size: 3vh;
 }

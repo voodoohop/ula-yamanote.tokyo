@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { stations } from '../data/stations';
+import { Train, createInitialTrains, updateTrainPositions, calculateTrainPosition } from '../utils/trainSimulation';
 import '../styles/YamanoteLine.css';
 
 interface Props {
@@ -47,6 +48,42 @@ const yamanoteStations = [
 
 export function YamanoteLine({ width = 300, height = 300, userPosition, closestStation }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const [trains, setTrains] = useState<Train[]>([]);
+  const animationFrameRef = useRef<number>();
+  const pointsRef = useRef<Array<{x: number; y: number}>>([]);
+
+  // Initialize trains
+  useEffect(() => {
+    setTrains(createInitialTrains());
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, []);
+
+  // Animate trains
+  useEffect(() => {
+    if (pointsRef.current.length === 0) return; // Don't start animation until points are ready
+    
+    let lastTime = performance.now();
+    
+    const animate = (currentTime: number) => {
+      const deltaTime = currentTime - lastTime;
+      lastTime = currentTime;
+      
+      setTrains(prevTrains => updateTrainPositions(prevTrains, deltaTime));
+      animationFrameRef.current = requestAnimationFrame(animate);
+    };
+    
+    animationFrameRef.current = requestAnimationFrame(animate);
+    
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [pointsRef.current]);
 
   useEffect(() => {
     if (!svgRef.current) return;
@@ -148,6 +185,9 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
       finalTransformCoord(station.lat, station.lng)
     );
 
+    // Store points in ref for train calculations
+    pointsRef.current = finalPoints;
+
     // Create path segments
     const pathSegments = finalPoints.map((point, i) => {
       const nextIndex = (i + 1) % finalPoints.length;
@@ -194,6 +234,23 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
           `;
         })
         .join('');
+    }
+
+    // Update trains
+    const trainGroup = svgRef.current.querySelector('.trains');
+    if (trainGroup && pointsRef.current.length > 0) {
+      trainGroup.innerHTML = trains.map(train => {
+        const position = calculateTrainPosition(train, pointsRef.current);
+        if (!position) return ''; // Skip rendering if position calculation failed
+        
+        const { x, y, angle } = position;
+        return `
+          <g class="train" transform="translate(${x},${y}) rotate(${angle})">
+            <circle r="3" class="train-point" />
+            <path d="M-4,-1.5 L4,-1.5 L4,1.5 L-4,1.5 Z" class="train-body" />
+          </g>
+        `;
+      }).join('');
     }
 
     // Add user position if available
@@ -270,7 +327,7 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
         `;
       }
     }
-  }, [width, height, userPosition, closestStation]);
+  }, [width, height, userPosition, closestStation, trains]);
 
   return (
     <div className="yamanote-map">
@@ -283,6 +340,7 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
       >
         <g className="paths" />
         <g className="stations" />
+        <g className="trains" />
         <g className="user-position" />
       </svg>
     </div>

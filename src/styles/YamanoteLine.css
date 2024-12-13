@@ -1,11 +1,18 @@
 .yamanote-map {
-  position: relative;
+  display: block;
+  width: 280px;
+  height: 280px;
   margin: 20px auto;
   background: rgba(224, 247, 233, 0.95);
   border: 2px solid #2e7d32;
   border-radius: 4px;
   box-shadow: 0 0 20px rgba(46, 125, 50, 0.3);
-  overflow: hidden;
+}
+
+.yamanote-svg {
+  display: block;
+  width: 280px;
+  height: 280px;
 }
 
 .yamanote-map::before {
@@ -23,10 +30,6 @@
   pointer-events: none;
   animation: map-scanlines 0.5s linear infinite;
   opacity: 0.5;
-}
-
-.yamanote-svg {
-  display: block;
 }
 
 .line-path {
@@ -115,6 +118,19 @@
 .direction-indicator-arrow {
   fill: #2196f3;
   stroke: none;
+}
+
+.train-point {
+  fill: #588C1A;  /* Even darker Yamanote Line green */
+  stroke: white;
+  stroke-width: 1;
+  animation: train-pulse 2s ease-in-out infinite;
+}
+
+.train-body {
+  fill: #588C1A;  /* Even darker Yamanote Line green */
+  stroke: none;
+  animation: train-pulse 2s ease-in-out infinite;
 }
 
 @keyframes map-scanlines {
@@ -209,5 +225,17 @@
 @keyframes dash {
   to {
     stroke-dashoffset: -8;
+  }
+}
+
+@keyframes train-pulse {
+  0% {
+    filter: drop-shadow(0 0 2px rgba(88, 140, 26, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 4px rgba(88, 140, 26, 0.6));
+  }
+  100% {
+    filter: drop-shadow(0 0 2px rgba(88, 140, 26, 0.4));
   }
 }

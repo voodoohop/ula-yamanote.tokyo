@@ -1,6 +1,5 @@
 import { useCallback } from 'react';
 import { stationPlayer } from '../utils/audio';
-import { fullscreenManager } from '../utils/fullscreen';
 
 interface UseAudioControlProps {
   isPlaying: boolean;
@@ -26,8 +25,6 @@ export const useAudioControl = ({
     setIsLoading(true);
     
     try {
-      await fullscreenManager.requestFullscreen();
-      
       if ("geolocation" in navigator) {
         try {
           const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
@@ -63,7 +60,7 @@ export const useAudioControl = ({
         setIsPlaying(true);
       }
     } catch (error) {
-      console.error('Fullscreen or GPS error:', error);
+      console.error('GPS error:', error);
     } finally {
       setIsLoading(false);
     }

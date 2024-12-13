@@ -18,8 +18,6 @@ interface Props {
   setIsPlaying: (playing: boolean) => void;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
-  isFullscreen: boolean;
-  setIsFullscreen: (fullscreen: boolean) => void;
 }
 
 interface StationData {
@@ -40,9 +38,7 @@ export function StationInfo({
   isPlaying,
   setIsPlaying,
   isLoading,
-  setIsLoading,
-  isFullscreen,
-  setIsFullscreen 
+  setIsLoading
 }: Props) {
   const [glitchText, setGlitchText] = useState('');
   const [glitchClass, setGlitchClass] = useState('');
@@ -185,15 +181,16 @@ export function StationInfo({
               {stationData.distance > 100 ? '駅の範囲外です' : '駅の範囲内です'}
             </span>
           </div>
-          
-
         </div>
-        <YamanoteLine 
-          width={280} 
-          height={280} 
-          userPosition={stationData ? { lat: stationData.userLat, lng: stationData.userLng } : undefined}
-          closestStation={stationData?.name}
-        />
+        
+        <div className="yamanote-map-container">
+          <YamanoteLine 
+            width={280} 
+            height={280} 
+            userPosition={stationData ? { lat: stationData.userLat, lng: stationData.userLng } : undefined}
+            closestStation={stationData?.name}
+          />
+        </div>
       </div>
     </div>
   );
