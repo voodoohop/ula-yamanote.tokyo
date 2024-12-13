@@ -36,6 +36,13 @@ export function SystemAlert({ showStartButton, onStart }: SystemAlertProps) {
       <div className="highlight">
         <span className="glitch" data-text="ウラ YAMANOTE">ウラ YAMANOTE</span>
       </div>
+      <div className="artwork-container">
+        <img 
+          src={uraYamanoteQr} 
+          alt="Ura Yamanote QR Animation" 
+          className="traffic-animation"
+        />
+      </div>
       <div className="launch-info">
         <div className="glitch" data-text="サイバーゾーン">サイバーゾーン</div>
         <div className="glitch" data-text="アクティベート">アクティベート</div>
@@ -59,13 +66,6 @@ export function SystemAlert({ showStartButton, onStart }: SystemAlertProps) {
             Location data is used anonymously and solely for this experience.
           </p>
         </div>
-      </div>
-      <div className="artwork-container">
-        <img 
-          src={uraYamanoteQr} 
-          alt="Ura Yamanote QR Animation" 
-          className="traffic-animation"
-        />
       </div>
       {showStartButton && (
         <button 
