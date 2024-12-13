@@ -95,21 +95,15 @@ export function createCoordinateTransformer(
   };
 
   // Scale coordinates to SVG viewport
-  const scale = Math.min(width, height) * 0.9;
-  const initialOffsetX = (width - scale) / 2;
-  const initialOffsetY = (height - scale) / 2;
-
-  return function transformCoord(coord: Coordinates): Point {
-    // X coordinate increases with longitude (east)
-    const x = initialOffsetX + (scale * (coord.lng - squareBounds.minLng) / 
-      (squareBounds.maxLng - squareBounds.minLng));
+  return (coord: Coordinates): Point => {
+    const x = ((coord.lng - squareBounds.minLng) / (squareBounds.maxLng - squareBounds.minLng)) * width;
+    const y = height - ((coord.lat - squareBounds.minLat) / (squareBounds.maxLat - squareBounds.minLat)) * height;
     
-    // Y coordinate should decrease as latitude increases (north)
-    // So we invert the y-axis mapping
-    const y = initialOffsetY + (scale * (1 - (coord.lat - squareBounds.minLat) / 
-      (squareBounds.maxLat - squareBounds.minLat)));
-
-    return { x, y };
+    // Apply padding to ensure points aren't at the very edge
+    const paddedX = (width * padding / 2) + (x * (1 - padding));
+    const paddedY = (height * padding / 2) + (y * (1 - padding));
+    
+    return { x: paddedX, y: paddedY };
   };
 }
 

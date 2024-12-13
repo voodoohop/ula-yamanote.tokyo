@@ -17,6 +17,12 @@
   overflow: visible;  /* Allow SVG content to overflow */
 }
 
+.yamanote-line {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
 .yamanote-map::before {
   content: '';
   position: absolute;
@@ -35,56 +41,63 @@
 }
 
 .line-path {
+  stroke: #9acd32;
+  stroke-width: 8;
   fill: none;
-  stroke: #4CAF50;
-  stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
   opacity: 0.6;
 }
 
 .line-path.highlighted {
-  stroke: #ff4081;
-  stroke-width: 3;
+  stroke: #32cd32;
+  stroke-width: 12;
   opacity: 0.8;
   animation: path-pulse 1.5s ease-in-out infinite;
-  filter: drop-shadow(0 0 3px rgba(255, 64, 129, 0.3));
+  filter: drop-shadow(0 0 3px rgba(50, 205, 50, 0.3));
 }
 
 .station-point {
-  fill: #1976D2;
-  stroke: white;
-  stroke-width: 1;
+  fill: white;
+  stroke: #9acd32;
+  stroke-width: 4;
   opacity: 0.9;
   transition: r 0.2s ease-in-out, filter 0.2s ease-in-out;
-  filter: drop-shadow(0 0 2px rgba(25, 118, 210, 0.4));
+  filter: drop-shadow(0 0 2px rgba(154, 205, 50, 0.4));
 }
 
 .station-point:hover {
   r: 4;
   opacity: 1;
-  filter: drop-shadow(0 0 4px rgba(25, 118, 210, 0.6));
+  filter: drop-shadow(0 0 4px rgba(154, 205, 50, 0.6));
 }
 
 .closest-station {
-  fill: #ff4081;
+  fill: #32cd32;
   stroke: white;
   stroke-width: 1.5;
-  filter: drop-shadow(0 0 4px rgba(255, 64, 129, 0.5));
+  filter: drop-shadow(0 0 4px rgba(50, 205, 50, 0.5));
   animation: station-pulse 1.5s ease-in-out infinite;
 }
 
+.user-position-marker {
+  filter: drop-shadow(0 0 4px rgba(65, 105, 225, 0.5));
+}
+
 .user-point {
-  fill: #2196f3;
+  fill: #4169e1;
   stroke: white;
-  stroke-width: 1.5;
+  stroke-width: 4;
   opacity: 0.9;
   animation: user-pulse 2s ease-in-out infinite;
-  filter: drop-shadow(0 0 3px rgba(33, 150, 243, 0.5));
+}
+
+.user-point-inner {
+  animation: user-inner-pulse 2s ease-in-out infinite;
 }
 
 .user-arrow {
-  fill: #2196f3;
+  fill: #4169e1;
   stroke: #fff;
   stroke-width: 1;
   opacity: 0.9;
@@ -92,33 +105,34 @@
 }
 
 .station-label {
-  font-size: 12px;
-  fill: #ff4081;
-  font-weight: 500;
-  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.2));
+  fill: #333;
+  font-size: 32px;
+  font-weight: bold;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8));
   pointer-events: none;
   animation: label-fade 1.5s ease-in-out infinite;
 }
 
 .connection-line {
   fill: none;
-  stroke: #2196f3;
-  stroke-width: 1.5;
-  stroke-dasharray: 4 4;
+  stroke: #4169e1;
+  stroke-opacity: 0.8;
+  stroke-width: 4;
+  stroke-dasharray: 8 8;
   stroke-linecap: round;
-  opacity: 0.5;
   animation: dash 1s linear infinite;
-  filter: drop-shadow(0 0 2px rgba(33, 150, 243, 0.3));
+  filter: drop-shadow(0 0 2px rgba(65, 105, 225, 0.3));
 }
 
 .direction-indicator-bg {
-  fill: #ffffff;
-  stroke: #2196f3;
+  fill: #4169e1;
+  opacity: 0.9;
+  stroke: #4169e1;
   stroke-width: 2;
 }
 
 .direction-indicator-arrow {
-  fill: #2196f3;
+  fill: white;
   stroke: none;
 }
 
@@ -128,36 +142,36 @@
 
 .train.clockwise .train-point,
 .train.clockwise .train-body {
-  fill: #2E7D32;  /* Darker, more vibrant green */
+  fill: #ff4500;  
   stroke: white;
   stroke-width: 0.5;
 }
 
 .train.counterclockwise .train-point,
 .train.counterclockwise .train-body {
-  fill: #FF9800;  /* Orange for clear contrast */
+  fill: #ff6347;  
   stroke: white;
   stroke-width: 0.5;
 }
 
 .train-point {
-  fill: #588C1A;  /* Even darker Yamanote Line green */
+  fill: #ff4500;  
   stroke: white;
   stroke-width: 1;
   animation: train-pulse 2s ease-in-out infinite;
 }
 
 .train-body {
-  fill: #588C1A;  /* Even darker Yamanote Line green */
+  fill: #ff6347;  
   stroke: none;
   animation: train-pulse 2s ease-in-out infinite;
 }
 
 .distance-text {
-  font-size: 12px;
   fill: #333;
-  opacity: 0.6;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 32px;
+  font-weight: bold;
+  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.5));
 }
 
 @keyframes map-scanlines {
@@ -197,19 +211,31 @@
 
 @keyframes user-pulse {
   0% {
-    r: 4;
+    r: 20;
     opacity: 0.7;
-    filter: drop-shadow(0 0 2px rgba(33, 150, 243, 0.5));
   }
   50% {
-    r: 6;
+    r: 25;
     opacity: 0.9;
-    filter: drop-shadow(0 0 4px rgba(33, 150, 243, 0.8));
   }
   100% {
-    r: 4;
+    r: 20;
     opacity: 0.7;
-    filter: drop-shadow(0 0 2px rgba(33, 150, 243, 0.5));
+  }
+}
+
+@keyframes user-inner-pulse {
+  0% {
+    r: 8;
+    opacity: 0.7;
+  }
+  50% {
+    r: 10;
+    opacity: 0.9;
+  }
+  100% {
+    r: 8;
+    opacity: 0.7;
   }
 }
 
@@ -251,18 +277,18 @@
 
 @keyframes dash {
   to {
-    stroke-dashoffset: -8;
+    stroke-dashoffset: -16;
   }
 }
 
 @keyframes train-pulse {
   0% {
-    filter: drop-shadow(0 0 2px rgba(88, 140, 26, 0.4));
+    filter: drop-shadow(0 0 2px rgba(255, 69, 0, 0.4));
   }
   50% {
-    filter: drop-shadow(0 0 4px rgba(88, 140, 26, 0.6));
+    filter: drop-shadow(0 0 4px rgba(255, 69, 0, 0.6));
   }
   100% {
-    filter: drop-shadow(0 0 2px rgba(88, 140, 26, 0.4));
+    filter: drop-shadow(0 0 2px rgba(255, 69, 0, 0.4));
   }
 }

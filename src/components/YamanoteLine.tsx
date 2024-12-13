@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { stations } from '../data/stations';
 import { useTrainAnimation, useCoordinateTransformation, useUserPosition } from '../hooks/useYamanoteLine';
 import { Props, Point, TrainPosition } from '../types/yamanote';
@@ -27,15 +27,16 @@ const StationPoint: React.FC<{
     <circle 
       cx={point.x} 
       cy={point.y} 
-      r={isClosest ? 3 : 2} 
+      r={isClosest ? 15 : 10} 
       className={`station-point ${isClosest ? 'closest-station' : ''}`}
       data-station={name}
     />
     {isClosest && (
       <text 
-        x={point.x + 8} 
-        y={point.y + 4} 
+        x={point.x + 25} 
+        y={point.y + 8} 
         className="station-label"
+        fontSize="32"
       >
         {name}
       </text>
@@ -48,8 +49,8 @@ const TrainMarker: React.FC<{
   direction: 'clockwise' | 'counterclockwise';
 }> = ({ position, direction }) => (
   <g className={`train ${direction}`} transform={`translate(${position.x},${position.y}) rotate(${position.angle})`}>
-    <circle r={3} className="train-point" />
-    <path d="M-4,-1.5 L4,-1.5 L4,1.5 L-4,1.5 Z" className="train-body" />
+    <circle r={12} className="train-point" />
+    <path d="M-16,-6 L16,-6 L16,6 L-16,6 Z" className="train-body" />
   </g>
 );
 
@@ -57,20 +58,29 @@ const UserPositionMarker: React.FC<{
   point: Point;
   connectionPoint?: Point;
 }> = ({ point, connectionPoint }) => (
-  <>
+  <g className="user-position-marker">
     {connectionPoint && (
       <path
         className="connection-line"
         d={`M ${point.x},${point.y} L ${connectionPoint.x},${connectionPoint.y}`}
+        strokeWidth="4"
       />
     )}
     <circle 
       cx={point.x} 
       cy={point.y} 
-      r={4} 
+      r={20} 
       className="user-point"
     />
-  </>
+    <circle 
+      cx={point.x} 
+      cy={point.y} 
+      r={8} 
+      className="user-point-inner"
+      fill="white"
+      opacity="0.8"
+    />
+  </g>
 );
 
 const DirectionIndicator: React.FC<{
@@ -83,46 +93,52 @@ const DirectionIndicator: React.FC<{
     <circle 
       cx={edgeX} 
       cy={edgeY} 
-      r={12} 
+      r={30} 
       className="direction-indicator-bg"
     />
     <polygon 
-      points={`${edgeX},${edgeY-12} ${edgeX-8},${edgeY+4} ${edgeX+8},${edgeY+4}`}
+      points={`${edgeX},${edgeY-30} ${edgeX-20},${edgeY+10} ${edgeX+20},${edgeY+10}`}
       transform={`rotate(${bearing * 180 / Math.PI}, ${edgeX}, ${edgeY})`}
       className="direction-indicator-arrow"
     />
     <text
       x={edgeX}
-      y={edgeY + 24}
+      y={edgeY + 50}
       textAnchor="middle"
       className="distance-text"
+      fontSize="32"
     >
       {`${distance.toFixed(1)}km`}
     </text>
   </g>
 );
 
-export function YamanoteLine({ width = 300, height = 300, userPosition, closestStation }: Props) {
+export const YamanoteLine = ({ width = 300, height = 300, userPosition, closestStation }: Props) => {
   const svgRef = useRef<SVGSVGElement>(null);
-  
-  const { transformedPoints, pointsRef } = useCoordinateTransformation(width, height, yamanoteStations);
-  const { startAnimation, getTrainPositions } = useTrainAnimation();
-  const userPositionData = useUserPosition(userPosition, closestStation, width, height);
-  
-  React.useEffect(() => {
-    return startAnimation(pointsRef);
-  }, [pointsRef.current]);
+  const { trains, startAnimation, getTrainPositions } = useTrainAnimation();
+  const { transformedPoints, pointsRef } = useCoordinateTransformation(1000, 1000, yamanoteStations);
+  const userPositionData = useUserPosition(userPosition, closestStation, 1000, 1000);
 
-  const trainPositions = getTrainPositions(pointsRef.current);
+  useEffect(() => {
+    if (transformedPoints.length > 0) {
+      pointsRef.current = transformedPoints;
+      return startAnimation(pointsRef);
+    }
+  }, [startAnimation, transformedPoints]);
+
+  const trainPositions = getTrainPositions(transformedPoints);
+
+  if (transformedPoints.length === 0) return null;
 
   return (
-    <div className="yamanote-map">
+    <div className="yamanote-line-container">
       <svg 
         ref={svgRef}
         width={width} 
-        height={height} 
-        viewBox={`0 0 ${width} ${height}`}
-        style={{ backgroundColor: '#f0f0f0', overflow: 'visible' }}
+        height={height}
+        viewBox="0 0 1000 1000"
+        preserveAspectRatio="xMidYMid meet"
+        className="yamanote-line"
       >
         <g className="paths">
           {transformedPoints.map((point, i) => {
@@ -160,27 +176,23 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
             />
           ))}
         </g>
-        <g className="user-position">
-          {userPositionData && (
-            userPositionData.isWithinBounds ? (
+        {userPositionData && (
+          <g className="user-position">
+            {userPositionData.userPoint.isWithinBounds ? (
               <UserPositionMarker
-                point={userPositionData.point}
-                connectionPoint={closestStation ? 
-                  transformedPoints[yamanoteStations.indexOf(closestStation)] : 
-                  undefined}
+                point={userPositionData.userPoint.point}
+                connectionPoint={userPositionData.connectionPoint}
               />
             ) : (
-              userPositionData.indicator && (
-                <DirectionIndicator
-                  edgeX={width-userPositionData.indicator.edgeX}
-                  edgeY={height-userPositionData.indicator.edgeY}
-                  bearing={userPositionData.indicator.bearing}
-                  distance={userPositionData.indicator.distance}
-                />
-              )
-            )
-          )}
-        </g>
+              <DirectionIndicator
+                edgeX={userPositionData.userPoint.indicator!.edgeX}
+                edgeY={userPositionData.userPoint.indicator!.edgeY}
+                bearing={userPositionData.bearing!}
+                distance={userPositionData.distance!}
+              />
+            )}
+          </g>
+        )}
       </svg>
     </div>
   );

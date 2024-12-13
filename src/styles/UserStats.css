@@ -1,0 +1,60 @@
+.user-stats {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  font-family: 'DotGothic16', monospace;
+  background: rgba(46, 125, 50, 0.1);
+  border-radius: 4px;
+  margin: 10px 0;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-value {
+  font-size: 1.2em;
+  color: #2e7d32;
+  font-weight: bold;
+}
+
+.stat-label {
+  font-size: 0.9em;
+  color: #444;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.stat-label .jp {
+  font-size: 1em;
+}
+
+.stat-label .en {
+  font-size: 0.8em;
+  opacity: 0.8;
+}
+
+/* Add glitch effect on hover */
+.stat-value:hover {
+  animation: textShadow 1.6s infinite;
+  cursor: default;
+}
+
+@keyframes textShadow {
+  0% {
+    text-shadow: 0.4389924193300864px 0 1px rgba(0,30,255,0.5), -0.4389924193300864px 0 1px rgba(255,0,80,0.3), 0 0 3px;
+  }
+  5% {
+    text-shadow: 2.7928974010788217px 0 1px rgba(0,30,255,0.5), -2.7928974010788217px 0 1px rgba(255,0,80,0.3), 0 0 3px;
+  }
+  100% {
+    text-shadow: 0.4389924193300864px 0 1px rgba(0,30,255,0.5), -0.4389924193300864px 0 1px rgba(255,0,80,0.3), 0 0 3px;
+  }
+}

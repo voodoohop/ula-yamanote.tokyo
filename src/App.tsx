@@ -5,6 +5,7 @@ import { StationInfo } from './components/StationInfo';
 import { EventInfo } from './components/EventInfo';
 import { Info } from './components/Info';
 import { PlayButton } from './components/PlayButton';
+import { UserStats } from './components/UserStats';
 import { useAudioControl } from './hooks/useAudioControl';
 import './styles/global.css';
 import './styles/StationName.css';
@@ -59,6 +60,7 @@ function App() {
           isPlaying={isPlaying}
         />
         <Effects />
+        <UserStats />
         <EventInfo />
       </div>
     );

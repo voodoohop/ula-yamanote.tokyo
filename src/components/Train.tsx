@@ -23,7 +23,7 @@ export function Train() {
 
     handleResize(); // Initial check
     window.addEventListener('resize', handleResize);
-    const interval = setInterval(updateUserLocation, 50);
+    const interval = setInterval(updateUserLocation, 100);
 
     return () => {
       clearInterval(interval);
