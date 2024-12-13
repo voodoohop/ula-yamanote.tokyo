@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { SystemAlert } from './SystemAlert';
 import { YamanoteLine } from './YamanoteLine';
 import { stationPlayer, initializeAudio } from '../utils/audio';
@@ -43,6 +43,7 @@ export function StationInfo({
   const [glitchText, setGlitchText] = useState('');
   const [glitchClass, setGlitchClass] = useState('');
   const [currentPlayingStation, setCurrentPlayingStation] = useState<string | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
   
   const stationData = useGPSTracking(isGpsActive);
   useSpeedRate(stationData?.speed ?? null);
@@ -113,6 +114,12 @@ export function StationInfo({
     return () => clearInterval(glitchInterval);
   }, []);
 
+  const handleMuteToggle = useCallback(() => {
+    const newMutedState = !isMuted;
+    setIsMuted(newMutedState);
+    stationPlayer.setMuted(newMutedState);
+  }, [isMuted]);
+
   // Only show system alert if GPS is not active AND we have no previous station data
   if (!isGpsActive && !stationData) {
     return (
@@ -146,6 +153,13 @@ export function StationInfo({
       <div className="noise"></div>
       <div className="crt-effect"></div>
       <img src={stationDisplayImage} alt="Station Display" className="station-display-image" />
+      <button 
+        onClick={handleMuteToggle}
+        className={`mute-button ${isMuted ? 'muted' : ''}`}
+        aria-label={isMuted ? 'Unmute' : 'Mute'}
+      >
+        {isMuted ? '🔇' : '🔊'}
+      </button>
       <div className="welcome-message">
         <div className="message-text">JR East wishes you a good trip ✈️</div>
         <div className="message-text-jp">JR東日本は、良い旅をお祈りします。</div>
