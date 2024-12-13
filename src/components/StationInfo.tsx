@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { SystemAlert } from './SystemAlert';
 import { YamanoteLine } from './YamanoteLine';
+import { GPSIndicator } from './GPSIndicator';
 import { stationPlayer, initializeAudio } from '../utils/audio';
 import { wakeLockManager } from '../utils/wakeLock';
 import { useGPSTracking } from '../hooks/useGPSTracking';
@@ -45,7 +46,7 @@ export function StationInfo({
   const [currentPlayingStation, setCurrentPlayingStation] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   
-  const stationData = useGPSTracking(isGpsActive);
+  const { stationData, gpsUpdateReceived } = useGPSTracking(isGpsActive);
   useSpeedRate(stationData?.speed ?? null);
 
   useEffect(() => {
@@ -149,6 +150,7 @@ export function StationInfo({
 
   return (
     <div className={`station-info ${isGpsActive ? 'gps-active' : ''} ${glitchClass}`}>
+      <GPSIndicator isActive={gpsUpdateReceived} />
       <div className="scanline"></div>
       <div className="noise"></div>
       <div className="crt-effect"></div>

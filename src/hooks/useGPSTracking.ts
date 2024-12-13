@@ -15,6 +15,7 @@ export interface StationData {
 export function useGPSTracking(isGpsActive: boolean) {
   const [stationData, setStationData] = useState<StationData | null>(null);
   const [watchId, setWatchId] = useState<number | null>(null);
+  const [gpsUpdateReceived, setGpsUpdateReceived] = useState(false);
 
   const updateInfo = useCallback((position: GeolocationPosition) => {
     const userLat = position.coords.latitude;
@@ -37,6 +38,8 @@ export function useGPSTracking(isGpsActive: boolean) {
       { lat: userLat, lng: userLng },
       { lat: closestStation.lat, lng: closestStation.lng }
     );
+
+    setGpsUpdateReceived(prev => !prev); // Toggle to trigger effects
 
     setStationData({
       name: closestStation.name,
@@ -81,5 +84,5 @@ export function useGPSTracking(isGpsActive: boolean) {
     };
   }, [isGpsActive, updateInfo, watchId]);
 
-  return stationData;
+  return { stationData, gpsUpdateReceived };
 }
