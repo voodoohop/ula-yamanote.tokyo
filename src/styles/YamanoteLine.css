@@ -7,12 +7,14 @@
   border: none;
   box-shadow: 0 0 20px rgba(46, 125, 50, 0.3);
   scale: 1.25;
+  overflow: visible;  /* Allow content to overflow */
 }
 
 .yamanote-svg {
   display: block;
   width: 280px;
   height: 280px;
+  overflow: visible;  /* Allow SVG content to overflow */
 }
 
 .yamanote-map::before {

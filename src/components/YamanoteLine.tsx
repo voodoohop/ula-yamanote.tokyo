@@ -245,7 +245,7 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
 
     const bearing = calculateBearing(userPosition, targetCoords);
     const distance = calculateDistance(userPosition, targetCoords);
-    const radius = Math.min(width, height) / 2 - 20;
+    const radius = Math.min(width, height) / 1.8 - 20;
     const edgeX = width/2 + radius * Math.sin(bearing);
     const edgeY = height/2 - radius * Math.cos(bearing);
 
@@ -263,7 +263,7 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
         width={width} 
         height={height} 
         viewBox={`0 0 ${width} ${height}`}
-        style={{ backgroundColor: '#f0f0f0' }}
+        style={{ backgroundColor: '#f0f0f0', overflow: 'visible' }}
       >
         <g className="paths">
           {transformedPoints.map((point, i) => {
@@ -312,8 +312,8 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
             ) : (
               userPositionData.indicator && (
                 <DirectionIndicator
-                  edgeX={userPositionData.indicator.edgeX}
-                  edgeY={userPositionData.indicator.edgeY}
+                  edgeX={width-userPositionData.indicator.edgeX}
+                  edgeY={height-userPositionData.indicator.edgeY}
                   bearing={userPositionData.indicator.bearing}
                   distance={userPositionData.indicator.distance}
                 />
