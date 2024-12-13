@@ -24,16 +24,27 @@ const StationPoint: React.FC<{
   isClosest: boolean;
 }> = ({ point, name, isClosest }) => (
   <g className="station-group">
+    {isClosest && (
+      <circle 
+        cx={point.x} 
+        cy={point.y} 
+        r={22} 
+        className="station-highlight"
+        fill="none"
+        stroke="#ff4757"
+        strokeWidth="2"
+      />
+    )}
     <circle 
       cx={point.x} 
       cy={point.y} 
-      r={isClosest ? 15 : 10} 
+      r={isClosest ? 18 : 10} 
       className={`station-point ${isClosest ? 'closest-station' : ''}`}
       data-station={name}
     />
     {isClosest && (
       <text 
-        x={point.x + 25} 
+        x={point.x + 30} 
         y={point.y + 8} 
         className="station-label"
         fontSize="32"
@@ -88,8 +99,18 @@ const DirectionIndicator: React.FC<{
   edgeY: number;
   bearing: number;
   distance: number;
-}> = ({ edgeX, edgeY, bearing, distance }) => (
+  connectionPoint?: Point;
+}> = ({ edgeX, edgeY, bearing, distance, connectionPoint }) => (
   <g className="direction-indicator">
+    {connectionPoint && (
+      <line
+        x1={connectionPoint.x}
+        y1={connectionPoint.y}
+        x2={edgeX}
+        y2={edgeY}
+        className="direction-indicator-line"
+      />
+    )}
     <circle 
       cx={edgeX} 
       cy={edgeY} 
@@ -158,6 +179,15 @@ export const YamanoteLine = ({ width = 300, height = 300, userPosition, closestS
               );
             })}
           </g>
+          <g className="trains">
+            {trainPositions.map((position, i) => (
+              <TrainMarker
+                key={`train-${i}`}
+                position={position}
+                direction={i % 2 === 0 ? 'clockwise' : 'counterclockwise'}
+              />
+            ))}
+          </g>
           <g className="stations">
             {transformedPoints.map((point, i) => (
               <StationPoint
@@ -165,15 +195,6 @@ export const YamanoteLine = ({ width = 300, height = 300, userPosition, closestS
                 point={point}
                 name={yamanoteStations[i]}
                 isClosest={yamanoteStations[i] === closestStation}
-              />
-            ))}
-          </g>
-          <g className="trains">
-            {trainPositions.map((position, i) => (
-              <TrainMarker
-                key={`train-${i}`}
-                position={position}
-                direction={i % 2 === 0 ? 'clockwise' : 'counterclockwise'}
               />
             ))}
           </g>
@@ -190,6 +211,7 @@ export const YamanoteLine = ({ width = 300, height = 300, userPosition, closestS
                   edgeY={userPositionData.userPoint.indicator!.edgeY}
                   bearing={userPositionData.bearing!}
                   distance={userPositionData.distance!}
+                  connectionPoint={userPositionData.connectionPoint}
                 />
               )}
             </g>

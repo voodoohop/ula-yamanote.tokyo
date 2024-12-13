@@ -20,7 +20,7 @@
     inset 0 0 15px rgba(0, 0, 0, 0.3);
   position: relative;
   padding: 15px;
-  transform: scale(1.25);
+  transform: scale(1.5);
 }
 
 .yamanote-svg {
@@ -54,29 +54,29 @@
 }
 
 .line-path {
-  stroke: #9acd32;
-  stroke-width: 8;
+  stroke: #7fb91e;  /* Darker shade of green for better contrast */
+  stroke-width: 6;  /* Slimmer lines */
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
-  opacity: 0.6;
+  opacity: 0.8;  /* Increased opacity for better visibility */
 }
 
 .line-path.highlighted {
-  stroke: #32cd32;
-  stroke-width: 12;
-  opacity: 0.8;
+  stroke: #2ba532;  /* Darker highlight green */
+  stroke-width: 10;
+  opacity: 0.9;
   animation: path-pulse 1.5s ease-in-out infinite;
-  filter: drop-shadow(0 0 3px rgba(50, 205, 50, 0.3));
+  filter: drop-shadow(0 0 3px rgba(43, 165, 50, 0.4));
 }
 
 .station-point {
   fill: white;
-  stroke: #9acd32;
+  stroke: #7fb91e;  /* Matching the line color */
   stroke-width: 4;
-  opacity: 0.9;
+  opacity: 0.95;
   transition: r 0.2s ease-in-out, filter 0.2s ease-in-out;
-  filter: drop-shadow(0 0 2px rgba(154, 205, 50, 0.4));
+  filter: drop-shadow(0 0 2px rgba(127, 185, 30, 0.5));
 }
 
 .station-point:hover {
@@ -86,11 +86,11 @@
 }
 
 .closest-station {
-  fill: #32cd32;
+  fill: #ff4757;  /* A vibrant red that stands out from the green line */
   stroke: white;
-  stroke-width: 1.5;
-  filter: drop-shadow(0 0 4px rgba(50, 205, 50, 0.5));
-  animation: station-pulse 1.5s ease-in-out infinite;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 8px rgba(255, 71, 87, 0.8));
+  animation: station-glow 1.5s ease-in-out infinite;
 }
 
 .user-position-marker {
@@ -118,12 +118,12 @@
 }
 
 .station-label {
-  fill: #333;
+  fill: #1a1a1a;
   font-size: 32px;
   font-weight: bold;
-  filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8));
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 1));
   pointer-events: none;
-  animation: label-fade 1.5s ease-in-out infinite;
+  animation: label-glow 1.5s ease-in-out infinite;
 }
 
 .connection-line {
@@ -142,6 +142,17 @@
   opacity: 0.9;
   stroke: #4169e1;
   stroke-width: 2;
+}
+
+.direction-indicator-line {
+  fill: none;
+  stroke: #4169e1;
+  stroke-opacity: 0.8;
+  stroke-width: 4;
+  stroke-dasharray: 8 8;
+  stroke-linecap: round;
+  animation: dash 1s linear infinite;
+  filter: drop-shadow(0 0 2px rgba(65, 105, 225, 0.3));
 }
 
 .direction-indicator-arrow {
@@ -207,18 +218,18 @@
   }
 }
 
-@keyframes station-pulse {
+@keyframes station-glow {
   0% {
-    r: 3;
-    opacity: 0.8;
+    filter: drop-shadow(0 0 8px rgba(255, 71, 87, 0.6));
+    stroke-opacity: 0.8;
   }
   50% {
-    r: 4;
-    opacity: 1;
+    filter: drop-shadow(0 0 15px rgba(255, 71, 87, 0.9));
+    stroke-opacity: 1;
   }
   100% {
-    r: 3;
-    opacity: 0.8;
+    filter: drop-shadow(0 0 8px rgba(255, 71, 87, 0.6));
+    stroke-opacity: 0.8;
   }
 }
 
@@ -267,15 +278,15 @@
   }
 }
 
-@keyframes label-fade {
+@keyframes label-glow {
   0% {
-    opacity: 0.8;
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.9));
   }
   50% {
-    opacity: 1;
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 1));
   }
   100% {
-    opacity: 0.8;
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.9));
   }
 }
 

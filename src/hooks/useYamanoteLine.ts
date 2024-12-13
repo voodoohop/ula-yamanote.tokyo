@@ -138,13 +138,16 @@ export const useUserPosition = (
   const edgeX = width/2 + radius * Math.cos(bearing);
   const edgeY = height/2 - radius * Math.sin(bearing);
 
+  // Transform the target coordinates to get the connection point
+  const connectionPoint = transformCoord(targetCoords);
+
   return {
     userPoint: {
       point,
       isWithinBounds: false,
       indicator: { edgeX, edgeY, bearing: -bearing, distance }
     },
-    connectionPoint: undefined,
+    connectionPoint,
     bearing,
     distance
   };

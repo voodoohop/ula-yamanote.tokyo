@@ -10,7 +10,7 @@ export interface Train {
 }
 
 export const TOTAL_TRAINS = 24; // 12 trains in each direction
-export const CIRCUIT_TIME_MS = 24 * 60 * 1000; // 24 minutes in milliseconds (2x faster than real-time)
+export const CIRCUIT_TIME_MS = 8 * 60 * 1000; // 8 minutes in milliseconds (3x faster than real-time)
 
 export function createInitialTrains(): Train[] {
   const halfLength = TOTAL_TRAINS / 2;
