@@ -2,7 +2,10 @@ import React from 'react';
 import { useUserStats } from '../hooks/useUserStats';
 import '../styles/UserStats.css';
 
+// Component temporarily disabled
 export function UserStats() {
+  return null;
+  /*
   const { activeUsers, totalUsers } = useUserStats();
 
   return (
@@ -23,4 +26,5 @@ export function UserStats() {
       </div>
     </div>
   );
+  */
 }
