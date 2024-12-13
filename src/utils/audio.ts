@@ -184,6 +184,14 @@ class StationPlayer {
         this.currentPlayer.volume.value = this.isMuted ? -Infinity : 0;  // Ensure final volume is at 0 dB
         this.nextPlayer = null;
         this.currentTrack = stationName;
+
+        // Start health check monitoring
+        if (this.healthCheckInterval) {
+          clearInterval(this.healthCheckInterval);
+        }
+        this.healthCheckInterval = setInterval(() => {
+          this.checkPlaybackHealth();
+        }, 5000); // Check every 5 seconds
       }, this.crossfadeDuration * 1000 + 100);
 
     } catch (error) {
