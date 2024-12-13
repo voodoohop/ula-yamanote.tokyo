@@ -132,68 +132,70 @@ export const YamanoteLine = ({ width = 300, height = 300, userPosition, closestS
 
   return (
     <div className="yamanote-line-container">
-      <svg 
-        ref={svgRef}
-        width={width} 
-        height={height}
-        viewBox="0 0 1000 1000"
-        preserveAspectRatio="xMidYMid meet"
-        className="yamanote-line"
-      >
-        <g className="paths">
-          {transformedPoints.map((point, i) => {
-            const nextIndex = (i + 1) % transformedPoints.length;
-            const isConnectedToClosest = closestStation && 
-              (yamanoteStations[i] === closestStation || 
-               yamanoteStations[nextIndex] === closestStation);
+      <div className="yamanote-map">
+        <svg 
+          ref={svgRef}
+          width={width} 
+          height={height}
+          viewBox="0 0 1000 1000"
+          preserveAspectRatio="xMidYMid meet"
+          className="yamanote-line"
+        >
+          <g className="paths">
+            {transformedPoints.map((point, i) => {
+              const nextIndex = (i + 1) % transformedPoints.length;
+              const isConnectedToClosest = closestStation && 
+                (yamanoteStations[i] === closestStation || 
+                 yamanoteStations[nextIndex] === closestStation);
 
-            return (
-              <LinePath
-                key={`path-${i}`}
-                point1={point}
-                point2={transformedPoints[nextIndex]}
-                isHighlighted={isConnectedToClosest}
-              />
-            );
-          })}
-        </g>
-        <g className="stations">
-          {transformedPoints.map((point, i) => (
-            <StationPoint
-              key={`station-${i}`}
-              point={point}
-              name={yamanoteStations[i]}
-              isClosest={yamanoteStations[i] === closestStation}
-            />
-          ))}
-        </g>
-        <g className="trains">
-          {trainPositions.map((position, i) => (
-            <TrainMarker
-              key={`train-${i}`}
-              position={position}
-              direction={i % 2 === 0 ? 'clockwise' : 'counterclockwise'}
-            />
-          ))}
-        </g>
-        {userPositionData && (
-          <g className="user-position">
-            {userPositionData.userPoint.isWithinBounds ? (
-              <UserPositionMarker
-                point={userPositionData.userPoint.point}
-                connectionPoint={userPositionData.connectionPoint}
-              />
-            ) : (
-              <DirectionIndicator
-                edgeX={userPositionData.userPoint.indicator!.edgeX}
-                edgeY={userPositionData.userPoint.indicator!.edgeY}
-                bearing={userPositionData.bearing!}
-                distance={userPositionData.distance!}
-              />
-            )}
+              return (
+                <LinePath
+                  key={`path-${i}`}
+                  point1={point}
+                  point2={transformedPoints[nextIndex]}
+                  isHighlighted={isConnectedToClosest}
+                />
+              );
+            })}
           </g>
-        )}
-      </svg>
+          <g className="stations">
+            {transformedPoints.map((point, i) => (
+              <StationPoint
+                key={`station-${i}`}
+                point={point}
+                name={yamanoteStations[i]}
+                isClosest={yamanoteStations[i] === closestStation}
+              />
+            ))}
+          </g>
+          <g className="trains">
+            {trainPositions.map((position, i) => (
+              <TrainMarker
+                key={`train-${i}`}
+                position={position}
+                direction={i % 2 === 0 ? 'clockwise' : 'counterclockwise'}
+              />
+            ))}
+          </g>
+          {userPositionData && (
+            <g className="user-position">
+              {userPositionData.userPoint.isWithinBounds ? (
+                <UserPositionMarker
+                  point={userPositionData.userPoint.point}
+                  connectionPoint={userPositionData.connectionPoint}
+                />
+              ) : (
+                <DirectionIndicator
+                  edgeX={userPositionData.userPoint.indicator!.edgeX}
+                  edgeY={userPositionData.userPoint.indicator!.edgeY}
+                  bearing={userPositionData.bearing!}
+                  distance={userPositionData.distance!}
+                />
+              )}
+            </g>
+          )}
+        </svg>
+      </div>
     </div>
   );
 }

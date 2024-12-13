@@ -145,13 +145,13 @@ export function StationInfo({
       <div className="scanline"></div>
       <div className="noise"></div>
       <div className="crt-effect"></div>
-      
+      <img src={stationDisplayImage} alt="Station Display" className="station-display-image" />
+      <div className="welcome-message">
+        <div className="message-text">JR East wishes you a good trip ✈️</div>
+        <div className="message-text-jp">JR東日本は、良い旅をお祈りします。</div>
+      </div>
       <div className="current-station">
         <div className="proximity-info">
-          <div className="closest-station-label">
-            <img src={stationDisplayImage} alt="Station Display" className="station-display-image" />
-          </div>
-          
           <div className="station-name-display">
             <span className="glitch" data-text={`${stationData.japaneseName} (${stationData.name})`}>
               {stationData.japaneseName} ({stationData.name})

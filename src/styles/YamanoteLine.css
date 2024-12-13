@@ -1,13 +1,26 @@
+.yamanote-line-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0;
+}
+
 .yamanote-map {
-  display: block;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: 280px;
   height: 280px;
   margin: 20px auto;
   background: rgba(172, 181, 176, 0.95);
-  border: none;
-  box-shadow: 0 0 20px rgba(46, 125, 50, 0.3);
-  scale: 1.25;
-  overflow: visible;  /* Allow content to overflow */
+  border: 6px solid #2c2c2c;
+  border-radius: 20px;
+  box-shadow: 
+    0 0 20px rgba(46, 125, 50, 0.3),
+    inset 0 0 15px rgba(0, 0, 0, 0.3);
+  position: relative;
+  padding: 15px;
+  transform: scale(1.25);
 }
 
 .yamanote-svg {
