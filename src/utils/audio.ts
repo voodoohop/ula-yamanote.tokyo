@@ -141,62 +141,51 @@ class StationPlayer {
         this.preloadedTracks.delete(stationName);
       }
 
-      // Start Tone.js context
-      await Tone.start();
+      // Start Tone.js context if needed
+      if (Tone.context.state !== 'running') {
+        await Tone.start();
+      }
 
       // First track case
       if (!this.currentPlayer) {
         this.currentPlayer = newPlayer;
         this.currentTrack = stationName;
+        this.currentPlayer.volume.value = this.isMuted ? -Infinity : -60;
         await this.currentPlayer.start();
-        this.currentPlayer.volume.rampTo(0, 0.1); // Quick fade in to 0 dB
+        this.currentPlayer.volume.rampTo(this.isMuted ? -Infinity : 0, 0.1);
         return;
       }
 
-      // Start crossfade
+      // Prepare the crossfade
       this.nextPlayer = newPlayer;
+      this.nextPlayer.volume.value = -60;
       await this.nextPlayer.start();
-      
-      // Calculate volume curves for crossfade
+
+      // Use a single now reference for all scheduling
       const now = Tone.now();
-      const targetVolume = 0;  // Always target 0 dB for full volume
-      const silentVolume = -Infinity;
+      const fadeOutDuration = this.crossfadeDuration;
+      const fadeInDuration = this.crossfadeDuration;
 
-      // Start both volume ramps at the same time
-      this.currentPlayer.volume.cancelScheduledValues(now);
-      this.nextPlayer.volume.cancelScheduledValues(now);
-      
-      // Set initial volumes
-      this.currentPlayer.volume.setValueAtTime(targetVolume, now);
-      this.nextPlayer.volume.setValueAtTime(silentVolume, now);
-      
-      // Perform the crossfade
-      this.currentPlayer.volume.linearRampToValueAtTime(silentVolume, now + this.crossfadeDuration);
-      this.nextPlayer.volume.linearRampToValueAtTime(targetVolume, now + this.crossfadeDuration);
+      // Schedule the crossfade
+      this.currentPlayer?.volume.rampTo(-60, fadeOutDuration, now);
+      this.nextPlayer.volume.rampTo(this.isMuted ? -Infinity : 0, fadeInDuration, now);
 
-      // Schedule cleanup of old player
-      setTimeout(() => {
+      // Clean up after the fade
+      Tone.Transport.scheduleOnce(() => {
         if (this.currentPlayer) {
-          this.currentPlayer.stop();
-          this.currentPlayer.dispose();
+          this.currentPlayer.stop().dispose();
         }
         this.currentPlayer = this.nextPlayer;
-        this.currentPlayer.volume.value = this.isMuted ? -Infinity : 0;  // Ensure final volume is at 0 dB
         this.nextPlayer = null;
         this.currentTrack = stationName;
-
-        // Start health check monitoring
-        if (this.healthCheckInterval) {
-          clearInterval(this.healthCheckInterval);
-        }
-        this.healthCheckInterval = setInterval(() => {
-          this.checkPlaybackHealth();
-        }, 5000); // Check every 5 seconds
-      }, this.crossfadeDuration * 1000 + 100);
+      }, `+${fadeOutDuration + 0.1}`);
 
     } catch (error) {
       console.error(`Error loading track for ${stationName}:`, error);
-      this.retryLoadTrack(stationName);
+      // Only retry if this is still the current track request
+      if (this.currentTrack === stationName || !this.currentTrack) {
+        this.retryLoadTrack(stationName);
+      }
     } finally {
       this.isLoading = false;
     }
