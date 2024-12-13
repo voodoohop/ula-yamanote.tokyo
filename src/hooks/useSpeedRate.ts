@@ -11,15 +11,15 @@ export function useSpeedRate(speed: number | null) {
       if (speed !== null) {
         // More gradual transition for low speeds
         if (speed <= 1) {
-          targetRate = 0.7;  // Higher minimum rate
+          targetRate = 0.85;  // Higher minimum rate for less dramatic slowdown
         } else if (speed >= 8) {
           targetRate = 1.0;  // Maximum rate at higher speed
         } else {
-          targetRate = 0.7 + (speed / 8) * 0.3;  // More gentle slope
+          targetRate = 0.85 + (speed / 8) * 0.15;  // More gentle slope
         }
       }
 
-      const smoothing = 0.8;  // Faster response (20% of new value each update)
+      const smoothing = 0.95;  // Slower response (5% of new value each update)
       const newRate = smoothing * smoothedRate + (1 - smoothing) * targetRate;
       
       if (Math.abs(newRate - smoothedRate) > 0.001) {  // Less sensitive threshold
@@ -28,7 +28,7 @@ export function useSpeedRate(speed: number | null) {
       }
     };
 
-    const interval = setInterval(updateRate, 200);  // Update less frequently
+    const interval = setInterval(updateRate, 300);  // Update less frequently
     return () => clearInterval(interval);
   }, [speed, smoothedRate]);
 
