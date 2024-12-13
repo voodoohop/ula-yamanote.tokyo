@@ -1,15 +1,12 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { SystemAlert } from './SystemAlert';
 import { YamanoteLine } from './YamanoteLine';
-import { GPSIndicator } from './GPSIndicator';
-import { stationPlayer } from '../utils/audio';
-import { debounce } from '../utils/debounce';
+import { stationPlayer, initializeAudio } from '../utils/audio';
 import { wakeLockManager } from '../utils/wakeLock';
 import { useGPSTracking } from '../hooks/useGPSTracking';
 import { useSpeedRate } from '../hooks/useSpeedRate';
 import { stationTrackMap } from '../data/stations';
 import stationDisplayImage from '../assets/glitchstationdisplaysmaller.webp';
-import * as Tone from 'tone';
 import '../styles/StationInfo.css';
 
 interface Props {
@@ -46,52 +43,48 @@ export function StationInfo({
   const [glitchText, setGlitchText] = useState('');
   const [glitchClass, setGlitchClass] = useState('');
   const [currentPlayingStation, setCurrentPlayingStation] = useState<string | null>(null);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isAudioInitialized, setIsAudioInitialized] = useState(false);
   
-  const { stationData, gpsUpdateReceived } = useGPSTracking(isGpsActive);
+  const stationData = useGPSTracking(isGpsActive);
   useSpeedRate(stationData?.speed ?? null);
 
-  const transitionToStation = useCallback(async (stationName: string) => {
-    console.log('Transitioning from', currentPlayingStation, 'to', stationName);
-    
-    try {
-      if (!isAudioInitialized) {
-        await Tone.start();
-        setIsAudioInitialized(true);
-      }
-      
-      if (stationName) {
-        setIsLoading(true);
-        await stationPlayer?.loadTrack(stationName);
-        setCurrentPlayingStation(stationName);
-        setIsLoading(false);
-      }
-    } catch (error) {
-      console.error('Error transitioning to station:', error);
-      setIsLoading(false);
-    }
-  }, [currentPlayingStation, isAudioInitialized]);
-
-  // Create debounced version of transition function
-  const debouncedTransition = useCallback(
-    debounce(transitionToStation, 1000),
-    [transitionToStation]
-  );
+  useEffect(() => {
+    initializeAudio();
+  }, []);
 
   useEffect(() => {
-    const stations = Object.keys(stationTrackMap);
-    const currentStation = stations[currentStationIndex];
-    
-    if (currentStation) {
-      debouncedTransition(currentStation);
-    }
+    if (stationData && stationData.name !== currentPlayingStation) {
+      const playStationTrack = async () => {
+        try {
+          console.log(`Transitioning from ${currentPlayingStation} to ${stationData.name}`);
+          
+          // Find the current station index
+          const stations = Object.keys(stationTrackMap);
+          const currentIndex = stations.indexOf(stationData.name);
+          
+          // Preload adjacent stations
+          if (currentIndex !== -1) {
+            const prevStation = stations[(currentIndex - 1 + stations.length) % stations.length];
+            const nextStation = stations[(currentIndex + 1) % stations.length];
+            
+            // Start preloading adjacent stations
+            await Promise.all([
+              stationPlayer.preloadTrack(prevStation),
+              stationPlayer.preloadTrack(nextStation)
+            ]);
+          }
 
-    // Cleanup
-    return () => {
-      debouncedTransition.cancel?.();
-    };
-  }, [currentStationIndex, debouncedTransition]);
+          // Load and play the current station
+          await stationPlayer.loadTrack(stationData.name);
+          await wakeLockManager.acquire();
+          setCurrentPlayingStation(stationData.name);
+          console.log(`Successfully transitioned to ${stationData.name}`);
+        } catch (error) {
+          console.error('Error during station transition:', error);
+        }
+      };
+      playStationTrack();
+    }
+  }, [stationData?.name, currentPlayingStation]);
 
   useEffect(() => {
     return () => {
@@ -119,12 +112,6 @@ export function StationInfo({
 
     return () => clearInterval(glitchInterval);
   }, []);
-
-  const handleMuteToggle = useCallback(() => {
-    const newMutedState = !isMuted;
-    setIsMuted(newMutedState);
-    stationPlayer.setMuted(newMutedState);
-  }, [isMuted]);
 
   // Only show system alert if GPS is not active AND we have no previous station data
   if (!isGpsActive && !stationData) {
@@ -155,22 +142,10 @@ export function StationInfo({
 
   return (
     <div className={`station-info ${isGpsActive ? 'gps-active' : ''} ${glitchClass}`}>
-      <GPSIndicator 
-        isActive={gpsUpdateReceived} 
-        speed={stationData?.speed}
-        distance={stationData?.distance}
-      />
       <div className="scanline"></div>
       <div className="noise"></div>
       <div className="crt-effect"></div>
       <img src={stationDisplayImage} alt="Station Display" className="station-display-image" />
-      <button 
-        onClick={handleMuteToggle}
-        className={`mute-button ${isMuted ? 'muted' : ''}`}
-        aria-label={isMuted ? 'Unmute' : 'Mute'}
-      >
-        {isMuted ? '🔇' : '🔊'}
-      </button>
       <div className="welcome-message">
         <div className="message-text">JR East wishes you a good trip ✈️</div>
         <div className="message-text-jp">JR東日本は、良い旅をお祈りします。</div>

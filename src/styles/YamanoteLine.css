@@ -54,21 +54,20 @@
 }
 
 .line-path {
-  stroke: #4a8c0f;  /* Darker green for better visibility */
-  stroke-width: 4;  /* Thinner lines for more precision */
+  stroke: #7fb91e;  /* Darker shade of green for better contrast */
+  stroke-width: 6;  /* Slimmer lines */
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
-  opacity: 1;  /* Full opacity for better visibility */
-  filter: drop-shadow(0 0 1px rgba(74, 140, 15, 0.3));  /* Subtle shadow for depth */
+  opacity: 0.8;  /* Increased opacity for better visibility */
 }
 
 .line-path.highlighted {
-  stroke: #2ba532;  /* Keep the highlighted color */
-  stroke-width: 8;  /* Slightly thinner highlight */
-  opacity: 1;
+  stroke: #2ba532;  /* Darker highlight green */
+  stroke-width: 10;
+  opacity: 0.9;
   animation: path-pulse 1.5s ease-in-out infinite;
-  filter: drop-shadow(0 0 3px rgba(43, 165, 50, 0.5));
+  filter: drop-shadow(0 0 3px rgba(43, 165, 50, 0.4));
 }
 
 .station-point {
@@ -95,19 +94,18 @@
 }
 
 .user-position-marker {
-  filter: drop-shadow(0 0 4px rgba(65, 105, 225, 0.5));
+  filter: drop-shadow(0 0 4px rgba(65, 105, 225, 0.6));
 }
 
 .user-point {
   fill: #4169e1;
   stroke: white;
-  stroke-width: 4;
+  stroke-width: 3;
   opacity: 0.9;
-  animation: user-pulse 2s ease-in-out infinite;
 }
 
 .user-point-inner {
-  animation: user-inner-pulse 2s ease-in-out infinite;
+  animation: pulse 2s ease-in-out infinite;
 }
 
 .user-arrow {
@@ -130,10 +128,8 @@
 .connection-line {
   fill: none;
   stroke: #4169e1;
-  stroke-opacity: 0.8;
-  stroke-width: 4;
-  stroke-dasharray: 8 8;
-  stroke-linecap: round;
+  stroke-dasharray: 6;
+  opacity: 0.6;
   animation: dash 1s linear infinite;
   filter: drop-shadow(0 0 2px rgba(65, 105, 225, 0.3));
 }
@@ -300,9 +296,20 @@
   }
 }
 
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.6;
+  }
+}
+
 @keyframes dash {
   to {
-    stroke-dashoffset: -16;
+    stroke-dashoffset: -12;
   }
 }
 
