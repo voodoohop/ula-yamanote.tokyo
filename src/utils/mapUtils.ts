@@ -100,14 +100,14 @@ export function createCoordinateTransformer(
   const initialOffsetY = (height - scale) / 2;
 
   return function transformCoord(coord: Coordinates): Point {
-    let x = initialOffsetX + (scale * (coord.lng - squareBounds.minLng) / 
+    // X coordinate increases with longitude (east)
+    const x = initialOffsetX + (scale * (coord.lng - squareBounds.minLng) / 
       (squareBounds.maxLng - squareBounds.minLng));
-    let y = initialOffsetY + (scale * (1 - (coord.lat - squareBounds.minLat) / 
+    
+    // Y coordinate should decrease as latitude increases (north)
+    // So we invert the y-axis mapping
+    const y = initialOffsetY + (scale * (1 - (coord.lat - squareBounds.minLat) / 
       (squareBounds.maxLat - squareBounds.minLat)));
-
-    // Invert both axes
-    x = width - x;
-    y = height - y;
 
     return { x, y };
   };

@@ -22,14 +22,120 @@ interface Props {
   closestStation?: string;
 }
 
+interface Point {
+  x: number;
+  y: number;
+}
+
+interface TrainPosition {
+  x: number;
+  y: number;
+  angle: number;
+}
+
 // Use station names from the ordered stations array
 const yamanoteStations = stations.map(station => station.name);
+
+const LinePath: React.FC<{
+  point1: Point;
+  point2: Point;
+  isHighlighted: boolean;
+}> = ({ point1, point2, isHighlighted }) => (
+  <path 
+    className={`line-path ${isHighlighted ? 'highlighted' : ''}`}
+    d={`M ${point1.x},${point1.y} L ${point2.x},${point2.y}`}
+  />
+);
+
+const StationPoint: React.FC<{
+  point: Point;
+  name: string;
+  isClosest: boolean;
+}> = ({ point, name, isClosest }) => (
+  <g className="station-group">
+    <circle 
+      cx={point.x} 
+      cy={point.y} 
+      r={isClosest ? 3 : 2} 
+      className={`station-point ${isClosest ? 'closest-station' : ''}`}
+      data-station={name}
+    />
+    {isClosest && (
+      <text 
+        x={point.x + 8} 
+        y={point.y + 4} 
+        className="station-label"
+      >
+        {name}
+      </text>
+    )}
+  </g>
+);
+
+const TrainMarker: React.FC<{
+  position: TrainPosition;
+}> = ({ position }) => (
+  <g className="train" transform={`translate(${position.x},${position.y}) rotate(${position.angle})`}>
+    <circle r={3} className="train-point" />
+    <path d="M-4,-1.5 L4,-1.5 L4,1.5 L-4,1.5 Z" className="train-body" />
+  </g>
+);
+
+const UserPositionMarker: React.FC<{
+  point: Point;
+  connectionPoint?: Point;
+}> = ({ point, connectionPoint }) => (
+  <>
+    {connectionPoint && (
+      <path
+        className="connection-line"
+        d={`M ${point.x},${point.y} L ${connectionPoint.x},${connectionPoint.y}`}
+      />
+    )}
+    <circle 
+      cx={point.x} 
+      cy={point.y} 
+      r={4} 
+      className="user-point"
+    />
+  </>
+);
+
+const DirectionIndicator: React.FC<{
+  edgeX: number;
+  edgeY: number;
+  bearing: number;
+  distance: number;
+}> = ({ edgeX, edgeY, bearing, distance }) => (
+  <g className="direction-indicator">
+    <circle 
+      cx={edgeX} 
+      cy={edgeY} 
+      r={12} 
+      className="direction-indicator-bg"
+    />
+    <polygon 
+      points={`${edgeX},${edgeY-12} ${edgeX-8},${edgeY+4} ${edgeX+8},${edgeY+4}`}
+      transform={`rotate(${bearing * 180 / Math.PI}, ${edgeX}, ${edgeY})`}
+      className="direction-indicator-arrow"
+    />
+    <text
+      x={edgeX}
+      y={edgeY + 24}
+      textAnchor="middle"
+      className="distance-text"
+    >
+      {`${distance.toFixed(1)}km`}
+    </text>
+  </g>
+);
 
 export function YamanoteLine({ width = 300, height = 300, userPosition, closestStation }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [trains, setTrains] = useState<Train[]>([]);
+  const [transformedPoints, setTransformedPoints] = useState<Point[]>([]);
   const animationFrameRef = useRef<number>();
-  const pointsRef = useRef<Array<{x: number; y: number}>>([]);
+  const pointsRef = useRef<Point[]>([]);
 
   // Initialize trains
   useEffect(() => {
@@ -43,7 +149,7 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
 
   // Animate trains
   useEffect(() => {
-    if (pointsRef.current.length === 0) return; // Don't start animation until points are ready
+    if (pointsRef.current.length === 0) return;
     
     let lastTime = performance.now();
     
@@ -64,6 +170,7 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
     };
   }, [pointsRef.current]);
 
+  // Transform coordinates
   useEffect(() => {
     if (!svgRef.current) return;
 
@@ -94,159 +201,60 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
     const finalTransformCoord = (lat: number, lng: number) => {
       const initial = transformCoord({ lat, lng });
       return {
-        x: width - (initial.x + offset.x),
-        y: height - (initial.y + offset.y)
+        x: initial.x + offset.x,
+        y: initial.y + offset.y
       };
     };
 
-    // Store points in ref for train calculations
-    pointsRef.current = points.map(point => ({
-      x: width - (point.x + offset.x),
-      y: height - (point.y + offset.y)
-    }));
+    // Transform and store points
+    const transformedPoints = yamanoteCoordinates.map(station => 
+      finalTransformCoord(station.lat, station.lng)
+    );
 
-    // Create path segments
-    const pathSegments = pointsRef.current.map((point, i) => {
-      const nextIndex = (i + 1) % pointsRef.current.length;
-      const isConnectedToClosest = closestStation && 
-        (yamanoteCoordinates[i].name === closestStation || 
-         yamanoteCoordinates[nextIndex].name === closestStation);
+    setTransformedPoints(transformedPoints);
+    pointsRef.current = transformedPoints;
+  }, [width, height]);
 
-      return `<path 
-        class="line-path ${isConnectedToClosest ? 'highlighted' : ''}"
-        d="M ${point.x},${point.y} L ${pointsRef.current[nextIndex].x},${pointsRef.current[nextIndex].y}"
-      />`;
-    });
+  // Calculate train positions
+  const trainPositions = trains.map(train => {
+    const position = calculateTrainPosition(train, pointsRef.current);
+    return position || null;
+  }).filter((pos): pos is TrainPosition => pos !== null);
 
-    // Update the paths
-    const pathGroup = svgRef.current.querySelector('.paths');
-    if (pathGroup) {
-      pathGroup.innerHTML = pathSegments.join('');
+  // Calculate user position data
+  const userPositionData = userPosition && (() => {
+    const bounds = calculateBounds(stations);
+    const transformCoord = createCoordinateTransformer(bounds, width, height);
+    const point = transformCoord(userPosition);
+    const padding = 20;
+
+    if (isPointWithinBounds(point, width, height, padding)) {
+      return { point, isWithinBounds: true };
     }
 
-    // Update station points
-    const stationGroup = svgRef.current.querySelector('.stations');
-    if (stationGroup) {
-      stationGroup.innerHTML = yamanoteCoordinates
-        .map((station) => {
-          const point = finalTransformCoord(station.lat, station.lng);
-          const isClosest = station.name === closestStation;
-          return `
-            <g class="station-group">
-              <circle 
-                cx="${point.x}" 
-                cy="${point.y}" 
-                r="${isClosest ? 3 : 2}" 
-                class="station-point ${isClosest ? 'closest-station' : ''}"
-                data-station="${station.name}"
-              />
-              ${isClosest ? `
-                <text 
-                  x="${point.x + 8}" 
-                  y="${point.y + 4}" 
-                  class="station-label"
-                >${station.name}</text>
-              ` : ''}
-            </g>
-          `;
-        })
-        .join('');
-    }
+    // Calculate off-map indicator position
+    const closestStationData = closestStation 
+      ? stations.find(s => s.name === closestStation)
+      : null;
+    const targetCoords = closestStationData 
+      ? { lat: closestStationData.lat, lng: closestStationData.lng }
+      : { 
+          lat: bounds.minLat + (bounds.maxLat - bounds.minLat) / 2,
+          lng: bounds.minLng + (bounds.maxLng - bounds.minLng) / 2 
+        };
 
-    // Update trains
-    const trainGroup = svgRef.current.querySelector('.trains');
-    if (trainGroup && pointsRef.current.length > 0) {
-      trainGroup.innerHTML = trains.map(train => {
-        const position = calculateTrainPosition(train, pointsRef.current);
-        if (!position) return ''; // Skip rendering if position calculation failed
-        
-        const { x, y, angle } = position;
-        return `
-          <g class="train" transform="translate(${x},${y}) rotate(${angle})">
-            <circle r="3" class="train-point" />
-            <path d="M-4,-1.5 L4,-1.5 L4,1.5 L-4,1.5 Z" class="train-body" />
-          </g>
-        `;
-      }).join('');
-    }
+    const bearing = calculateBearing(userPosition, targetCoords);
+    const distance = calculateDistance(userPosition, targetCoords);
+    const radius = Math.min(width, height) / 2 - 20;
+    const edgeX = width/2 + radius * Math.sin(bearing);
+    const edgeY = height/2 - radius * Math.cos(bearing);
 
-    // Add user position if available
-    const userGroup = svgRef.current.querySelector('.user-position');
-    if (userGroup && userPosition) {
-      const point = finalTransformCoord(userPosition.lat, userPosition.lng);
-      
-      // Check if point is within bounds with some padding
-      const padding = 20;
-      if (isPointWithinBounds(point, width, height, padding)) {
-        // Draw connection line to closest station if available
-        let connectionLine = '';
-        if (closestStation) {
-          const closestStationData = yamanoteCoordinates.find(s => s.name === closestStation);
-          if (closestStationData) {
-            const closestPoint = finalTransformCoord(
-              closestStationData.lat,
-              closestStationData.lng
-            );
-            connectionLine = `
-              <path
-                class="connection-line"
-                d="M ${point.x},${point.y} L ${closestPoint.x},${closestPoint.y}"
-              />
-            `;
-          }
-        }
-
-        userGroup.innerHTML = `
-          ${connectionLine}
-          <circle 
-            cx="${point.x}" 
-            cy="${point.y}" 
-            r="4" 
-            class="user-point"
-          />
-        `;
-      } else {
-        // If we have a closest station, point towards it instead of the center
-        const closestStationData = yamanoteCoordinates.find(s => s.name === closestStation);
-        const targetCoords = closestStationData 
-          ? { lat: closestStationData.lat, lng: closestStationData.lng }
-          : { lat: bounds.minLat + (bounds.maxLat - bounds.minLat) / 2, 
-              lng: bounds.minLng + (bounds.maxLng - bounds.minLng) / 2 };
-
-        // Calculate bearing and distance
-        const bearing = calculateBearing(userPosition, targetCoords);
-        const distance = calculateDistance(userPosition, targetCoords);
-        const distanceText = `${distance.toFixed(1)}km`;
-        
-        // Place arrow at the edge of the map
-        const radius = Math.min(width, height) / 2 - 20;
-        const edgeX = width/2 + radius * Math.sin(bearing);
-        const edgeY = height/2 - radius * Math.cos(bearing); // Minus because SVG Y is inverted
-        
-        userGroup.innerHTML = `
-          <g class="direction-indicator">
-            <circle 
-              cx="${edgeX}" 
-              cy="${edgeY}" 
-              r="12" 
-              class="direction-indicator-bg"
-            />
-            <polygon 
-              points="${edgeX},${edgeY-12} ${edgeX-8},${edgeY+4} ${edgeX+8},${edgeY+4}"
-              transform="rotate(${bearing * 180 / Math.PI}, ${edgeX}, ${edgeY})"
-              class="direction-indicator-arrow"
-            />
-            <text
-              x="${edgeX}"
-              y="${edgeY + 24}"
-              text-anchor="middle"
-              class="distance-text"
-            >${distanceText}</text>
-          </g>
-        `;
-      }
-    }
-  }, [width, height, userPosition, closestStation, trains]);
+    return {
+      point,
+      isWithinBounds: false,
+      indicator: { edgeX, edgeY, bearing, distance }
+    };
+  })();
 
   return (
     <div className="yamanote-map">
@@ -257,10 +265,62 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
         viewBox={`0 0 ${width} ${height}`}
         style={{ backgroundColor: '#f0f0f0' }}
       >
-        <g className="paths" />
-        <g className="stations" />
-        <g className="trains" />
-        <g className="user-position" />
+        <g className="paths">
+          {transformedPoints.map((point, i) => {
+            const nextIndex = (i + 1) % transformedPoints.length;
+            const isConnectedToClosest = closestStation && 
+              (yamanoteStations[i] === closestStation || 
+               yamanoteStations[nextIndex] === closestStation);
+
+            return (
+              <LinePath
+                key={`path-${i}`}
+                point1={point}
+                point2={transformedPoints[nextIndex]}
+                isHighlighted={isConnectedToClosest}
+              />
+            );
+          })}
+        </g>
+        <g className="stations">
+          {transformedPoints.map((point, i) => (
+            <StationPoint
+              key={`station-${i}`}
+              point={point}
+              name={yamanoteStations[i]}
+              isClosest={yamanoteStations[i] === closestStation}
+            />
+          ))}
+        </g>
+        <g className="trains">
+          {trainPositions.map((position, i) => (
+            <TrainMarker
+              key={`train-${i}`}
+              position={position}
+            />
+          ))}
+        </g>
+        <g className="user-position">
+          {userPositionData && (
+            userPositionData.isWithinBounds ? (
+              <UserPositionMarker
+                point={userPositionData.point}
+                connectionPoint={closestStation ? 
+                  transformedPoints[yamanoteStations.indexOf(closestStation)] : 
+                  undefined}
+              />
+            ) : (
+              userPositionData.indicator && (
+                <DirectionIndicator
+                  edgeX={userPositionData.indicator.edgeX}
+                  edgeY={userPositionData.indicator.edgeY}
+                  bearing={userPositionData.indicator.bearing}
+                  distance={userPositionData.indicator.distance}
+                />
+              )
+            )
+          )}
+        </g>
       </svg>
     </div>
   );
