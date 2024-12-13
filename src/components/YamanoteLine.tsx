@@ -1,6 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { stations } from '../data/stations';
 import { Train, createInitialTrains, updateTrainPositions, calculateTrainPosition } from '../utils/trainSimulation';
+import { 
+  calculateBounds,
+  createCoordinateTransformer,
+  calculateSVGBounds,
+  calculateCenteringOffset,
+  isPointWithinBounds,
+  calculateDistance,
+  calculateBearing
+} from '../utils/mapUtils';
 import '../styles/YamanoteLine.css';
 
 interface Props {
@@ -68,106 +77,44 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
       return;
     }
 
-    // Calculate bounds for Yamanote line only (not including user position)
-    const bounds = yamanoteCoordinates.reduce(
-      (acc, station) => ({
-        minLat: Math.min(acc.minLat, station.lat),
-        maxLat: Math.max(acc.maxLat, station.lat),
-        minLng: Math.min(acc.minLng, station.lng),
-        maxLng: Math.max(acc.maxLng, station.lng),
-      }),
-      {
-        minLat: Infinity,
-        maxLat: -Infinity,
-        minLng: Infinity,
-        maxLng: -Infinity,
-      }
-    );
-
-    // Calculate center of Yamanote line
-    const centerLat = (bounds.maxLat + bounds.minLat) / 2;
-    const centerLng = (bounds.maxLng + bounds.minLng) / 2;
-
-    // Calculate the range needed for Yamanote line
-    const latRange = bounds.maxLat - bounds.minLat;
-    const lngRange = bounds.maxLng - bounds.minLng;
-
-    // Adjust longitude range for Tokyo's latitude
-    const adjustedLngRange = lngRange / Math.cos(centerLat * Math.PI / 180);
-
-    // Use the larger range to maintain aspect ratio
-    const range = Math.max(latRange, adjustedLngRange) * 1.2; // 20% padding
-
-    // Update bounds to be centered and square
-    bounds.minLat = centerLat - range / 2;
-    bounds.maxLat = centerLat + range / 2;
-    bounds.minLng = centerLng - (range * Math.cos(centerLat * Math.PI / 180)) / 2;
-    bounds.maxLng = centerLng + (range * Math.cos(centerLat * Math.PI / 180)) / 2;
-
-    // Scale coordinates to SVG viewport
-    const scale = Math.min(width, height) * 0.9;
-    const initialOffsetX = (width - scale) / 2;
-    const initialOffsetY = (height - scale) / 2;
-
-    const transformCoord = (lat: number, lng: number) => ({
-      x: initialOffsetX + (scale * (lng - bounds.minLng) / (bounds.maxLng - bounds.minLng)),
-      y: initialOffsetY + (scale * (1 - (lat - bounds.minLat) / (bounds.maxLat - bounds.minLat)))
-    });
+    // Calculate bounds and create coordinate transformer
+    const bounds = calculateBounds(yamanoteCoordinates);
+    const transformCoord = createCoordinateTransformer(bounds, width, height);
 
     // Generate points for the Yamanote line
     const points = yamanoteCoordinates.map(station => 
-      transformCoord(station.lat, station.lng)
+      transformCoord({ lat: station.lat, lng: station.lng })
     );
 
-    // Calculate actual bounding box of transformed points
-    const svgBounds = points.reduce(
-      (acc, point) => ({
-        minX: Math.min(acc.minX, point.x),
-        maxX: Math.max(acc.maxX, point.x),
-        minY: Math.min(acc.minY, point.y),
-        maxY: Math.max(acc.maxY, point.y),
-      }),
-      {
-        minX: Infinity,
-        maxX: -Infinity,
-        minY: Infinity,
-        maxY: -Infinity,
-      }
-    );
+    // Calculate SVG bounds and centering offset
+    const svgBounds = calculateSVGBounds(points);
+    const offset = calculateCenteringOffset(svgBounds, width, height);
 
-    // Calculate additional offset to center the actual points
-    const actualWidth = svgBounds.maxX - svgBounds.minX;
-    const actualHeight = svgBounds.maxY - svgBounds.minY;
-    const additionalOffsetX = (width - actualWidth) / 2 - svgBounds.minX;
-    const additionalOffsetY = (height - actualHeight) / 2 - svgBounds.minY;
-
-    // Update transform function with additional offset
+    // Create final transform function with centering
     const finalTransformCoord = (lat: number, lng: number) => {
-      const initial = transformCoord(lat, lng);
+      const initial = transformCoord({ lat, lng });
       return {
-        x: initial.x + additionalOffsetX,
-        y: initial.y + additionalOffsetY,
+        x: width - (initial.x + offset.x),
+        y: height - (initial.y + offset.y)
       };
     };
 
-    // Generate final points with corrected centering
-    const finalPoints = yamanoteCoordinates.map(station => 
-      finalTransformCoord(station.lat, station.lng)
-    );
-
     // Store points in ref for train calculations
-    pointsRef.current = finalPoints;
+    pointsRef.current = points.map(point => ({
+      x: width - (point.x + offset.x),
+      y: height - (point.y + offset.y)
+    }));
 
     // Create path segments
-    const pathSegments = finalPoints.map((point, i) => {
-      const nextIndex = (i + 1) % finalPoints.length;
+    const pathSegments = pointsRef.current.map((point, i) => {
+      const nextIndex = (i + 1) % pointsRef.current.length;
       const isConnectedToClosest = closestStation && 
         (yamanoteCoordinates[i].name === closestStation || 
          yamanoteCoordinates[nextIndex].name === closestStation);
 
       return `<path 
         class="line-path ${isConnectedToClosest ? 'highlighted' : ''}"
-        d="M ${point.x},${point.y} L ${finalPoints[nextIndex].x},${finalPoints[nextIndex].y}"
+        d="M ${point.x},${point.y} L ${pointsRef.current[nextIndex].x},${pointsRef.current[nextIndex].y}"
       />`;
     });
 
@@ -230,11 +177,7 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
       
       // Check if point is within bounds with some padding
       const padding = 20;
-      const isWithinBounds = 
-        point.x >= padding && point.x <= width - padding && 
-        point.y >= padding && point.y <= height - padding;
-
-      if (isWithinBounds) {
+      if (isPointWithinBounds(point, width, height, padding)) {
         // Draw connection line to closest station if available
         let connectionLine = '';
         if (closestStation) {
@@ -265,39 +208,14 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
       } else {
         // If we have a closest station, point towards it instead of the center
         const closestStationData = yamanoteCoordinates.find(s => s.name === closestStation);
-        const targetLat = closestStationData ? closestStationData.lat : centerLat;
-        const targetLng = closestStationData ? closestStationData.lng : centerLng;
+        const targetCoords = closestStationData 
+          ? { lat: closestStationData.lat, lng: closestStationData.lng }
+          : { lat: bounds.minLat + (bounds.maxLat - bounds.minLat) / 2, 
+              lng: bounds.minLng + (bounds.maxLng - bounds.minLng) / 2 };
 
-        // Calculate bearing using geographical coordinates
-        const dLng = (targetLng - userPosition.lng) * Math.PI / 180;
-        const userLat = userPosition.lat * Math.PI / 180;
-        const targetLatRad = targetLat * Math.PI / 180;
-        
-        const y = Math.sin(dLng) * Math.cos(targetLatRad);
-        const x = Math.cos(userLat) * Math.sin(targetLatRad) -
-                 Math.sin(userLat) * Math.cos(targetLatRad) * Math.cos(dLng);
-        const bearing = Math.atan2(y, x);
-        
-        // Calculate distance between two points in kilometers using Haversine formula
-        const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-          const R = 6371; // Earth's radius in kilometers
-          const dLat = (lat2 - lat1) * Math.PI / 180;
-          const dLon = (lon2 - lon1) * Math.PI / 180;
-          const a = 
-            Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-            Math.sin(dLon/2) * Math.sin(dLon/2);
-          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-          return R * c;
-        };
-
-        // Calculate distance to target
-        const distance = calculateDistance(
-          userPosition.lat,
-          userPosition.lng,
-          targetLat,
-          targetLng
-        );
+        // Calculate bearing and distance
+        const bearing = calculateBearing(userPosition, targetCoords);
+        const distance = calculateDistance(userPosition, targetCoords);
         const distanceText = `${distance.toFixed(1)}km`;
         
         // Place arrow at the edge of the map

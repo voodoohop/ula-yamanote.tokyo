@@ -26,9 +26,17 @@ export function calculateBearing(from: Coordinates, to: Coordinates): number {
   const y = Math.sin(Δλ) * Math.cos(φ2);
   const x = Math.cos(φ1) * Math.sin(φ2) -
             Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
-  const bearing = Math.atan2(y, x);
+  let bearing = Math.atan2(y, x);
 
-  return (bearing * 180 / Math.PI + 360) % 360;
+  // Convert to degrees
+  bearing = bearing * 180 / Math.PI;
+  
+  // When out of bounds, invert the bearing
+  if (Math.abs(to.lng - from.lng) > 180 || Math.abs(to.lat - from.lat) > 90) {
+    bearing = (bearing + 180) % 360;
+  }
+
+  return (bearing + 360) % 360;
 }
 
 export function getDirection(from: Coordinates, to: Coordinates): string {
