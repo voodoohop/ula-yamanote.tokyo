@@ -299,10 +299,13 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
         const targetLng = closestStationData ? closestStationData.lng : centerLng;
 
         // Calculate bearing using geographical coordinates
-        const dLng = (targetLng - userPosition.lng);
-        const y = Math.sin(dLng * Math.PI / 180) * Math.cos(targetLat * Math.PI / 180);
-        const x = Math.cos(userPosition.lat * Math.PI / 180) * Math.sin(targetLat * Math.PI / 180) -
-                 Math.sin(userPosition.lat * Math.PI / 180) * Math.cos(targetLat * Math.PI / 180) * Math.cos(dLng * Math.PI / 180);
+        const dLng = (targetLng - userPosition.lng) * Math.PI / 180;
+        const userLat = userPosition.lat * Math.PI / 180;
+        const targetLatRad = targetLat * Math.PI / 180;
+        
+        const y = Math.sin(dLng) * Math.cos(targetLatRad);
+        const x = Math.cos(userLat) * Math.sin(targetLatRad) -
+                 Math.sin(userLat) * Math.cos(targetLatRad) * Math.cos(dLng);
         const bearing = Math.atan2(y, x);
         
         // Place arrow at the edge of the map
