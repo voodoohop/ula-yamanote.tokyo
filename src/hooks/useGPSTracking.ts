@@ -53,36 +53,67 @@ export function useGPSTracking(isGpsActive: boolean) {
   }, []);
 
   useEffect(() => {
-    if (!isGpsActive || watchId !== null) {
-      return;
-    }
+    let currentWatchId: number | null = null;
 
-    const handleError = (error: GeolocationPositionError) => {
-      const errorMsg = error.code === 1 ? 'GPS permission denied' :
-                      error.code === 2 ? 'GPS position unavailable' :
-                      'GPS request timeout';
-      console.log('GPS Status:', errorMsg);
+    const setupGPS = async () => {
+      if (!isGpsActive) {
+        if (watchId !== null) {
+          navigator.geolocation.clearWatch(watchId);
+          setWatchId(null);
+        }
+        return;
+      }
+
+      try {
+        // Check permission first
+        const permission = await navigator.permissions.query({ name: 'geolocation' });
+        if (permission.state === 'denied') {
+          console.log('GPS Status: Permission denied');
+          return;
+        }
+
+        // Only proceed if still active
+        if (!isGpsActive) return;
+
+        const handleError = (error: GeolocationPositionError) => {
+          const errorMsg = error.code === 1 ? 'GPS permission denied' :
+                          error.code === 2 ? 'GPS position unavailable' :
+                          'GPS request timeout';
+          console.log('GPS Status:', errorMsg);
+        };
+
+        // Get initial position
+        navigator.geolocation.getCurrentPosition(updateInfo, handleError, {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
+        });
+
+        // Start watching
+        currentWatchId = navigator.geolocation.watchPosition(
+          updateInfo,
+          handleError,
+          {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+          }
+        );
+
+        setWatchId(currentWatchId);
+      } catch (error) {
+        console.error('Error setting up GPS:', error);
+      }
     };
 
-    const id = navigator.geolocation.watchPosition(
-      updateInfo,
-      handleError,
-      {
-        enableHighAccuracy: true,
-        timeout: 5000,
-        maximumAge: 0
-      }
-    );
-
-    setWatchId(id);
+    setupGPS();
 
     return () => {
-      if (watchId !== null) {
-        navigator.geolocation.clearWatch(watchId);
-        setWatchId(null);
+      if (currentWatchId !== null) {
+        navigator.geolocation.clearWatch(currentWatchId);
       }
     };
-  }, [isGpsActive, updateInfo, watchId]);
+  }, [isGpsActive, updateInfo]);
 
   return { stationData, gpsUpdateReceived };
 }

@@ -59,27 +59,24 @@ export function StationInfo({
         try {
           console.log(`Transitioning from ${currentPlayingStation} to ${stationData.name}`);
           
-          // Find the current station index
-          const stations = Object.keys(stationTrackMap);
-          const currentIndex = stations.indexOf(stationData.name);
-          
-          // Preload adjacent stations
-          if (currentIndex !== -1) {
-            const prevStation = stations[(currentIndex - 1 + stations.length) % stations.length];
-            const nextStation = stations[(currentIndex + 1) % stations.length];
-            
-            // Start preloading adjacent stations
-            await Promise.all([
-              stationPlayer.preloadTrack(prevStation),
-              stationPlayer.preloadTrack(nextStation)
-            ]);
-          }
-
-          // Load and play the current station
+          // Load and play the current station first
           await stationPlayer.loadTrack(stationData.name);
           await wakeLockManager.acquire();
           setCurrentPlayingStation(stationData.name);
           console.log(`Successfully transitioned to ${stationData.name}`);
+
+          // Then preload adjacent stations
+          const stations = Object.keys(stationTrackMap);
+          const currentIndex = stations.indexOf(stationData.name);
+          
+          if (currentIndex !== -1) {
+            const prevStation = stations[(currentIndex - 1 + stations.length) % stations.length];
+            const nextStation = stations[(currentIndex + 1) % stations.length];
+            
+            // Preload one at a time to avoid timing issues
+            await stationPlayer.preloadTrack(prevStation);
+            await stationPlayer.preloadTrack(nextStation);
+          }
         } catch (error) {
           console.error('Error during station transition:', error);
         }

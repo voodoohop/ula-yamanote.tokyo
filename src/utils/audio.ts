@@ -10,33 +10,175 @@ class StationPlayer {
   private crossfadeDuration = 2;
   private isMuted = false;
   private retryTimeout: NodeJS.Timeout | null = null;
-  private healthCheckInterval: NodeJS.Timeout | null = null;
+  private isDisposed = false;
+  private loadQueue: string[] = [];
 
   constructor() {
-    // Start health check interval
-    this.startHealthCheck();
+    // Initialize Tone.js with safe defaults
+    Tone.setContext(new Tone.Context({ latencyHint: 'playback' }));
+    window.addEventListener('unload', () => this.dispose());
   }
 
-  private startHealthCheck() {
-    if (this.healthCheckInterval) {
-      clearInterval(this.healthCheckInterval);
+  private async ensureContext() {
+    if (Tone.context.state !== 'running') {
+      try {
+        await Tone.start();
+        console.log('Tone.js context started');
+      } catch (error) {
+        console.error('Failed to start Tone.js context:', error);
+        throw error;
+      }
     }
-    this.healthCheckInterval = setInterval(() => {
-      this.checkPlaybackHealth();
-    }, 5000); // Check every 5 seconds
   }
 
-  private async checkPlaybackHealth() {
-    if (this.isMuted || !this.currentTrack || !this.currentPlayer) return;
+  private cleanupOldPlayer() {
+    if (this.currentPlayer) {
+      try {
+        this.currentPlayer.stop();
+        this.currentPlayer.dispose();
+      } catch (error) {
+        console.error('Error cleaning up old player:', error);
+      }
+      this.currentPlayer = null;
+    }
+  }
+
+  public dispose() {
+    this.isDisposed = true;
+    if (this.retryTimeout) {
+      clearTimeout(this.retryTimeout);
+      this.retryTimeout = null;
+    }
+    
+    // Clean up all audio resources
+    this.cleanupOldPlayer();
+    if (this.nextPlayer) {
+      try {
+        this.nextPlayer.stop();
+        this.nextPlayer.dispose();
+      } catch (error) {
+        console.error('Error disposing next player:', error);
+      }
+      this.nextPlayer = null;
+    }
+    
+    // Clean up preloaded tracks
+    for (const player of this.preloadedTracks.values()) {
+      try {
+        player.stop();
+        player.dispose();
+      } catch (error) {
+        console.error('Error disposing preloaded track:', error);
+      }
+    }
+    this.preloadedTracks.clear();
+    this.loadQueue = [];
+  }
+
+  private async safeCreatePlayer(trackPath: string): Promise<Tone.Player | null> {
+    if (this.isDisposed) return null;
     
     try {
-      // Check if we should be playing but aren't
-      if (!this.currentPlayer.state.includes('started')) {
-        console.log('Playback stopped unexpectedly, restarting...');
-        await this.loadTrack(this.currentTrack);
-      }
+      const player = new Tone.Player({
+        url: trackPath,
+        loop: true,
+        autostart: false,
+        volume: -60,
+      }).toDestination();
+      
+      await new Promise((resolve, reject) => {
+        player.onerror = reject;
+        player.onstop = resolve;
+        player.onload = resolve;
+      });
+      
+      return player;
     } catch (error) {
-      console.error('Health check error:', error);
+      console.error('Error creating player:', error);
+      return null;
+    }
+  }
+
+  async loadTrack(stationName: string) {
+    if (this.isDisposed) return;
+
+    // Add to queue and return if already loading
+    if (this.isLoading) {
+      this.loadQueue.push(stationName);
+      return;
+    }
+
+    // Don't reload if we're already playing this track
+    if (this.currentTrack === stationName && this.currentPlayer?.state === 'started') {
+      return;
+    }
+
+    console.log(`Loading track for station: ${stationName}`);
+    const trackPath = this.getTrackPath(stationName);
+    if (!trackPath) return;
+    
+    this.isLoading = true;
+    
+    try {
+      await this.ensureContext();
+
+      // Get or create the new player
+      let newPlayer = this.preloadedTracks.get(stationName);
+      if (!newPlayer) {
+        newPlayer = await this.safeCreatePlayer(trackPath);
+        if (!newPlayer) throw new Error('Failed to create player');
+      } else {
+        this.preloadedTracks.delete(stationName);
+      }
+
+      // First track case
+      if (!this.currentPlayer) {
+        this.currentPlayer = newPlayer;
+        this.currentTrack = stationName;
+        await this.currentPlayer.start();
+        this.currentPlayer.volume.rampTo(this.isMuted ? -Infinity : 0, 0.1);
+        return;
+      }
+
+      // Prepare the crossfade
+      this.nextPlayer = newPlayer;
+      await this.nextPlayer.start();
+
+      // Use a single now reference for all scheduling
+      const now = Tone.now();
+      const fadeOutDuration = this.crossfadeDuration;
+
+      // Schedule the crossfade
+      if (this.currentPlayer?.volume) {
+        this.currentPlayer.volume.rampTo(-60, fadeOutDuration, now);
+      }
+      if (this.nextPlayer?.volume) {
+        this.nextPlayer.volume.rampTo(this.isMuted ? -Infinity : 0, fadeOutDuration, now);
+      }
+
+      // Clean up after the fade using Transport for reliable timing
+      Tone.Transport.scheduleOnce(() => {
+        if (!this.isDisposed) {
+          this.cleanupOldPlayer();
+          this.currentPlayer = this.nextPlayer;
+          this.nextPlayer = null;
+          this.currentTrack = stationName;
+        }
+      }, `+${fadeOutDuration + 0.1}`);
+
+    } catch (error) {
+      console.error(`Error loading track for ${stationName}:`, error);
+      if (this.currentTrack === stationName || !this.currentTrack) {
+        this.retryLoadTrack(stationName);
+      }
+    } finally {
+      this.isLoading = false;
+      
+      // Process next item in queue if any
+      const nextTrack = this.loadQueue.shift();
+      if (nextTrack) {
+        setTimeout(() => this.loadTrack(nextTrack), 100);
+      }
     }
   }
 
@@ -51,8 +193,8 @@ class StationPlayer {
       if (!trackPath) return;
 
       console.log(`Retry ${retryCount + 1}: Loading track for ${stationName}`);
-      const newPlayer = await this.createPlayer(trackPath);
-      await Tone.loaded();
+      const newPlayer = await this.safeCreatePlayer(trackPath);
+      if (!newPlayer) throw new Error('Failed to create player');
       
       // If we're still trying to load the same track
       if (this.currentTrack === stationName) {
@@ -105,7 +247,8 @@ class StationPlayer {
     if (!trackPath) return;
 
     try {
-      const player = await this.createPlayer(trackPath);
+      const player = await this.safeCreatePlayer(trackPath);
+      if (!player) throw new Error('Failed to create player');
       await Tone.loaded();
       this.preloadedTracks.set(stationName, player);
       console.log(`Preloaded track for station: ${stationName}`);
@@ -114,80 +257,26 @@ class StationPlayer {
     }
   }
 
-  async loadTrack(stationName: string) {
-    // Don't reload if we're already playing this track
-    if (this.currentTrack === stationName && this.currentPlayer) {
-      return;
+  async startHealthCheck() {
+    if (this.healthCheckInterval) {
+      clearInterval(this.healthCheckInterval);
     }
+    this.healthCheckInterval = setInterval(() => {
+      this.checkPlaybackHealth();
+    }, 5000); // Check every 5 seconds
+  }
 
-    // Don't start another load if we're already loading
-    if (this.isLoading) {
-      return;
-    }
-
-    console.log(`Loading track for station: ${stationName}`);
-    const trackPath = this.getTrackPath(stationName);
-    if (!trackPath) return;
-    
-    this.isLoading = true;
+  private async checkPlaybackHealth() {
+    if (this.isMuted || !this.currentTrack || !this.currentPlayer) return;
     
     try {
-      // Get or create the new player
-      let newPlayer = this.preloadedTracks.get(stationName);
-      if (!newPlayer) {
-        newPlayer = await this.createPlayer(trackPath);
-        await Tone.loaded();
-      } else {
-        this.preloadedTracks.delete(stationName);
+      // Check if we should be playing but aren't
+      if (!this.currentPlayer.state.includes('started')) {
+        console.log('Playback stopped unexpectedly, restarting...');
+        await this.loadTrack(this.currentTrack);
       }
-
-      // Start Tone.js context if needed
-      if (Tone.context.state !== 'running') {
-        await Tone.start();
-      }
-
-      // First track case
-      if (!this.currentPlayer) {
-        this.currentPlayer = newPlayer;
-        this.currentTrack = stationName;
-        this.currentPlayer.volume.value = this.isMuted ? -Infinity : -60;
-        await this.currentPlayer.start();
-        this.currentPlayer.volume.rampTo(this.isMuted ? -Infinity : 0, 0.1);
-        return;
-      }
-
-      // Prepare the crossfade
-      this.nextPlayer = newPlayer;
-      this.nextPlayer.volume.value = -60;
-      await this.nextPlayer.start();
-
-      // Use a single now reference for all scheduling
-      const now = Tone.now();
-      const fadeOutDuration = this.crossfadeDuration;
-      const fadeInDuration = this.crossfadeDuration;
-
-      // Schedule the crossfade
-      this.currentPlayer?.volume.rampTo(-60, fadeOutDuration, now);
-      this.nextPlayer.volume.rampTo(this.isMuted ? -Infinity : 0, fadeInDuration, now);
-
-      // Clean up after the fade
-      Tone.Transport.scheduleOnce(() => {
-        if (this.currentPlayer) {
-          this.currentPlayer.stop().dispose();
-        }
-        this.currentPlayer = this.nextPlayer;
-        this.nextPlayer = null;
-        this.currentTrack = stationName;
-      }, `+${fadeOutDuration + 0.1}`);
-
     } catch (error) {
-      console.error(`Error loading track for ${stationName}:`, error);
-      // Only retry if this is still the current track request
-      if (this.currentTrack === stationName || !this.currentTrack) {
-        this.retryLoadTrack(stationName);
-      }
-    } finally {
-      this.isLoading = false;
+      console.error('Health check error:', error);
     }
   }
 
@@ -216,21 +305,7 @@ class StationPlayer {
       clearInterval(this.healthCheckInterval);
       this.healthCheckInterval = null;
     }
-    if (this.currentPlayer) {
-      this.currentPlayer.stop();
-      this.currentPlayer.dispose();
-      this.currentPlayer = null;
-    }
-    if (this.nextPlayer) {
-      this.nextPlayer.stop();
-      this.nextPlayer.dispose();
-      this.nextPlayer = null;
-    }
-    this.currentTrack = null;
-    
-    // Clean up preloaded tracks
-    this.preloadedTracks.forEach(player => player.dispose());
-    this.preloadedTracks.clear();
+    this.dispose();
   }
 
   setVolume(volume: number) {
@@ -249,15 +324,49 @@ class StationPlayer {
   }
 }
 
-// Create singleton instance
-export const stationPlayer = new StationPlayer();
-
 // Initialize audio context on user interaction
 export function initializeAudio() {
-  document.addEventListener('click', async () => {
-    if (Tone.context.state !== 'running') {
-      await Tone.context.resume();
-      console.log('Audio context resumed');
+  let hasInitialized = false;
+
+  const initHandler = async () => {
+    if (hasInitialized) return;
+    hasInitialized = true;
+
+    try {
+      await Tone.start();
+      console.log('Audio context initialized');
+    } catch (error) {
+      console.error('Failed to initialize audio context:', error);
+      hasInitialized = false; // Allow retry on next interaction
     }
-  }, { once: true });
+  };
+
+  // Handle various user interaction events
+  const events = ['click', 'touchstart', 'keydown'];
+  events.forEach(event => {
+    document.addEventListener(event, initHandler, { once: true });
+  });
+
+  // Cleanup on page unload
+  window.addEventListener('unload', () => {
+    stationPlayer.dispose();
+  });
 }
+
+// Create singleton instance with error boundary
+let stationPlayer: StationPlayer;
+try {
+  stationPlayer = new StationPlayer();
+} catch (error) {
+  console.error('Failed to create StationPlayer:', error);
+  // Create a dummy player that does nothing
+  stationPlayer = {
+    loadTrack: () => Promise.resolve(),
+    preloadTrack: () => Promise.resolve(),
+    setMuted: () => {},
+    stop: () => {},
+    dispose: () => {},
+  } as StationPlayer;
+}
+
+export { stationPlayer };
