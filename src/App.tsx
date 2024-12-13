@@ -90,8 +90,24 @@ function App() {
 
   const MainContent = () => (
     <div className={`app ${isFullscreen ? 'fullscreen' : ''}`}>
-      {!isFullscreen && <Link to="/info" className="info-link">情報 Info</Link>}
-      <StationInfo isGpsActive={isGpsActive} />
+      {!isFullscreen && (
+        <>
+          <Link to="/info" className="info-link">情報 Info</Link>
+          <EventInfo />
+        </>
+      )}
+      <StationInfo 
+        currentStationIndex={currentStationIndex}
+        setCurrentStationIndex={setCurrentStationIndex}
+        isGpsActive={isGpsActive}
+        setIsGpsActive={setIsGpsActive}
+        isPlaying={isPlaying}
+        setIsPlaying={setIsPlaying}
+        isLoading={isLoading}
+        setIsLoading={setIsLoading}
+        isFullscreen={isFullscreen}
+        setIsFullscreen={setIsFullscreen}
+      />
       {!isFullscreen && (
         <button 
           onClick={handleAudioControl}
@@ -101,9 +117,12 @@ function App() {
           {isLoading ? '読み込み中...' : isPlaying ? '停止 STOP' : '発車 START'}
         </button>
       )}
-      <Track />
-      <EventInfo />
-      <Effects />
+      {!isFullscreen && (
+        <>
+          <Track />
+          <Effects />
+        </>
+      )}
     </div>
   );
 
