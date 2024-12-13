@@ -13,38 +13,8 @@ interface Props {
   closestStation?: string;
 }
 
-// Filter only Yamanote line stations and define their order
-const yamanoteStations = [
-  'Shimbashi',
-  'Yurakucho',
-  'Tokyo',
-  'Kanda',
-  'Akihabara',
-  'Okachimachi',
-  'Ueno',
-  'Uguisudani',
-  'Nishi-Nippori',
-  'Nippori',
-  'Tabata',
-  'Komagome',
-  'Sugamo',
-  'Otsuka',
-  'Ikebukuro',
-  'Mejiro',
-  'Takadanobaba',
-  'Shin-Okubo',
-  'Shinjuku',
-  'Yoyogi',
-  'Harajuku',
-  'Shibuya',
-  'Ebisu',
-  'Meguro',
-  'Gotanda',
-  'Osaki',
-  'Shinagawa',
-  'Tamachi',
-  'Hamamatsucho'
-];
+// Use station names from the ordered stations array
+const yamanoteStations = stations.map(station => station.name);
 
 export function YamanoteLine({ width = 300, height = 300, userPosition, closestStation }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
