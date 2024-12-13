@@ -1,16 +1,56 @@
 import * as Tone from 'tone';
 import { stationTrackMap } from '../data/stations';
 
-// Audio player for station tracks
 class StationPlayer {
-  private player: Tone.Player | null = null;
+  private currentPlayer: Tone.Player | null = null;
+  private nextPlayer: Tone.Player | null = null;
   private currentTrack: string | null = null;
   private isLoading: boolean = false;
-  private shouldPlay: boolean = false;
+  private crossfadeDuration: number = 8;
+  private preloadedTracks: Map<string, Tone.Player> = new Map();
+
+  private async createPlayer(trackPath: string): Promise<Tone.Player> {
+    const player = new Tone.Player({
+      url: trackPath,
+      loop: true,
+      autostart: false,
+    }).toDestination();
+    
+    // Start with silence
+    player.volume.value = -Infinity;
+    return player;
+  }
+
+  private getTrackPath(stationName: string): string | null {
+    const trackFilename = stationTrackMap[stationName];
+    if (!trackFilename) {
+      console.log(`No track available for station: ${stationName}`);
+      return null;
+    }
+    return `/assets/tracks/low/${trackFilename}-low.mp3`;
+  }
+
+  async preloadTrack(stationName: string) {
+    if (this.preloadedTracks.has(stationName)) {
+      return;
+    }
+
+    const trackPath = this.getTrackPath(stationName);
+    if (!trackPath) return;
+
+    try {
+      const player = await this.createPlayer(trackPath);
+      await Tone.loaded();
+      this.preloadedTracks.set(stationName, player);
+      console.log(`Preloaded track for station: ${stationName}`);
+    } catch (error) {
+      console.error(`Error preloading track for ${stationName}:`, error);
+    }
+  }
 
   async loadTrack(stationName: string) {
     // Don't reload if we're already playing this track
-    if (this.currentTrack === stationName && this.player) {
+    if (this.currentTrack === stationName && this.currentPlayer) {
       return;
     }
 
@@ -19,94 +59,103 @@ class StationPlayer {
       return;
     }
 
-    console.log(`Attempting to load track for station: ${stationName}`);
-    const trackFilename = stationTrackMap[stationName];
-    if (!trackFilename) {
-      console.log(`No track available for station: ${stationName}`);
-      return;
-    }
-
-    const trackPath = `/assets/tracks/low/${trackFilename}-low.mp3`;
-    console.log(`Loading track from path: ${trackPath}`);
+    console.log(`Loading track for station: ${stationName}`);
+    const trackPath = this.getTrackPath(stationName);
+    if (!trackPath) return;
     
     this.isLoading = true;
-    this.shouldPlay = this.player !== null; // Remember if we should autoplay
     
     try {
-      // Create new player but don't dispose the old one yet
-      const newPlayer = new Tone.Player({
-        url: trackPath,
-        loop: true,
-        autostart: false,
-      }).toDestination();
-
-      // Wait for the new player to load
-      await Tone.loaded();
-
-      // Only after new player is loaded, stop and dispose the old one
-      if (this.player) {
-        this.player.stop();
-        this.player.dispose();
+      // Get or create the new player
+      let newPlayer = this.preloadedTracks.get(stationName);
+      if (!newPlayer) {
+        newPlayer = await this.createPlayer(trackPath);
+        await Tone.loaded();
+      } else {
+        this.preloadedTracks.delete(stationName);
       }
 
-      this.player = newPlayer;
-      this.currentTrack = stationName;
+      // Start Tone.js context
+      await Tone.start();
+
+      // First track case
+      if (!this.currentPlayer) {
+        this.currentPlayer = newPlayer;
+        this.currentTrack = stationName;
+        await this.currentPlayer.start();
+        this.currentPlayer.volume.rampTo(0, 0.1); // Quick fade in for first track
+        return;
+      }
+
+      // Start crossfade
+      this.nextPlayer = newPlayer;
+      await this.nextPlayer.start();
       
-      // Start playing the new track if we should autoplay
-      if (this.shouldPlay) {
-        await this.play();
-      }
+      // Calculate volume curves for crossfade
+      const now = Tone.now();
+      const initialVolume = 0;  // 0 dB is full volume
+      const silentVolume = -Infinity;
+
+      // Start both volume ramps at the same time
+      this.currentPlayer.volume.cancelScheduledValues(now);
+      this.nextPlayer.volume.cancelScheduledValues(now);
+      
+      // Set initial volumes
+      this.currentPlayer.volume.setValueAtTime(initialVolume, now);
+      this.nextPlayer.volume.setValueAtTime(silentVolume, now);
+      
+      // Perform the crossfade
+      this.currentPlayer.volume.linearRampToValueAtTime(silentVolume, now + this.crossfadeDuration);
+      this.nextPlayer.volume.linearRampToValueAtTime(initialVolume, now + this.crossfadeDuration);
+
+      // Schedule cleanup of old player
+      setTimeout(() => {
+        if (this.currentPlayer) {
+          this.currentPlayer.stop();
+          this.currentPlayer.dispose();
+        }
+        this.currentPlayer = this.nextPlayer;
+        this.nextPlayer = null;
+        this.currentTrack = stationName;
+      }, this.crossfadeDuration * 1000 + 100); // Add a small delay to ensure both tracks fade simultaneously
+
     } catch (error) {
       console.error(`Error loading track for ${stationName}:`, error);
-      this.player = null;
-      this.currentTrack = null;
     } finally {
       this.isLoading = false;
     }
   }
 
-  async play() {
-    if (!this.player) {
-      console.error('No audio player available');
-      return;
-    }
-    
-    try {
-      console.log('Audio context state:', Tone.context.state);
-      console.log('Attempting to start Tone.js...');
-      await Tone.start();
-      console.log('Tone.js started successfully');
-      
-      if (this.player.state !== 'started') {
-        console.log('Player state before start:', this.player.state);
-        await this.player.start();
-        console.log('Player state after start:', this.player.state);
-      } else {
-        console.log('Player already started');
-      }
-    } catch (error) {
-      console.error('Error playing track:', error);
-      console.error('Audio context state:', Tone.context.state);
-      console.error('Player state:', this.player?.state);
-    }
-  }
-
   stop() {
-    if (this.player) {
-      this.player.stop();
+    if (this.currentPlayer) {
+      this.currentPlayer.stop();
+      this.currentPlayer.dispose();
+      this.currentPlayer = null;
     }
+    if (this.nextPlayer) {
+      this.nextPlayer.stop();
+      this.nextPlayer.dispose();
+      this.nextPlayer = null;
+    }
+    this.currentTrack = null;
+    
+    // Clean up preloaded tracks
+    this.preloadedTracks.forEach(player => player.dispose());
+    this.preloadedTracks.clear();
   }
 
   setVolume(volume: number) {
-    if (this.player) {
-      // Convert volume (0-1) to dB (-Infinity to 0)
-      this.player.volume.value = Tone.gainToDb(volume);
+    if (this.currentPlayer) {
+      this.currentPlayer.volume.value = Tone.gainToDb(volume);
     }
   }
 
   setPlaybackRate(rate: number) {
-    if (this.player) {
-      this.player.playbackRate = rate;
+    if (this.currentPlayer) {
+      this.currentPlayer.playbackRate = rate;
+    }
+    if (this.nextPlayer) {
+      this.nextPlayer.playbackRate = rate;
     }
   }
 }

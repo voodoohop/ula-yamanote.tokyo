@@ -1,13 +1,16 @@
 .event-info {
   width: 100%;
   max-width: 600px;
-  margin: 20px auto;
+  margin: 0 auto;
+  margin-top: 20px;
   padding: 20px;
-  background: rgba(224, 247, 233, 0.85);
+  background: rgba(224, 247, 233, 0.95);
   border: 2px solid #2e7d32;
-  box-shadow: 0 0 20px #2e7d32;
+  border-radius: 4px;
+  box-shadow: 0 0 15px rgba(46, 125, 50, 0.2);
   font-family: 'DotGothic16', monospace;
   position: relative;
+  overflow: visible;
   animation: glitch 0.3s infinite;
   animation-play-state: paused;
 }
@@ -18,7 +21,7 @@
 
 .language-toggle {
   position: absolute;
-  top: -15px;
+  top: -10px; /* Adjusted to be more visible */
   right: 20px;
   background: #2e7d32;
   color: #fff;
@@ -27,6 +30,7 @@
   font-family: 'DotGothic16', monospace;
   cursor: pointer;
   animation: buttonGlitch 2s infinite;
+  z-index: 1; /* Ensure button stays on top */
 }
 
 .language-toggle:hover {

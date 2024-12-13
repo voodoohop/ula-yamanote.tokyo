@@ -37,9 +37,19 @@ body::before {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   padding: 20px;
+  padding-bottom: 0;
   position: relative;
+  gap: 0;
+}
+
+.app > * {
+  margin-bottom: 10px;
+}
+
+.app > *:last-child {
+  margin-bottom: 0;
 }
 
 .app.fullscreen {

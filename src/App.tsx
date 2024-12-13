@@ -1,13 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { Effects } from './components/Effects';
 import { StationInfo } from './components/StationInfo';
 import { EventInfo } from './components/EventInfo';
 import { Info } from './components/Info';
-import { fullscreenManager } from './utils/fullscreen';
-import { stationPlayer } from './utils/audio';
+import { PlayButton } from './components/PlayButton';
+import { useAudioControl } from './hooks/useAudioControl';
 import './styles/global.css';
-import './styles/PlayButton.css';
 import './styles/StationName.css';
 
 function App() {
@@ -26,59 +25,12 @@ function App() {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  const handleAudioControl = useCallback(async () => {
-    if (isPlaying) {
-      stationPlayer.stop();
-      setIsPlaying(false);
-      setIsGpsActive(false);
-      return;
-    }
-
-    setIsLoading(true);
-    
-    try {
-      await fullscreenManager.requestFullscreen();
-      
-      if ("geolocation" in navigator) {
-        try {
-          const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
-          
-          if (permissionStatus.state === 'denied') {
-            console.error('Geolocation permission is denied');
-            setIsGpsActive(false);
-            setIsPlaying(false);
-            return;
-          }
-
-          await new Promise((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(
-              resolve,
-              reject,
-              { 
-                enableHighAccuracy: true,
-                maximumAge: 2000,
-                timeout: 10000
-              }
-            );
-          });
-
-          setIsGpsActive(true);
-          setIsPlaying(true);
-        } catch (error: any) {
-          console.error('Geolocation error:', error);
-          setIsGpsActive(false);
-          setIsPlaying(error.code !== 1);
-        }
-      } else {
-        setIsGpsActive(false);
-        setIsPlaying(true);
-      }
-    } catch (error) {
-      console.error('Fullscreen or GPS error:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isPlaying]);
+  const handleAudioControl = useAudioControl({
+    isPlaying,
+    setIsPlaying,
+    setIsGpsActive,
+    setIsLoading
+  });
 
   const MainContent = () => {
     if (isFullscreen) {
@@ -103,7 +55,6 @@ function App() {
     return (
       <div className="app">
         <Link to="/info" className="info-link">情報 Info</Link>
-        <EventInfo />
         <StationInfo 
           currentStationIndex={currentStationIndex}
           setCurrentStationIndex={setCurrentStationIndex}
@@ -116,14 +67,13 @@ function App() {
           isFullscreen={isFullscreen}
           setIsFullscreen={setIsFullscreen}
         />
-        <button 
+        <PlayButton 
           onClick={handleAudioControl}
-          className={`play-button ${isLoading ? 'loading' : ''} ${isPlaying ? 'playing' : ''}`}
-          disabled={isLoading}
-        >
-          {isLoading ? '読み込み中...' : isPlaying ? '停止 STOP' : '発車 START'}
-        </button>
+          isLoading={isLoading}
+          isPlaying={isPlaying}
+        />
         <Effects />
+        <EventInfo />
       </div>
     );
   };

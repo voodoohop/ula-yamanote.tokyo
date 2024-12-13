@@ -56,16 +56,12 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
       .map(name => stations.find(s => s.name === name))
       .filter((station): station is typeof stations[number] => station !== undefined);
 
-    console.log('Yamanote coordinates:', yamanoteCoordinates);
-    console.log('User position:', userPosition);
-    console.log('Closest station:', closestStation);
-
     if (yamanoteCoordinates.length === 0) {
       console.error('No valid coordinates found for Yamanote stations');
       return;
     }
 
-    // Calculate bounds including user position if available
+    // Calculate bounds for Yamanote line only (not including user position)
     const bounds = yamanoteCoordinates.reduce(
       (acc, station) => ({
         minLat: Math.min(acc.minLat, station.lat),
@@ -74,26 +70,26 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
         maxLng: Math.max(acc.maxLng, station.lng),
       }),
       {
-        minLat: userPosition ? Math.min(Infinity, userPosition.lat) : Infinity,
-        maxLat: userPosition ? Math.max(-Infinity, userPosition.lat) : -Infinity,
-        minLng: userPosition ? Math.min(Infinity, userPosition.lng) : Infinity,
-        maxLng: userPosition ? Math.max(-Infinity, userPosition.lng) : -Infinity,
+        minLat: Infinity,
+        maxLat: -Infinity,
+        minLng: Infinity,
+        maxLng: -Infinity,
       }
     );
 
-    // Calculate center
+    // Calculate center of Yamanote line
     const centerLat = (bounds.maxLat + bounds.minLat) / 2;
     const centerLng = (bounds.maxLng + bounds.minLng) / 2;
 
-    // Calculate the range needed to encompass all points
+    // Calculate the range needed for Yamanote line
     const latRange = bounds.maxLat - bounds.minLat;
     const lngRange = bounds.maxLng - bounds.minLng;
 
-    // Adjust longitude range for Tokyo's latitude (approximately cos(35.7°) ≈ 0.81)
+    // Adjust longitude range for Tokyo's latitude
     const adjustedLngRange = lngRange / Math.cos(centerLat * Math.PI / 180);
 
-    // Use the larger range to maintain aspect ratio and ensure all points are visible
-    const range = Math.max(latRange, adjustedLngRange) * 1.3; // Increase size by 30%
+    // Use the larger range to maintain aspect ratio
+    const range = Math.max(latRange, adjustedLngRange) * 1.2; // 20% padding
 
     // Update bounds to be centered and square
     bounds.minLat = centerLat - range / 2;
@@ -102,16 +98,16 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
     bounds.maxLng = centerLng + (range * Math.cos(centerLat * Math.PI / 180)) / 2;
 
     // Scale coordinates to SVG viewport
-    const scale = Math.min(width, height) * 0.9; // Use 90% of the available space
+    const scale = Math.min(width, height) * 0.9;
     const initialOffsetX = (width - scale) / 2;
     const initialOffsetY = (height - scale) / 2;
 
     const transformCoord = (lat: number, lng: number) => ({
       x: initialOffsetX + (scale * (lng - bounds.minLng) / (bounds.maxLng - bounds.minLng)),
-      y: initialOffsetY + (scale * (1 - (lat - bounds.minLat) / (bounds.maxLat - bounds.minLat))) // Flip Y axis
+      y: initialOffsetY + (scale * (1 - (lat - bounds.minLat) / (bounds.maxLat - bounds.minLat)))
     });
 
-    // Generate initial points to calculate actual bounding box
+    // Generate points for the Yamanote line
     const points = yamanoteCoordinates.map(station => 
       transformCoord(station.lat, station.lng)
     );
@@ -205,25 +201,29 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
     if (userGroup && userPosition) {
       const point = finalTransformCoord(userPosition.lat, userPosition.lng);
       
-      // Check if point is within bounds
+      // Check if point is within bounds with some padding
+      const padding = 20;
       const isWithinBounds = 
-        point.x >= 0 && point.x <= width && 
-        point.y >= 0 && point.y <= height;
+        point.x >= padding && point.x <= width - padding && 
+        point.y >= padding && point.y <= height - padding;
 
       if (isWithinBounds) {
         // Draw connection line to closest station if available
         let connectionLine = '';
         if (closestStation) {
-          const closestPoint = finalTransformCoord(
-            yamanoteCoordinates.find(s => s.name === closestStation)!.lat,
-            yamanoteCoordinates.find(s => s.name === closestStation)!.lng
-          );
-          connectionLine = `
-            <path
-              class="connection-line"
-              d="M ${point.x},${point.y} L ${closestPoint.x},${closestPoint.y}"
-            />
-          `;
+          const closestStationData = yamanoteCoordinates.find(s => s.name === closestStation);
+          if (closestStationData) {
+            const closestPoint = finalTransformCoord(
+              closestStationData.lat,
+              closestStationData.lng
+            );
+            connectionLine = `
+              <path
+                class="connection-line"
+                d="M ${point.x},${point.y} L ${closestPoint.x},${closestPoint.y}"
+              />
+            `;
+          }
         }
 
         userGroup.innerHTML = `
@@ -236,18 +236,37 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
           />
         `;
       } else {
-        // Calculate edge point for out-of-bounds indicator
-        const angle = Math.atan2(point.y - height/2, point.x - width/2);
-        const radius = Math.min(width, height) / 2 - 10;
-        const edgeX = width/2 + radius * Math.cos(angle);
-        const edgeY = height/2 + radius * Math.sin(angle);
+        // If we have a closest station, point towards it instead of the center
+        const closestStationData = yamanoteCoordinates.find(s => s.name === closestStation);
+        const targetLat = closestStationData ? closestStationData.lat : centerLat;
+        const targetLng = closestStationData ? closestStationData.lng : centerLng;
+
+        // Calculate bearing using geographical coordinates
+        const dLng = (targetLng - userPosition.lng);
+        const y = Math.sin(dLng * Math.PI / 180) * Math.cos(targetLat * Math.PI / 180);
+        const x = Math.cos(userPosition.lat * Math.PI / 180) * Math.sin(targetLat * Math.PI / 180) -
+                 Math.sin(userPosition.lat * Math.PI / 180) * Math.cos(targetLat * Math.PI / 180) * Math.cos(dLng * Math.PI / 180);
+        const bearing = Math.atan2(y, x);
+        
+        // Place arrow at the edge of the map
+        const radius = Math.min(width, height) / 2 - 20;
+        const edgeX = width/2 + radius * Math.sin(bearing);
+        const edgeY = height/2 - radius * Math.cos(bearing); // Minus because SVG Y is inverted
         
         userGroup.innerHTML = `
-          <polygon 
-            points="${edgeX},${edgeY} ${edgeX-8},${edgeY-8} ${edgeX+8},${edgeY-8}"
-            transform="rotate(${angle * 180 / Math.PI + 90}, ${edgeX}, ${edgeY})"
-            class="user-arrow"
-          />
+          <g class="direction-indicator">
+            <circle 
+              cx="${edgeX}" 
+              cy="${edgeY}" 
+              r="12" 
+              class="direction-indicator-bg"
+            />
+            <polygon 
+              points="${edgeX},${edgeY-12} ${edgeX-8},${edgeY+4} ${edgeX+8},${edgeY+4}"
+              transform="rotate(${bearing * 180 / Math.PI}, ${edgeX}, ${edgeY})"
+              class="direction-indicator-arrow"
+            />
+          </g>
         `;
       }
     }
@@ -260,10 +279,7 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
         width={width} 
         height={height} 
         viewBox={`0 0 ${width} ${height}`}
-        style={{ 
-          backgroundColor: '#f0f0f0',
-          transform: 'translateX(20%) scaleX(1.5)' // Increased to 1.5 for 150% width
-        }}
+        style={{ backgroundColor: '#f0f0f0' }}
       >
         <g className="paths" />
         <g className="stations" />

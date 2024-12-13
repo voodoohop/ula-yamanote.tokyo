@@ -5,6 +5,7 @@ import { stationPlayer, initializeAudio } from '../utils/audio';
 import { wakeLockManager } from '../utils/wakeLock';
 import { useGPSTracking } from '../hooks/useGPSTracking';
 import { useSpeedRate } from '../hooks/useSpeedRate';
+import { stationTrackMap } from '../data/stations';
 import stationDisplayImage from '../assets/glitchstationdisplaysmaller.webp';
 import '../styles/StationInfo.css';
 
@@ -59,8 +60,25 @@ export function StationInfo({
       const playStationTrack = async () => {
         try {
           console.log(`Transitioning from ${currentPlayingStation} to ${stationData.name}`);
+          
+          // Find the current station index
+          const stations = Object.keys(stationTrackMap);
+          const currentIndex = stations.indexOf(stationData.name);
+          
+          // Preload adjacent stations
+          if (currentIndex !== -1) {
+            const prevStation = stations[(currentIndex - 1 + stations.length) % stations.length];
+            const nextStation = stations[(currentIndex + 1) % stations.length];
+            
+            // Start preloading adjacent stations
+            await Promise.all([
+              stationPlayer.preloadTrack(prevStation),
+              stationPlayer.preloadTrack(nextStation)
+            ]);
+          }
+
+          // Load and play the current station
           await stationPlayer.loadTrack(stationData.name);
-          await stationPlayer.play();
           await wakeLockManager.acquire();
           setCurrentPlayingStation(stationData.name);
           console.log(`Successfully transitioned to ${stationData.name}`);
