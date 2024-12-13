@@ -1,13 +1,15 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { SystemAlert } from './SystemAlert';
 import { YamanoteLine } from './YamanoteLine';
 import { GPSIndicator } from './GPSIndicator';
-import { stationPlayer, initializeAudio } from '../utils/audio';
+import { stationPlayer } from '../utils/audio';
+import { debounce } from '../utils/debounce';
 import { wakeLockManager } from '../utils/wakeLock';
 import { useGPSTracking } from '../hooks/useGPSTracking';
 import { useSpeedRate } from '../hooks/useSpeedRate';
 import { stationTrackMap } from '../data/stations';
 import stationDisplayImage from '../assets/glitchstationdisplaysmaller.webp';
+import * as Tone from 'tone';
 import '../styles/StationInfo.css';
 
 interface Props {
@@ -45,45 +47,51 @@ export function StationInfo({
   const [glitchClass, setGlitchClass] = useState('');
   const [currentPlayingStation, setCurrentPlayingStation] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(false);
+  const [isAudioInitialized, setIsAudioInitialized] = useState(false);
   
   const { stationData, gpsUpdateReceived } = useGPSTracking(isGpsActive);
   useSpeedRate(stationData?.speed ?? null);
 
-  useEffect(() => {
-    initializeAudio();
-  }, []);
-
-  useEffect(() => {
-    if (stationData && stationData.name !== currentPlayingStation) {
-      const playStationTrack = async () => {
-        try {
-          console.log(`Transitioning from ${currentPlayingStation} to ${stationData.name}`);
-          
-          // Load and play the current station first
-          await stationPlayer.loadTrack(stationData.name);
-          await wakeLockManager.acquire();
-          setCurrentPlayingStation(stationData.name);
-          console.log(`Successfully transitioned to ${stationData.name}`);
-
-          // Then preload adjacent stations
-          const stations = Object.keys(stationTrackMap);
-          const currentIndex = stations.indexOf(stationData.name);
-          
-          if (currentIndex !== -1) {
-            const prevStation = stations[(currentIndex - 1 + stations.length) % stations.length];
-            const nextStation = stations[(currentIndex + 1) % stations.length];
-            
-            // Preload one at a time to avoid timing issues
-            await stationPlayer.preloadTrack(prevStation);
-            await stationPlayer.preloadTrack(nextStation);
-          }
-        } catch (error) {
-          console.error('Error during station transition:', error);
-        }
-      };
-      playStationTrack();
+  const transitionToStation = useCallback(async (stationName: string) => {
+    console.log('Transitioning from', currentPlayingStation, 'to', stationName);
+    
+    try {
+      if (!isAudioInitialized) {
+        await Tone.start();
+        setIsAudioInitialized(true);
+      }
+      
+      if (stationName) {
+        setIsLoading(true);
+        await stationPlayer?.loadTrack(stationName);
+        setCurrentPlayingStation(stationName);
+        setIsLoading(false);
+      }
+    } catch (error) {
+      console.error('Error transitioning to station:', error);
+      setIsLoading(false);
     }
-  }, [stationData?.name, currentPlayingStation]);
+  }, [currentPlayingStation, isAudioInitialized]);
+
+  // Create debounced version of transition function
+  const debouncedTransition = useCallback(
+    debounce(transitionToStation, 1000),
+    [transitionToStation]
+  );
+
+  useEffect(() => {
+    const stations = Object.keys(stationTrackMap);
+    const currentStation = stations[currentStationIndex];
+    
+    if (currentStation) {
+      debouncedTransition(currentStation);
+    }
+
+    // Cleanup
+    return () => {
+      debouncedTransition.cancel?.();
+    };
+  }, [currentStationIndex, debouncedTransition]);
 
   useEffect(() => {
     return () => {
