@@ -54,20 +54,21 @@
 }
 
 .line-path {
-  stroke: #7fb91e;  /* Darker shade of green for better contrast */
-  stroke-width: 6;  /* Slimmer lines */
+  stroke: #4a8c0f;  /* Darker green for better visibility */
+  stroke-width: 4;  /* Thinner lines for more precision */
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
-  opacity: 0.8;  /* Increased opacity for better visibility */
+  opacity: 1;  /* Full opacity for better visibility */
+  filter: drop-shadow(0 0 1px rgba(74, 140, 15, 0.3));  /* Subtle shadow for depth */
 }
 
 .line-path.highlighted {
-  stroke: #2ba532;  /* Darker highlight green */
-  stroke-width: 10;
-  opacity: 0.9;
+  stroke: #2ba532;  /* Keep the highlighted color */
+  stroke-width: 8;  /* Slightly thinner highlight */
+  opacity: 1;
   animation: path-pulse 1.5s ease-in-out infinite;
-  filter: drop-shadow(0 0 3px rgba(43, 165, 50, 0.4));
+  filter: drop-shadow(0 0 3px rgba(43, 165, 50, 0.5));
 }
 
 .station-point {
