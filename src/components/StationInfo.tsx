@@ -9,7 +9,16 @@ import stationDisplayImage from '../assets/glitchstationdisplaysmaller.webp';
 import '../styles/StationInfo.css';
 
 interface Props {
+  currentStationIndex: number;
+  setCurrentStationIndex: (index: number) => void;
   isGpsActive: boolean;
+  setIsGpsActive: (active: boolean) => void;
+  isPlaying: boolean;
+  setIsPlaying: (playing: boolean) => void;
+  isLoading: boolean;
+  setIsLoading: (loading: boolean) => void;
+  isFullscreen: boolean;
+  setIsFullscreen: (fullscreen: boolean) => void;
 }
 
 interface StationData {
@@ -22,7 +31,18 @@ interface StationData {
   userLng: number;
 }
 
-export function StationInfo({ isGpsActive }: Props) {
+export function StationInfo({ 
+  currentStationIndex,
+  setCurrentStationIndex,
+  isGpsActive,
+  setIsGpsActive,
+  isPlaying,
+  setIsPlaying,
+  isLoading,
+  setIsLoading,
+  isFullscreen,
+  setIsFullscreen 
+}: Props) {
   const [glitchText, setGlitchText] = useState('');
   const [glitchClass, setGlitchClass] = useState('');
   const [currentPlayingStation, setCurrentPlayingStation] = useState<string | null>(null);

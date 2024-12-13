@@ -7,10 +7,10 @@ export function Track() {
 
 export function Effects() {
   return (
-    <>
+    <div className="effects-container">
       <div className="grid" />
       <div className="effects" />
       <Track />
-    </>
+    </div>
   );
 }

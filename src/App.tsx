@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import { Effects, Track } from './components/Effects';
+import { Effects } from './components/Effects';
 import { StationInfo } from './components/StationInfo';
 import { EventInfo } from './components/EventInfo';
 import { Info } from './components/Info';
-import { stations } from './data/stations';
 import { fullscreenManager } from './utils/fullscreen';
 import { stationPlayer } from './utils/audio';
 import './styles/global.css';
@@ -39,76 +38,84 @@ function App() {
     
     try {
       await fullscreenManager.requestFullscreen();
-    } catch (error) {
-      console.log('Fullscreen request was denied or failed');
-    }
-    
-    if ("geolocation" in navigator) {
-      try {
-        const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
-        
-        if (permissionStatus.state === 'denied') {
-          console.error('Geolocation permission is denied');
-          setIsGpsActive(false);
-          setIsPlaying(false);
-          setIsLoading(false);
-          return;
-        }
+      
+      if ("geolocation" in navigator) {
+        try {
+          const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
+          
+          if (permissionStatus.state === 'denied') {
+            console.error('Geolocation permission is denied');
+            setIsGpsActive(false);
+            setIsPlaying(false);
+            return;
+          }
 
-        await new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(
-            resolve,
-            reject,
-            { 
-              enableHighAccuracy: true,
-              maximumAge: 2000, // Cache location for 2 seconds
-              timeout: 10000
-            }
-          );
-        });
+          await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(
+              resolve,
+              reject,
+              { 
+                enableHighAccuracy: true,
+                maximumAge: 2000,
+                timeout: 10000
+              }
+            );
+          });
 
-        setIsGpsActive(true);
-        setIsPlaying(true);
-      } catch (error: any) {
-        console.error('Geolocation error:', error);
-        if (error.code === 1) {
-          setIsGpsActive(false);
-          setIsPlaying(false);
-        } else {
-          setIsGpsActive(false);
+          setIsGpsActive(true);
           setIsPlaying(true);
+        } catch (error: any) {
+          console.error('Geolocation error:', error);
+          setIsGpsActive(false);
+          setIsPlaying(error.code !== 1);
         }
-      } finally {
-        setIsLoading(false);
+      } else {
+        setIsGpsActive(false);
+        setIsPlaying(true);
       }
-    } else {
-      setIsGpsActive(false);
-      setIsPlaying(true);
+    } catch (error) {
+      console.error('Fullscreen or GPS error:', error);
+    } finally {
       setIsLoading(false);
     }
   }, [isPlaying]);
 
-  const MainContent = () => (
-    <div className={`app ${isFullscreen ? 'fullscreen' : ''}`}>
-      {!isFullscreen && (
-        <>
-          <Link to="/info" className="info-link">情報 Info</Link>
-          <EventInfo />
-        </>
-      )}
-      <StationInfo 
-        currentStationIndex={currentStationIndex}
-        setCurrentStationIndex={setCurrentStationIndex}
-        isGpsActive={isGpsActive}
-        setIsGpsActive={setIsGpsActive}
-        isPlaying={isPlaying}
-        setIsPlaying={setIsPlaying}
-        isLoading={isLoading}
-        setIsLoading={setIsLoading}
-        isFullscreen={isFullscreen}
-        setIsFullscreen={setIsFullscreen}
-      />
-      {!isFullscreen && (
+  const MainContent = () => {
+    if (isFullscreen) {
+      return (
+        <div className="app fullscreen">
+          <StationInfo 
+            currentStationIndex={currentStationIndex}
+            setCurrentStationIndex={setCurrentStationIndex}
+            isGpsActive={isGpsActive}
+            setIsGpsActive={setIsGpsActive}
+            isPlaying={isPlaying}
+            setIsPlaying={setIsPlaying}
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+            isFullscreen={isFullscreen}
+            setIsFullscreen={setIsFullscreen}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className="app">
+        <Link to="/info" className="info-link">情報 Info</Link>
+        <EventInfo />
+        <StationInfo 
+          currentStationIndex={currentStationIndex}
+          setCurrentStationIndex={setCurrentStationIndex}
+          isGpsActive={isGpsActive}
+          setIsGpsActive={setIsGpsActive}
+          isPlaying={isPlaying}
+          setIsPlaying={setIsPlaying}
+          isLoading={isLoading}
+          setIsLoading={setIsLoading}
+          isFullscreen={isFullscreen}
+          setIsFullscreen={setIsFullscreen}
+        />
         <button 
           onClick={handleAudioControl}
           className={`play-button ${isLoading ? 'loading' : ''} ${isPlaying ? 'playing' : ''}`}
@@ -116,15 +123,10 @@ function App() {
         >
           {isLoading ? '読み込み中...' : isPlaying ? '停止 STOP' : '発車 START'}
         </button>
-      )}
-      {!isFullscreen && (
-        <>
-          <Track />
-          <Effects />
-        </>
-      )}
-    </div>
-  );
+        <Effects />
+      </div>
+    );
+  };
 
   return (
     <Router>
