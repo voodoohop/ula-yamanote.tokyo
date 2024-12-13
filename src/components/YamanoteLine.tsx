@@ -100,8 +100,10 @@ const DirectionIndicator: React.FC<{
   bearing: number;
   distance: number;
   connectionPoint?: Point;
-}> = ({ edgeX, edgeY, bearing, distance, connectionPoint }) => (
-  <g className="direction-indicator">
+}> =({ edgeX, edgeY, bearing, distance, connectionPoint }) => {
+  edgeX = 1000-edgeX;
+  edgeY = 1000-edgeY;
+  return (<g className="direction-indicator">
     {connectionPoint && (
       <line
         x1={connectionPoint.x}
@@ -132,7 +134,7 @@ const DirectionIndicator: React.FC<{
       {`${distance.toFixed(1)}km`}
     </text>
   </g>
-);
+);}
 
 export const YamanoteLine = ({ width = 300, height = 300, userPosition, closestStation }: Props) => {
   const svgRef = useRef<SVGSVGElement>(null);
