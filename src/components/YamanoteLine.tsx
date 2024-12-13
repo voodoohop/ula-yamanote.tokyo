@@ -308,6 +308,28 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
                  Math.sin(userLat) * Math.cos(targetLatRad) * Math.cos(dLng);
         const bearing = Math.atan2(y, x);
         
+        // Calculate distance between two points in kilometers using Haversine formula
+        const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+          const R = 6371; // Earth's radius in kilometers
+          const dLat = (lat2 - lat1) * Math.PI / 180;
+          const dLon = (lon2 - lon1) * Math.PI / 180;
+          const a = 
+            Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+          const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+          return R * c;
+        };
+
+        // Calculate distance to target
+        const distance = calculateDistance(
+          userPosition.lat,
+          userPosition.lng,
+          targetLat,
+          targetLng
+        );
+        const distanceText = `${distance.toFixed(1)}km`;
+        
         // Place arrow at the edge of the map
         const radius = Math.min(width, height) / 2 - 20;
         const edgeX = width/2 + radius * Math.sin(bearing);
@@ -326,6 +348,12 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
               transform="rotate(${bearing * 180 / Math.PI}, ${edgeX}, ${edgeY})"
               class="direction-indicator-arrow"
             />
+            <text
+              x="${edgeX}"
+              y="${edgeY + 24}"
+              text-anchor="middle"
+              class="distance-text"
+            >${distanceText}</text>
           </g>
         `;
       }

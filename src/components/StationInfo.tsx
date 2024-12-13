@@ -159,7 +159,15 @@ export function StationInfo({
           </div>
           
           <div className="distance">
-            <span className="glitch" data-text={`${stationData.distance}m`}>{stationData.distance}m</span>
+            <span className="glitch" data-text={
+              stationData.distance >= 1000 
+                ? `${(stationData.distance / 1000).toFixed(1)}km` 
+                : `${Math.round(stationData.distance)}m`
+            }>
+              {stationData.distance >= 1000 
+                ? `${(stationData.distance / 1000).toFixed(1)}km` 
+                : `${Math.round(stationData.distance)}m`}
+            </span>
           </div>
 
           <div className="direction">
