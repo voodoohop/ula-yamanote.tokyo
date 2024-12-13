@@ -115,6 +115,7 @@ class StationPlayer {
           this.currentPlayer.dispose();
         }
         this.currentPlayer = this.nextPlayer;
+        this.currentPlayer.volume.value = initialVolume;  // Ensure final volume is at full
         this.nextPlayer = null;
         this.currentTrack = stationName;
       }, this.crossfadeDuration * 1000 + 100); // Add a small delay to ensure both tracks fade simultaneously
