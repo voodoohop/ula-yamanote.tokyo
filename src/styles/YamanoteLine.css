@@ -4,10 +4,9 @@
   height: 280px;
   margin: 20px auto;
   background: rgba(172, 181, 176, 0.95);
-  border: 2px solid #2e7d32;
-  border-radius: 4px;
+  border: none;
   box-shadow: 0 0 20px rgba(46, 125, 50, 0.3);
-  scale: 1.4;
+  scale: 1.25;
 }
 
 .yamanote-svg {
