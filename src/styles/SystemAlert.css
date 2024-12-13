@@ -79,8 +79,17 @@
 }
 
 .artwork-container {
-  margin: 20px 0;
-  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px auto;
+  width: 100%;
+}
+
+.artwork-container img {
+  max-width: 200px;
+  height: auto;
+  display: block;
 }
 
 .instagram-credit {
@@ -111,6 +120,42 @@
   will-change: background-position;
 }
 
+.experience-info {
+  margin: 20px auto;
+  padding: 20px;
+  background: rgba(46, 125, 50, 0.1);
+  border: 1px solid rgba(46, 125, 50, 0.3);
+  border-radius: 4px;
+  max-width: 600px;
+}
+
+.info-text {
+  margin-bottom: 20px;
+}
+
+.info-text p, .privacy-notice p {
+  margin: 10px 0;
+  font-size: 1.1em;
+  line-height: 1.4;
+  text-shadow: 0 0 5px rgba(46, 125, 50, 0.5);
+}
+
+.privacy-notice {
+  font-size: 0.9em;
+  opacity: 0.9;
+  border-top: 1px solid rgba(46, 125, 50, 0.3);
+  padding-top: 15px;
+  margin-top: 15px;
+}
+
+.privacy-notice p {
+  font-size: 1em;
+}
+
+.experience-info .glitch {
+  animation: textShadow 2s infinite;
+}
+
 @keyframes scanlines {
   0% {
     background-position: 0 0;
@@ -123,6 +168,39 @@
 @keyframes button-glitch {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+@keyframes textShadow {
+  0% {
+    text-shadow: 0.4389924193300864px 0 1px rgba(0,255,0,0.5), 
+                 0.7289790134048462px 0 2px rgba(0,255,0,0.3), 
+                 -0.09601924725800078px 0 3px rgba(0,255,0,0.2);
+  }
+  20% {
+    text-shadow: 2.7928974010788217px 0 1px rgba(0,255,0,0.5), 
+                 0.05769770862411499px 0 2px rgba(0,255,0,0.3), 
+                 0.45368320677804056px 0 3px rgba(0,255,0,0.2);
+  }
+  40% {
+    text-shadow: 0.4451326206878662px 0 1px rgba(0,255,0,0.5), 
+                 -0.12704089034926082px 0 2px rgba(0,255,0,0.3), 
+                 2.02914473123806px 0 3px rgba(0,255,0,0.2);
+  }
+  60% {
+    text-shadow: -0.7746927061783752px 0 1px rgba(0,255,0,0.5), 
+                 0.32270767851440464px 0 2px rgba(0,255,0,0.3), 
+                 1.634372720432982px 0 3px rgba(0,255,0,0.2);
+  }
+  80% {
+    text-shadow: 0.1802814255926513px 0 1px rgba(0,255,0,0.5), 
+                 0.6703636089637298px 0 2px rgba(0,255,0,0.3), 
+                 -0.7782682357821483px 0 3px rgba(0,255,0,0.2);
+  }
+  100% {
+    text-shadow: 0.4389924193300864px 0 1px rgba(0,255,0,0.5), 
+                 0.7289790134048462px 0 2px rgba(0,255,0,0.3), 
+                 -0.09601924725800078px 0 3px rgba(0,255,0,0.2);
+  }
 }
 
 .glitch-active {

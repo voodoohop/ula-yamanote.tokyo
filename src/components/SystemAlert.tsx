@@ -42,6 +42,24 @@ export function SystemAlert({ showStartButton, onStart }: SystemAlertProps) {
         <div className="location glitch" data-text="山手線">山手線</div>
         <div className="location-jp glitch" data-text="LOOP 01">LOOP 01</div>
       </div>
+      <div className="experience-info">
+        <div className="info-text">
+          <p className="glitch" data-text="まもなく、山手線オーディオシステムが起動いたします。位置情報に応じて変化する音響空間をお楽しみください。">
+            まもなく、山手線オーディオシステムが起動いたします。位置情報に応じて変化する音響空間をお楽しみください。
+          </p>
+          <p className="glitch" data-text="The Yamanote Line audio system will commence shortly. Please enjoy the evolving soundscape as you travel.">
+            The Yamanote Line audio system will commence shortly. Please enjoy the evolving soundscape as you travel.
+          </p>
+        </div>
+        <div className="privacy-notice">
+          <p className="glitch" data-text="位置情報は匿名で使用され、体験のためだけに使用されます。">
+            位置情報は匿名で使用され、体験のためだけに使用されます。
+          </p>
+          <p className="glitch" data-text="Location data is used anonymously and solely for this experience.">
+            Location data is used anonymously and solely for this experience.
+          </p>
+        </div>
+      </div>
       <div className="artwork-container">
         <img 
           src={uraYamanoteQr} 
