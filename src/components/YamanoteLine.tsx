@@ -1,37 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { stations } from '../data/stations';
-import { Train, createInitialTrains, updateTrainPositions, calculateTrainPosition } from '../utils/trainSimulation';
-import { 
-  calculateBounds,
-  createCoordinateTransformer,
-  calculateSVGBounds,
-  calculateCenteringOffset,
-  isPointWithinBounds,
-  calculateDistance,
-  calculateBearing
-} from '../utils/mapUtils';
+import { useTrainAnimation, useCoordinateTransformation, useUserPosition } from '../hooks/useYamanoteLine';
+import { Props, Point, TrainPosition } from '../types/yamanote';
 import '../styles/YamanoteLine.css';
-
-interface Props {
-  width?: number;
-  height?: number;
-  userPosition?: {
-    lat: number;
-    lng: number;
-  };
-  closestStation?: string;
-}
-
-interface Point {
-  x: number;
-  y: number;
-}
-
-interface TrainPosition {
-  x: number;
-  y: number;
-  angle: number;
-}
 
 // Use station names from the ordered stations array
 const yamanoteStations = stations.map(station => station.name);
@@ -74,8 +45,9 @@ const StationPoint: React.FC<{
 
 const TrainMarker: React.FC<{
   position: TrainPosition;
-}> = ({ position }) => (
-  <g className="train" transform={`translate(${position.x},${position.y}) rotate(${position.angle})`}>
+  direction: 'clockwise' | 'counterclockwise';
+}> = ({ position, direction }) => (
+  <g className={`train ${direction}`} transform={`translate(${position.x},${position.y}) rotate(${position.angle})`}>
     <circle r={3} className="train-point" />
     <path d="M-4,-1.5 L4,-1.5 L4,1.5 L-4,1.5 Z" className="train-body" />
   </g>
@@ -132,129 +104,16 @@ const DirectionIndicator: React.FC<{
 
 export function YamanoteLine({ width = 300, height = 300, userPosition, closestStation }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
-  const [trains, setTrains] = useState<Train[]>([]);
-  const [transformedPoints, setTransformedPoints] = useState<Point[]>([]);
-  const animationFrameRef = useRef<number>();
-  const pointsRef = useRef<Point[]>([]);
-
-  // Initialize trains
-  useEffect(() => {
-    setTrains(createInitialTrains());
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, []);
-
-  // Animate trains
-  useEffect(() => {
-    if (pointsRef.current.length === 0) return;
-    
-    let lastTime = performance.now();
-    
-    const animate = (currentTime: number) => {
-      const deltaTime = currentTime - lastTime;
-      lastTime = currentTime;
-      
-      setTrains(prevTrains => updateTrainPositions(prevTrains, deltaTime));
-      animationFrameRef.current = requestAnimationFrame(animate);
-    };
-    
-    animationFrameRef.current = requestAnimationFrame(animate);
-    
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
+  
+  const { transformedPoints, pointsRef } = useCoordinateTransformation(width, height, yamanoteStations);
+  const { startAnimation, getTrainPositions } = useTrainAnimation();
+  const userPositionData = useUserPosition(userPosition, closestStation, width, height);
+  
+  React.useEffect(() => {
+    return startAnimation(pointsRef);
   }, [pointsRef.current]);
 
-  // Transform coordinates
-  useEffect(() => {
-    if (!svgRef.current) return;
-
-    // Get coordinates for Yamanote line stations in correct order
-    const yamanoteCoordinates = yamanoteStations
-      .map(name => stations.find(s => s.name === name))
-      .filter((station): station is typeof stations[number] => station !== undefined);
-
-    if (yamanoteCoordinates.length === 0) {
-      console.error('No valid coordinates found for Yamanote stations');
-      return;
-    }
-
-    // Calculate bounds and create coordinate transformer
-    const bounds = calculateBounds(yamanoteCoordinates);
-    const transformCoord = createCoordinateTransformer(bounds, width, height);
-
-    // Generate points for the Yamanote line
-    const points = yamanoteCoordinates.map(station => 
-      transformCoord({ lat: station.lat, lng: station.lng })
-    );
-
-    // Calculate SVG bounds and centering offset
-    const svgBounds = calculateSVGBounds(points);
-    const offset = calculateCenteringOffset(svgBounds, width, height);
-
-    // Create final transform function with centering
-    const finalTransformCoord = (lat: number, lng: number) => {
-      const initial = transformCoord({ lat, lng });
-      return {
-        x: initial.x + offset.x,
-        y: initial.y + offset.y
-      };
-    };
-
-    // Transform and store points
-    const transformedPoints = yamanoteCoordinates.map(station => 
-      finalTransformCoord(station.lat, station.lng)
-    );
-
-    setTransformedPoints(transformedPoints);
-    pointsRef.current = transformedPoints;
-  }, [width, height]);
-
-  // Calculate train positions
-  const trainPositions = trains.map(train => {
-    const position = calculateTrainPosition(train, pointsRef.current);
-    return position || null;
-  }).filter((pos): pos is TrainPosition => pos !== null);
-
-  // Calculate user position data
-  const userPositionData = userPosition && (() => {
-    const bounds = calculateBounds(stations);
-    const transformCoord = createCoordinateTransformer(bounds, width, height);
-    const point = transformCoord(userPosition);
-    const padding = 20;
-
-    if (isPointWithinBounds(point, width, height, padding)) {
-      return { point, isWithinBounds: true };
-    }
-
-    // Calculate off-map indicator position
-    const closestStationData = closestStation 
-      ? stations.find(s => s.name === closestStation)
-      : null;
-    const targetCoords = closestStationData 
-      ? { lat: closestStationData.lat, lng: closestStationData.lng }
-      : { 
-          lat: bounds.minLat + (bounds.maxLat - bounds.minLat) / 2,
-          lng: bounds.minLng + (bounds.maxLng - bounds.minLng) / 2 
-        };
-
-    const bearing = calculateBearing(userPosition, targetCoords);
-    const distance = calculateDistance(userPosition, targetCoords);
-    const radius = Math.min(width, height) / 1.8 - 20;
-    const edgeX = width/2 + radius * Math.sin(bearing);
-    const edgeY = height/2 - radius * Math.cos(bearing);
-
-    return {
-      point,
-      isWithinBounds: false,
-      indicator: { edgeX, edgeY, bearing, distance }
-    };
-  })();
+  const trainPositions = getTrainPositions(pointsRef.current);
 
   return (
     <div className="yamanote-map">
@@ -297,6 +156,7 @@ export function YamanoteLine({ width = 300, height = 300, userPosition, closestS
             <TrainMarker
               key={`train-${i}`}
               position={position}
+              direction={i % 2 === 0 ? 'clockwise' : 'counterclockwise'}
             />
           ))}
         </g>

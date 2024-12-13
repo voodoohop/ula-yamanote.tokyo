@@ -122,6 +122,24 @@
   stroke: none;
 }
 
+.train {
+  transition: transform 0.1s linear;
+}
+
+.train.clockwise .train-point,
+.train.clockwise .train-body {
+  fill: #2E7D32;  /* Darker, more vibrant green */
+  stroke: white;
+  stroke-width: 0.5;
+}
+
+.train.counterclockwise .train-point,
+.train.counterclockwise .train-body {
+  fill: #FF9800;  /* Orange for clear contrast */
+  stroke: white;
+  stroke-width: 0.5;
+}
+
 .train-point {
   fill: #588C1A;  /* Even darker Yamanote Line green */
   stroke: white;

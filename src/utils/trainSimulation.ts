@@ -6,16 +6,28 @@ interface Point {
 export interface Train {
   id: number;
   progress: number; // 0 to 1, representing position along the entire line
+  direction: 'clockwise' | 'counterclockwise';
 }
 
-export const TOTAL_TRAINS = 25;
-export const CIRCUIT_TIME_MS = 6 * 60 * 1000; // 6 minutes in milliseconds (10x faster than real-time)
+export const TOTAL_TRAINS = 24; // 12 trains in each direction
+export const CIRCUIT_TIME_MS = 24 * 60 * 1000; // 24 minutes in milliseconds (2x faster than real-time)
 
 export function createInitialTrains(): Train[] {
-  return Array.from({ length: TOTAL_TRAINS }, (_, i) => ({
-    id: i,
-    progress: i / TOTAL_TRAINS
-  }));
+  const halfLength = TOTAL_TRAINS / 2;
+  const spacing = 1 / halfLength;
+  
+  return Array.from({ length: TOTAL_TRAINS }, (_, i) => {
+    const isClockwise = i < halfLength;
+    const indexInDirection = isClockwise ? i : (i - halfLength);
+    // Add offset for counterclockwise trains to stagger them between clockwise trains
+    const offset = isClockwise ? 0 : spacing / 2;
+    
+    return {
+      id: i,
+      progress: (indexInDirection * spacing + offset) % 1,
+      direction: isClockwise ? 'clockwise' : 'counterclockwise'
+    };
+  });
 }
 
 export function updateTrainPositions(trains: Train[], deltaTime: number): Train[] {
@@ -24,7 +36,9 @@ export function updateTrainPositions(trains: Train[], deltaTime: number): Train[
   
   return trains.map(train => ({
     ...train,
-    progress: (train.progress + progressDelta) % 1
+    progress: train.direction === 'clockwise' 
+      ? (train.progress + progressDelta) % 1
+      : (train.progress - progressDelta + 1) % 1
   }));
 }
 
