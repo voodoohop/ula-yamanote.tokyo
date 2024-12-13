@@ -150,7 +150,11 @@ export function StationInfo({
 
   return (
     <div className={`station-info ${isGpsActive ? 'gps-active' : ''} ${glitchClass}`}>
-      <GPSIndicator isActive={gpsUpdateReceived} />
+      <GPSIndicator 
+        isActive={gpsUpdateReceived} 
+        speed={stationData?.speed}
+        distance={stationData?.distance}
+      />
       <div className="scanline"></div>
       <div className="noise"></div>
       <div className="crt-effect"></div>
