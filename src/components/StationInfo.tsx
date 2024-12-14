@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { SystemAlert } from './SystemAlert';
 import { YamanoteLine } from './YamanoteLine';
-import { stationPlayer, initializeAudio } from '../utils/audio';
+import { stationPlayer } from '../utils/audio';
 import { wakeLockManager } from '../utils/wakeLock';
 import { useGPSTracking } from '../hooks/useGPSTracking';
 import { useSpeedRate } from '../hooks/useSpeedRate';
@@ -48,7 +48,6 @@ export function StationInfo({
   useSpeedRate(stationData?.speed ?? null);
 
   useEffect(() => {
-    initializeAudio();
   }, []);
 
   useEffect(() => {

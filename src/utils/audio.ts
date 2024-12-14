@@ -1,5 +1,5 @@
 import * as Tone from 'tone';
-import { stationTrackMap } from '../data/stations';
+import { stations, stationTrackMap } from '../data/stations';
 
 class StationPlayer {
   private currentPlayer: Tone.Player | null = null;
@@ -163,12 +163,34 @@ class StationPlayer {
 // Create singleton instance
 export const stationPlayer = new StationPlayer();
 
-// Initialize audio context on user interaction
-export function initializeAudio() {
-  document.addEventListener('click', async () => {
-    if (Tone.context.state !== 'running') {
-      await Tone.context.resume();
-      console.log('Audio context resumed');
-    }
-  }, { once: true });
+// Track initialization state
+let isInitializing = false;
+let isInitialized = false;
+
+// Initialize audio context and preload tracks
+export async function initializeAudio() {
+  // Prevent multiple simultaneous initializations
+  if (isInitializing || isInitialized) {
+    return;
+  }
+  
+  isInitializing = true;
+  console.log('Starting audio initialization');
+  
+  // Get all station names in order
+  const stationNames = stations.map(station => station.name);
+  
+  // Load stations in small batches to not overwhelm the network
+  const BATCH_SIZE = 3;
+  for (let i = 0; i < stationNames.length; i += BATCH_SIZE) {
+    const batch = stationNames.slice(i, i + BATCH_SIZE);
+    console.log(`Loading stations batch ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(stationNames.length/BATCH_SIZE)}: ${batch.join(', ')}`);
+    await Promise.all(
+      batch.map(station => stationPlayer.preloadTrack(station))
+    );
+  }
+  
+  console.log('All station tracks preloaded');
+  isInitialized = true;
+  isInitializing = false;
 }

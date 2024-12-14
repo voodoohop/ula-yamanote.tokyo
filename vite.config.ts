@@ -18,4 +18,12 @@ export default defineConfig({
     },
   },
   assetsInclude: ['**/*.mp3'], // Add MP3 files to asset handling
+  server: {
+    headers: {
+      // Add cache control headers for audio files
+      '*.mp3': {
+        'Cache-Control': 'public, max-age=31536000, immutable'
+      }
+    }
+  }
 });

@@ -12,3 +12,9 @@
   targetPort = 5173
   port = 8888
   publish = "dist"
+
+[[headers]]
+  for = "/assets/tracks/low/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    Access-Control-Allow-Origin = "*"
