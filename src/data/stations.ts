@@ -3,6 +3,7 @@ export interface Station {
   japaneseName: string;
   lat: number;
   lng: number;
+  story?: string;
 }
 
 // Stations ordered according to Yamanote line clockwise starting from Shimbashi
@@ -53,7 +54,8 @@ export const stations: Station[] = [
     name: 'Uguisudani',
     japaneseName: '鶯谷',
     lat: 35.7205,
-    lng: 139.7785
+    lng: 139.7785,
+    story: 'Legend tells of a Kyoto potter who released nightingales from Kyoto here, hoping their elegant songs would bring peace to the priests of nearby Kan\'ei-ji Temple and the spirits of the Tokugawa shoguns resting atop Ueno.'
   },
   {
     name: 'Nippori',
