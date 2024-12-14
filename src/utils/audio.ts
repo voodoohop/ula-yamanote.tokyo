@@ -6,7 +6,7 @@ class StationPlayer {
   private nextPlayer: Tone.Player | null = null;
   private currentTrack: string | null = null;
   private isLoading: boolean = false;
-  private crossfadeDuration: number = 8;
+  private crossfadeDuration: number = 2;
   private preloadedTracks: Map<string, Tone.Player> = new Map();
 
   private async createPlayer(trackPath: string): Promise<Tone.Player> {
@@ -74,8 +74,10 @@ class StationPlayer {
         this.preloadedTracks.delete(stationName);
       }
 
-      // Start Tone.js context
-      await Tone.start();
+      // Start Tone.js context if not started
+      if (Tone.context.state !== 'running') {
+        await Tone.start();
+      }
 
       // First track case
       if (!this.currentPlayer) {
@@ -114,7 +116,7 @@ class StationPlayer {
           this.currentPlayer.dispose();
         }
         this.currentPlayer = this.nextPlayer;
-        this.currentPlayer.volume.value = targetVolume;  // Ensure final volume is at 0 dB
+        this.currentPlayer!.volume.value = targetVolume;  // Ensure final volume is at 0 dB
         this.nextPlayer = null;
         this.currentTrack = stationName;
       }, this.crossfadeDuration * 1000 + 100);
@@ -163,9 +165,10 @@ class StationPlayer {
 // Create singleton instance
 export const stationPlayer = new StationPlayer();
 
-// Track initialization state
+// Track initialization state and abort controller
 let isInitializing = false;
 let isInitialized = false;
+let preloadAbortController: AbortController | null = null;
 
 // Initialize audio context and preload tracks
 export async function initializeAudio() {
@@ -176,21 +179,51 @@ export async function initializeAudio() {
   
   isInitializing = true;
   console.log('Starting audio initialization');
+
+  // Create new abort controller
+  if (preloadAbortController) {
+    preloadAbortController.abort();
+  }
+  preloadAbortController = new AbortController();
+  const { signal } = preloadAbortController;
   
   // Get all station names in order
   const stationNames = stations.map(station => station.name);
   
-  // Load stations in small batches to not overwhelm the network
-  const BATCH_SIZE = 3;
-  for (let i = 0; i < stationNames.length; i += BATCH_SIZE) {
-    const batch = stationNames.slice(i, i + BATCH_SIZE);
-    console.log(`Loading stations batch ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(stationNames.length/BATCH_SIZE)}: ${batch.join(', ')}`);
-    await Promise.all(
-      batch.map(station => stationPlayer.preloadTrack(station))
-    );
+  try {
+    // Load stations in small batches to not overwhelm the network
+    const BATCH_SIZE = 3;
+    for (let i = 0; i < stationNames.length && !signal.aborted; i += BATCH_SIZE) {
+      const batch = stationNames.slice(i, i + BATCH_SIZE);
+      console.log(`Loading stations batch ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(stationNames.length/BATCH_SIZE)}: ${batch.join(', ')}`);
+      
+      try {
+        await Promise.all(
+          batch.map(station => stationPlayer.preloadTrack(station))
+        );
+      } catch (error) {
+        console.warn('Error preloading batch:', error);
+        // Continue with next batch even if current fails
+      }
+    }
+    
+    if (!signal.aborted) {
+      console.log('All station tracks preloaded');
+      isInitialized = true;
+    }
+  } catch (error) {
+    console.error('Error during preloading:', error);
+  } finally {
+    isInitializing = false;
   }
-  
-  console.log('All station tracks preloaded');
-  isInitialized = true;
+}
+
+// Function to abort preloading
+export function abortPreloading() {
+  if (preloadAbortController) {
+    preloadAbortController.abort();
+  }
   isInitializing = false;
+  isInitialized = false; // Reset initialized state when aborting
+  console.log('Preloading aborted');
 }

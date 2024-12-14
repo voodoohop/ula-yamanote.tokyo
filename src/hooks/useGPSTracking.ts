@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { calculateDistance, getDirection } from '../utils/location';
 import { stations } from '../data/stations';
+import { abortPreloading } from '../utils/audio';
 
 export interface StationData {
   name: string;
@@ -17,6 +18,9 @@ export function useGPSTracking(isGpsActive: boolean) {
 
   useEffect(() => {
     if (!isGpsActive) return;
+
+    // Abort any ongoing preloading when GPS becomes active
+    abortPreloading();
 
     function updatePosition(position: GeolocationPosition) {
       const userLat = position.coords.latitude;
