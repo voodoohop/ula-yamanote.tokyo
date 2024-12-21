@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { stationPlayer } from '../utils/audio';
+import * as Tone from 'tone';
 
 interface UseAudioControlProps {
   isPlaying: boolean;
@@ -25,6 +26,9 @@ export const useAudioControl = ({
     setIsLoading(true);
     
     try {
+      // Start audio context for iOS Safari
+      await Tone.start();
+      
       if ("geolocation" in navigator) {
         try {
           const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
