@@ -17,6 +17,7 @@ function App() {
       setCurrentStationIndex((prev) => (prev + 1) % japaneseStations.length);
     }, 5000);
 
+<<<<<<< Updated upstream
     return () => clearInterval(interval);
   }, []);
 
@@ -48,6 +49,30 @@ function App() {
       audio.currentTime = 0;
       setIsPlaying(false);
       setIsGpsActive(false);
+=======
+  useEffect(() => {
+    // Log visitor IP
+    fetch('/.netlify/functions/log-visitor')
+      .catch(err => console.error('Failed to log visitor:', err));
+  }, []);
+
+  const MainContent = () => {
+    if (isPlaying) {
+      return (
+        <div className="app playing">
+          <StationInfo 
+            currentStationIndex={currentStationIndex}
+            setCurrentStationIndex={setCurrentStationIndex}
+            isGpsActive={isGpsActive}
+            setIsGpsActive={setIsGpsActive}
+            isPlaying={isPlaying}
+            setIsPlaying={setIsPlaying}
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+          />
+        </div>
+      );
+>>>>>>> Stashed changes
     }
   };
 
