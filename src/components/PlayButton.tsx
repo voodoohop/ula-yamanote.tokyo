@@ -11,7 +11,7 @@ export const PlayButton: React.FC<PlayButtonProps> = ({ onClick, isLoading, isPl
   <button 
     onClick={onClick}
     className={`play-button ${isLoading ? 'loading' : ''} ${isPlaying ? 'playing' : ''}`}
-    disabled={true}  // Always disabled
+    disabled={isLoading}
   >
     準備中... Coming soon...
   </button>

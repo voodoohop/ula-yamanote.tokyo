@@ -1,4 +1,5 @@
 import { Handler } from '@netlify/functions'
+import { getStore } from "@netlify/blobs"
 
 interface GeoResponse {
   status: string;
@@ -6,6 +7,13 @@ interface GeoResponse {
   country: string;
   regionName: string;
   message?: string;
+}
+
+interface VisitorLog {
+  ip: string
+  location: string
+  userAgent: string
+  timestamp: string
 }
 
 const handler: Handler = async (event, context) => {
@@ -17,15 +25,37 @@ const handler: Handler = async (event, context) => {
     const geoResponse = await fetch(`http://ip-api.com/json/${ip}`)
     const geoData = await geoResponse.json() as GeoResponse
     
+    let location = 'Unknown'
     if (geoData.status === 'success' && geoData.city && geoData.country) {
-      console.log(`[VISITOR] IP: ${ip} | Location: ${geoData.city}, ${geoData.regionName}, ${geoData.country} | UA: ${userAgent} | Time: ${timestamp}`)
-    } else {
-      console.log(`[VISITOR] IP: ${ip} | Location: API Error (${geoData.message || 'unknown'}) | UA: ${userAgent} | Time: ${timestamp}`)
-      console.error('Geo API response:', JSON.stringify(geoData))
+      location = `${geoData.city}, ${geoData.regionName}, ${geoData.country}`
+    } else if (geoData.message) {
+      location = `Error: ${geoData.message}`
     }
+
+    // Get the store
+    const store = getStore({
+      name: "visitor-logs"
+    });
+
+    // Create log entry
+    const logEntry: VisitorLog = {
+      ip,
+      location,
+      userAgent,
+      timestamp
+    }
+
+    // Append to the list of logs
+    const existingLogs = await store.get('logs') || '[]'
+    const logs = JSON.parse(existingLogs as string)
+    logs.push(logEntry)
+    
+    // Store back in KV store
+    await store.set('logs', JSON.stringify(logs))
+    
+    console.log(`[VISITOR] IP: ${ip} | Location: ${location} | UA: ${userAgent}`)
   } catch (error) {
-    console.log(`[VISITOR] IP: ${ip} | Location: Request Failed | UA: ${userAgent} | Time: ${timestamp}`)
-    console.error('Geo lookup failed:', error)
+    console.error('Failed to log visitor:', error)
   }
 
   return {
