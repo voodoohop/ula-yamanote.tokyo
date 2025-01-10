@@ -16,6 +16,12 @@ function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    // Log visitor IP
+    fetch('/.netlify/functions/log-visitor')
+      .catch(err => console.error('Failed to log visitor:', err));
+  }, []);
+
   const handleAudioControl = useAudioControl({
     isPlaying,
     setIsPlaying,
