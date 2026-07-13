@@ -6,163 +6,14 @@ import {
   getStationProgress,
   projectLngLat,
 } from './yamanoteGeometry';
+import { createPlateauBuildings } from './plateauBuildings';
 
 interface CitySceneProps {
   isRiding: boolean;
   isPaused: boolean;
   stationName: string;
   onReady: () => void;
-}
-
-interface Building {
-  x: number;
-  z: number;
-  width: number;
-  depth: number;
-  height: number;
-}
-
-function createRandom(seed: number) {
-  let value = seed >>> 0;
-  return () => {
-    value = (value * 1664525 + 1013904223) >>> 0;
-    return value / 0x100000000;
-  };
-}
-
-function buildCity(scene: THREE.Scene, routeCurve: THREE.Curve<THREE.Vector3>) {
-  const random = createRandom(1985);
-  const buildings: Building[] = [];
-  const routeSamples = routeCurve.getSpacedPoints(220);
-
-  for (let x = -8_200; x <= 2_800; x += 520) {
-    for (let z = -7_600; z <= 8_400; z += 520) {
-      const px = x + (random() - 0.5) * 140;
-      const pz = z + (random() - 0.5) * 140;
-      const isTrack = routeSamples.some((point) => (
-        (point.x - px) ** 2 + (point.z - pz) ** 2 < 170 ** 2
-      ));
-      const isRoad = Math.abs(px % 1_650) < 105 || Math.abs((pz - 480) % 1_650) < 105;
-
-      if (isTrack || isRoad || random() < 0.18) continue;
-
-      const distanceFromCenter = Math.hypot(px + 1_000, pz);
-      const centerBoost = Math.max(0, 1 - distanceFromCenter / 7_000);
-      buildings.push({
-        x: px,
-        z: pz,
-        width: 130 + random() * 120,
-        depth: 130 + random() * 120,
-        height: 45 + random() * 240 + centerBoost * random() * 520,
-      });
-    }
-  }
-
-  const buildingGeometry = new THREE.BoxGeometry(1, 1, 1);
-  const buildingMaterial = new THREE.MeshStandardMaterial({
-    color: 0xffffff,
-    roughness: 0.88,
-    metalness: 0.08,
-    vertexColors: true,
-  });
-  const buildingMesh = new THREE.InstancedMesh(buildingGeometry, buildingMaterial, buildings.length);
-  const transform = new THREE.Object3D();
-
-  buildings.forEach((building, index) => {
-    transform.position.set(building.x, building.height / 2, building.z);
-    transform.scale.set(building.width, building.height, building.depth);
-    transform.rotation.y = (random() - 0.5) * 0.08;
-    transform.updateMatrix();
-    buildingMesh.setMatrixAt(index, transform.matrix);
-
-    const tone = 0.23 + random() * 0.16;
-    buildingMesh.setColorAt(index, new THREE.Color().setRGB(tone * 0.86, tone, tone * 1.2));
-  });
-  buildingMesh.instanceMatrix.needsUpdate = true;
-  if (buildingMesh.instanceColor) buildingMesh.instanceColor.needsUpdate = true;
-  scene.add(buildingMesh);
-
-  const windowPositions: number[] = [];
-  const windowColors: number[] = [];
-  const warm = new THREE.Color(0xffd269);
-  const cool = new THREE.Color(0x8fd7d0);
-
-  const addWindow = (x: number, y: number, z: number) => {
-    const color = random() > 0.14 ? warm : cool;
-    windowPositions.push(x, y, z);
-    windowColors.push(color.r, color.g, color.b);
-  };
-
-  buildings.forEach((building) => {
-    const floors = Math.min(10, Math.floor(building.height / 48));
-    const xColumns = Math.max(1, Math.floor(building.width / 55));
-    const zColumns = Math.max(1, Math.floor(building.depth / 55));
-
-    for (let floor = 1; floor < floors; floor += 1) {
-      const y = floor * 34;
-      for (let column = 0; column < xColumns; column += 1) {
-        const x = building.x - building.width * 0.34
-          + (column / Math.max(xColumns - 1, 1)) * building.width * 0.68;
-        if (random() > 0.48) addWindow(x, y, building.z + building.depth / 2 + 1);
-        if (random() > 0.76) addWindow(x, y, building.z - building.depth / 2 - 1);
-      }
-      for (let column = 0; column < zColumns; column += 1) {
-        const z = building.z - building.depth * 0.34
-          + (column / Math.max(zColumns - 1, 1)) * building.depth * 0.68;
-        if (random() > 0.6) addWindow(building.x + building.width / 2 + 1, y, z);
-      }
-    }
-  });
-
-  const windowGeometry = new THREE.BufferGeometry();
-  windowGeometry.setAttribute('position', new THREE.Float32BufferAttribute(windowPositions, 3));
-  windowGeometry.setAttribute('color', new THREE.Float32BufferAttribute(windowColors, 3));
-  scene.add(new THREE.Points(
-    windowGeometry,
-    new THREE.PointsMaterial({
-      size: 12,
-      transparent: true,
-      opacity: 0.86,
-      vertexColors: true,
-      sizeAttenuation: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    }),
-  ));
-
-  const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(24_000, 22_000),
-    new THREE.MeshStandardMaterial({ color: 0x080a0f, roughness: 1 }),
-  );
-  ground.rotation.x = -Math.PI / 2;
-  ground.position.y = -0.04;
-  scene.add(ground);
-
-  const grid = new THREE.GridHelper(22_000, 88, 0x28313a, 0x15191f);
-  grid.position.y = 0.02;
-  const gridMaterials = Array.isArray(grid.material) ? grid.material : [grid.material];
-  gridMaterials.forEach((material) => {
-    material.transparent = true;
-    material.opacity = 0.28;
-  });
-  scene.add(grid);
-
-  const starPositions: number[] = [];
-  for (let index = 0; index < 420; index += 1) {
-    const angle = random() * Math.PI * 2;
-    const radius = 9_000 + random() * 16_000;
-    starPositions.push(
-      Math.cos(angle) * radius,
-      7_000 + random() * 12_000,
-      Math.sin(angle) * radius,
-    );
-  }
-  const starGeometry = new THREE.BufferGeometry();
-  starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
-  scene.add(new THREE.Points(
-    starGeometry,
-    new THREE.PointsMaterial({ color: 0xcad5e8, size: 18, transparent: true, opacity: 0.62 }),
-  ));
+  onError: () => void;
 }
 
 function createOffsetCurve(centerCurve: THREE.Curve<THREE.Vector3>, offset: number) {
@@ -233,7 +84,7 @@ function buildRailway(scene: THREE.Scene) {
     const point = rideCurve.getPointAt(progress);
     rideCurve.getTangentAt(progress, tangent).normalize();
     sleeper.position.copy(point);
-    sleeper.position.y = 0.23;
+    sleeper.position.y = point.y + 0.1;
     sleeper.rotation.y = Math.atan2(tangent.x, tangent.z);
     sleeper.updateMatrix();
     sleepers.setMatrixAt(index, sleeper.matrix);
@@ -290,12 +141,14 @@ export function CityScene({
   isPaused,
   stationName,
   onReady,
+  onError,
 }: CitySceneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const ridingRef = useRef(isRiding);
   const pausedRef = useRef(isPaused);
   const readyRef = useRef(false);
   const onReadyRef = useRef(onReady);
+  const onErrorRef = useRef(onError);
   const progressRef = useRef(getStationProgress(stationName));
 
   useEffect(() => {
@@ -315,6 +168,10 @@ export function CityScene({
   }, [onReady]);
 
   useEffect(() => {
+    onErrorRef.current = onError;
+  }, [onError]);
+
+  useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
@@ -332,6 +189,8 @@ export function CityScene({
     renderer.toneMappingExposure = 1.28;
     renderer.domElement.className = 'three-city-canvas';
     renderer.domElement.dataset.scene = 'ura-yamanote-city';
+    renderer.domElement.dataset.buildings = 'plateau-loading';
+    renderer.domElement.dataset.plateau = 'loading';
     container.appendChild(renderer.domElement);
 
     const hemisphere = new THREE.HemisphereLight(0x8391c7, 0x101216, 2.2);
@@ -342,7 +201,21 @@ export function CityScene({
     scene.add(hemisphere, moon, railGlow);
 
     const railway = buildRailway(scene);
-    buildCity(scene, railway.curve);
+    const plateau = createPlateauBuildings({
+      camera,
+      renderer,
+      onReady: () => {
+        renderer.domElement.dataset.buildings = 'plateau';
+        if (readyRef.current) return;
+        readyRef.current = true;
+        onReadyRef.current();
+      },
+      onStatus: (status) => {
+        renderer.domElement.dataset.plateau = status;
+        if (status === 'load-error' && !readyRef.current) onErrorRef.current();
+      },
+    });
+    scene.add(plateau.group);
     const lookAt = new THREE.Vector3();
     const desiredCamera = new THREE.Vector3();
     const tangent = new THREE.Vector3();
@@ -355,6 +228,7 @@ export function CityScene({
       renderer.setSize(clientWidth, clientHeight, false);
       camera.aspect = clientWidth / Math.max(clientHeight, 1);
       camera.updateProjectionMatrix();
+      plateau.resize();
     };
     const resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(container);
@@ -383,7 +257,7 @@ export function CityScene({
         const ahead = railway.curve.getPointAt((progress + 0.0022) % 1);
         desiredCamera.copy(behind).add(new THREE.Vector3(0, 18, 0));
         lookAt.copy(ahead).add(new THREE.Vector3(0, 7, 0));
-        camera.position.lerp(desiredCamera, 0.036);
+        camera.position.lerp(desiredCamera, 0.065);
       } else {
         const orbit = elapsed * 0.045;
         desiredCamera.set(
@@ -397,12 +271,9 @@ export function CityScene({
 
       camera.lookAt(lookAt);
       railGlow.position.copy(trainPoint).add(new THREE.Vector3(0, 16, 0));
+      plateau.update(ridingRef.current);
       renderer.render(scene, camera);
 
-      if (!readyRef.current) {
-        readyRef.current = true;
-        onReadyRef.current();
-      }
       animationFrame = window.requestAnimationFrame(render);
     };
     animationFrame = window.requestAnimationFrame(render);
@@ -410,6 +281,8 @@ export function CityScene({
     return () => {
       window.cancelAnimationFrame(animationFrame);
       resizeObserver.disconnect();
+      scene.remove(plateau.group);
+      plateau.dispose();
       disposeScene(scene);
       renderer.dispose();
       renderer.forceContextLoss();

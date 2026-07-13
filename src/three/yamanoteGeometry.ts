@@ -15,7 +15,7 @@ export function projectLngLat(lng: number, lat: number, elevation = 0) {
 }
 
 export function createYamanoteCurve() {
-  const points = yamanoteRoute.map(([lng, lat]) => projectLngLat(lng, lat, 2.1));
+  const points = yamanoteRoute.map(([lng, lat]) => projectLngLat(lng, lat, 38.1));
   return new THREE.CatmullRomCurve3(points, true, 'centripetal', 0.5);
 }
 

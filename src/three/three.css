@@ -103,6 +103,32 @@
   animation: three-loading-pulse 1s ease-in-out infinite;
 }
 
+.three-loading.is-error {
+  flex-direction: column;
+}
+
+.three-loading.is-error span {
+  background: #e56b6f;
+  box-shadow: 0 0 14px rgba(229, 107, 111, 0.65);
+  animation: none;
+}
+
+.three-loading button {
+  min-width: 88px;
+  min-height: 34px;
+  margin-top: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 4px;
+  color: #f1f3ef;
+  background: #11141a;
+  font: inherit;
+  cursor: pointer;
+}
+
+.three-loading button:hover {
+  border-color: var(--line);
+}
+
 .three-intro {
   position: absolute;
   z-index: 3;

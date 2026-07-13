@@ -49,6 +49,13 @@ export function AboutPanel({ isOpen, onClose }: AboutPanelProps) {
         >
           Railway data · MLIT Japan
         </a>
+        <a
+          href="https://www.mlit.go.jp/plateau/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Buildings · MLIT Project PLATEAU · CC BY 4.0
+        </a>
         <a href="mailto:contact@ula-yamanote.tokyo">contact@ula-yamanote.tokyo</a>
       </aside>
     </div>

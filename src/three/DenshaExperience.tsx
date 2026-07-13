@@ -21,6 +21,7 @@ import './three.css';
 
 const TOKYO_STATION_INDEX = audioStations.findIndex((station) => station.name === 'Tokyo');
 const AUTO_ADVANCE_MS = 90_000;
+type SceneStatus = 'loading' | 'ready' | 'error';
 
 function tokyoTime(date: Date) {
   return new Intl.DateTimeFormat('ja-JP', {
@@ -36,7 +37,8 @@ export function DenshaExperience() {
   const [stationIndex, setStationIndex] = useState(Math.max(TOKYO_STATION_INDEX, 0));
   const [isRiding, setIsRiding] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
-  const [isSceneReady, setIsSceneReady] = useState(false);
+  const [sceneStatus, setSceneStatus] = useState<SceneStatus>('loading');
+  const [sceneAttempt, setSceneAttempt] = useState(0);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [clock, setClock] = useState(() => new Date());
 
@@ -106,10 +108,12 @@ export function DenshaExperience() {
   return (
     <div className={`three-experience ${isRiding ? 'is-riding' : 'is-intro'}`}>
       <CityScene
+        key={sceneAttempt}
         isRiding={isRiding}
         isPaused={audio.status === 'paused'}
         stationName={station.name}
-        onReady={() => setIsSceneReady(true)}
+        onReady={() => setSceneStatus('ready')}
+        onError={() => setSceneStatus('error')}
       />
       <div className="three-scene-tint" aria-hidden="true" />
       <div className="three-scene-noise" aria-hidden="true" />
@@ -132,10 +136,21 @@ export function DenshaExperience() {
         </button>
       </header>
 
-      {!isSceneReady && (
-        <div className="three-loading" role="status">
+      {sceneStatus !== 'ready' && (
+        <div className={`three-loading ${sceneStatus === 'error' ? 'is-error' : ''}`} role="status">
           <span />
-          INITIALIZING TOKYO LOOP
+          {sceneStatus === 'error' ? 'OFFICIAL TOKYO DATA UNAVAILABLE' : 'STREAMING OFFICIAL TOKYO DATA'}
+          {sceneStatus === 'error' && (
+            <button
+              type="button"
+              onClick={() => {
+                setSceneStatus('loading');
+                setSceneAttempt((attempt) => attempt + 1);
+              }}
+            >
+              RETRY
+            </button>
+          )}
         </div>
       )}
 
@@ -148,7 +163,7 @@ export function DenshaExperience() {
           </h1>
           <div className="three-intro-rule" aria-hidden="true" />
           <p className="three-intro-station">東京 <span>Tokyo · Zone 03</span></p>
-          <button className="three-board-button" type="button" onClick={board} disabled={!isSceneReady}>
+          <button className="three-board-button" type="button" onClick={board} disabled={sceneStatus !== 'ready'}>
             <TrainFront size={19} />
             BOARD
           </button>

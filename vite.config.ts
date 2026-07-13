@@ -8,10 +8,12 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    chunkSizeWarningLimit: 550,
+    chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
         manualChunks(id) {
+          if (id.includes('/node_modules/3d-tiles-renderer/')) return 'three-tiles';
+          if (id.includes('/node_modules/three/examples/jsm/')) return 'three-addons';
           if (id.includes('/node_modules/three/')) return 'three';
         },
       },
