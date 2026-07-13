@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { yamanoteRouteStations } from '../data/yamanoteRoute.generated';
+import type { TokyoEnvironment } from '../hooks/useTokyoEnvironment';
 import {
   createYamanoteCurve,
   getStationProgress,
@@ -12,8 +13,71 @@ interface CitySceneProps {
   isRiding: boolean;
   isPaused: boolean;
   stationName: string;
+  environment: TokyoEnvironment;
   onReady: () => void;
   onError: () => void;
+}
+
+function createWeatherParticles(scene: THREE.Scene) {
+  const count = 700;
+  const positions = new Float32Array(count * 3);
+  let seed = 1985;
+  const random = () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 0x100000000;
+  };
+
+  for (let index = 0; index < count; index += 1) {
+    positions[index * 3] = (random() - 0.5) * 180;
+    positions[index * 3 + 1] = random() * 110 - 25;
+    positions[index * 3 + 2] = (random() - 0.5) * 180;
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const material = new THREE.PointsMaterial({
+    color: 0xb7d4df,
+    size: 0.38,
+    transparent: true,
+    opacity: 0.68,
+    depthWrite: false,
+  });
+  const points = new THREE.Points(geometry, material);
+  points.frustumCulled = false;
+  points.visible = false;
+  scene.add(points);
+
+  return {
+    update(
+      delta: number,
+      camera: THREE.Camera,
+      environment: TokyoEnvironment,
+      isRiding: boolean,
+    ) {
+      points.visible = isRiding && environment.precipitationKind !== 'none';
+      if (!points.visible) return;
+
+      points.position.set(camera.position.x, camera.position.y - 20, camera.position.z);
+      const isSnow = environment.precipitationKind === 'snow';
+      const fallSpeed = isSnow ? 7 : 52 + Math.min(environment.precipitation, 8) * 5;
+      const drift = (environment.windSpeed ?? 0) * delta * (isSnow ? 0.035 : 0.012);
+
+      for (let index = 0; index < count; index += 1) {
+        const offset = index * 3;
+        positions[offset] += drift;
+        positions[offset + 1] -= fallSpeed * delta;
+        if (positions[offset + 1] < -25) {
+          positions[offset] = (random() - 0.5) * 180;
+          positions[offset + 1] = 85 + random() * 20;
+          positions[offset + 2] = (random() - 0.5) * 180;
+        }
+      }
+
+      geometry.attributes.position.needsUpdate = true;
+      material.color.set(isSnow ? 0xf0f4f5 : environment.isDay ? 0x6f8f9f : 0xb7d4df);
+      material.size = isSnow ? 0.72 : 0.38;
+    },
+  };
 }
 
 function createOffsetCurve(centerCurve: THREE.Curve<THREE.Vector3>, offset: number) {
@@ -140,6 +204,7 @@ export function CityScene({
   isRiding,
   isPaused,
   stationName,
+  environment,
   onReady,
   onError,
 }: CitySceneProps) {
@@ -149,6 +214,7 @@ export function CityScene({
   const readyRef = useRef(false);
   const onReadyRef = useRef(onReady);
   const onErrorRef = useRef(onError);
+  const environmentRef = useRef(environment);
   const progressRef = useRef(getStationProgress(stationName));
 
   useEffect(() => {
@@ -172,12 +238,18 @@ export function CityScene({
   }, [onError]);
 
   useEffect(() => {
+    environmentRef.current = environment;
+  }, [environment]);
+
+  useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x07080c);
-    scene.fog = new THREE.FogExp2(0x090b12, 0.0001);
+    const background = new THREE.Color(0x07080c);
+    const fog = new THREE.FogExp2(0x090b12, 0.0001);
+    scene.background = background;
+    scene.fog = fog;
 
     const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 60_000);
     camera.position.set(7_800, 12_500, 9_600);
@@ -194,11 +266,11 @@ export function CityScene({
     container.appendChild(renderer.domElement);
 
     const hemisphere = new THREE.HemisphereLight(0x8391c7, 0x101216, 2.2);
-    const moon = new THREE.DirectionalLight(0xd7e4ff, 1.7);
-    moon.position.set(-5_000, 9_000, 4_000);
+    const skyLight = new THREE.DirectionalLight(0xd7e4ff, 1.7);
+    skyLight.position.set(-5_000, 9_000, 4_000);
     const railGlow = new THREE.PointLight(0x9acd32, 45, 420, 1.7);
     railGlow.position.set(0, 90, 0);
-    scene.add(hemisphere, moon, railGlow);
+    scene.add(hemisphere, skyLight, railGlow);
 
     const railway = buildRailway(scene);
     const plateau = createPlateauBuildings({
@@ -216,10 +288,22 @@ export function CityScene({
       },
     });
     scene.add(plateau.group);
+    const weatherParticles = createWeatherParticles(scene);
     const lookAt = new THREE.Vector3();
     const desiredCamera = new THREE.Vector3();
     const tangent = new THREE.Vector3();
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const nightBackground = new THREE.Color(0x07080c);
+    const cloudyNight = new THREE.Color(0x151a20);
+    const clearDay = new THREE.Color(0x9db8c7);
+    const overcastDay = new THREE.Color(0x707b83);
+    const targetBackground = new THREE.Color();
+    const daySky = new THREE.Color(0xdbeaf1);
+    const nightSky = new THREE.Color(0x8391c7);
+    const dayGround = new THREE.Color(0x4f5553);
+    const nightGround = new THREE.Color(0x101216);
+    const daySun = new THREE.Color(0xfff1ce);
+    const nightMoon = new THREE.Color(0xd7e4ff);
     let animationFrame = 0;
     let previousFrameTime = 0;
 
@@ -240,6 +324,8 @@ export function CityScene({
         : Math.min((frameTime - previousFrameTime) / 1000, 0.05);
       const elapsed = frameTime / 1000;
       previousFrameTime = frameTime;
+      const currentEnvironment = environmentRef.current;
+      const cloudAmount = currentEnvironment.cloudCover / 100;
 
       if (!pausedRef.current && !reducedMotion) {
         progressRef.current = (progressRef.current + delta * (ridingRef.current ? 0.0065 : 0.0025)) % 1;
@@ -271,6 +357,39 @@ export function CityScene({
 
       camera.lookAt(lookAt);
       railGlow.position.copy(trainPoint).add(new THREE.Vector3(0, 16, 0));
+      targetBackground
+        .copy(currentEnvironment.isDay ? clearDay : nightBackground)
+        .lerp(currentEnvironment.isDay ? overcastDay : cloudyNight, cloudAmount);
+      background.lerp(targetBackground, 0.035);
+      fog.color.lerp(targetBackground, 0.035);
+      const targetFogDensity = currentEnvironment.isDay
+        ? 0.000045 + cloudAmount * 0.000035
+        : 0.000075 + cloudAmount * 0.000035;
+      fog.density += (targetFogDensity - fog.density) * 0.035;
+
+      hemisphere.color.lerp(currentEnvironment.isDay ? daySky : nightSky, 0.035);
+      hemisphere.groundColor.lerp(currentEnvironment.isDay ? dayGround : nightGround, 0.035);
+      hemisphere.intensity += (
+        (currentEnvironment.isDay ? 1.8 + currentEnvironment.daylight * 1.8 : 1.25)
+        - hemisphere.intensity
+      ) * 0.035;
+      skyLight.color.lerp(currentEnvironment.isDay ? daySun : nightMoon, 0.035);
+      skyLight.intensity += (
+        (currentEnvironment.isDay ? 1.2 + currentEnvironment.daylight * 2.6 : 1.1)
+        - skyLight.intensity
+      ) * 0.035;
+      const sunAngle = ((currentEnvironment.tokyoHour - 6) / 12) * Math.PI;
+      skyLight.position.set(
+        Math.cos(sunAngle) * 8_000,
+        Math.max(700, Math.sin(sunAngle) * 9_000),
+        -3_800,
+      );
+      renderer.toneMappingExposure += (
+        (currentEnvironment.isDay ? 1.05 - cloudAmount * 0.12 : 1.28)
+        - renderer.toneMappingExposure
+      ) * 0.035;
+      railGlow.intensity = currentEnvironment.isDay ? 18 : 45;
+      weatherParticles.update(delta, camera, currentEnvironment, ridingRef.current);
       plateau.update(ridingRef.current);
       renderer.render(scene, camera);
 

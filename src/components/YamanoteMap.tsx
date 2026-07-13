@@ -1,5 +1,5 @@
 import { KeyboardEvent } from 'react';
-import { audioStations } from '../data/stations';
+import { experienceStations } from '../data/stations';
 
 interface YamanoteMapProps {
   activeIndex: number;
@@ -12,8 +12,8 @@ const CENTER = MAP_SIZE / 2;
 const RADIUS_X = 154;
 const RADIUS_Y = 126;
 
-const points = audioStations.map((_, index) => {
-  const angle = -Math.PI / 2 + (index / audioStations.length) * Math.PI * 2;
+const points = experienceStations.map((_, index) => {
+  const angle = -Math.PI / 2 + (index / experienceStations.length) * Math.PI * 2;
   return {
     x: CENTER + Math.cos(angle) * RADIUS_X,
     y: CENTER + Math.sin(angle) * RADIUS_Y,
@@ -37,13 +37,13 @@ export function YamanoteMap({ activeIndex, isTracking, onSelect }: YamanoteMapPr
       className="yamanote-map"
       viewBox={`0 0 ${MAP_SIZE} ${MAP_SIZE}`}
       role="img"
-      aria-label={`Yamanote sound map, ${audioStations[activeIndex].name} selected`}
+      aria-label={`Yamanote sound map, ${experienceStations[activeIndex].name} selected`}
     >
       <ellipse className="route-shadow" cx={CENTER} cy={CENTER} rx={RADIUS_X} ry={RADIUS_Y} />
       <ellipse className="route-line" cx={CENTER} cy={CENTER} rx={RADIUS_X} ry={RADIUS_Y} />
 
       {points.map((point, index) => {
-        const station = audioStations[index];
+        const station = experienceStations[index];
         const isActive = index === activeIndex;
         return (
           <g
@@ -72,10 +72,10 @@ export function YamanoteMap({ activeIndex, isTracking, onSelect }: YamanoteMapPr
       <g className="map-center-label">
         <text x={CENTER} y={CENTER - 24} textAnchor="middle">NOW PLAYING</text>
         <text className="map-japanese" x={CENTER} y={CENTER + 13} textAnchor="middle">
-          {audioStations[activeIndex].japaneseName}
+          {experienceStations[activeIndex].japaneseName}
         </text>
         <text className="map-romaji" x={CENTER} y={CENTER + 38} textAnchor="middle">
-          {audioStations[activeIndex].name}
+          {experienceStations[activeIndex].name}
         </text>
       </g>
 

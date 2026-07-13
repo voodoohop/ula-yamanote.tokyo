@@ -13,13 +13,13 @@ import {
 import { AboutPanel } from './components/AboutPanel';
 import { ExperienceModeSwitch } from './components/ExperienceModeSwitch';
 import { YamanoteMap } from './components/YamanoteMap';
-import { audioStations } from './data/stations';
+import { experienceStations } from './data/stations';
 import { useStationAudio } from './hooks/useStationAudio';
 import { useStationLocation } from './hooks/useStationLocation';
 import stationDisplay from './assets/glitchstationdisplaysmaller.webp';
 import './styles/global.css';
 
-const TOKYO_STATION_INDEX = audioStations.findIndex((station) => station.name === 'Tokyo');
+const TOKYO_STATION_INDEX = experienceStations.findIndex((station) => station.name === 'Tokyo');
 
 function formatDistance(distance: number | null) {
   if (distance === null) return null;
@@ -31,9 +31,9 @@ function App() {
   const [hasStarted, setHasStarted] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
 
-  const station = audioStations[stationIndex];
-  const previousStation = audioStations[(stationIndex - 1 + audioStations.length) % audioStations.length];
-  const nextStation = audioStations[(stationIndex + 1) % audioStations.length];
+  const station = experienceStations[stationIndex];
+  const previousStation = experienceStations[(stationIndex - 1 + experienceStations.length) % experienceStations.length];
+  const nextStation = experienceStations[(stationIndex + 1) % experienceStations.length];
   const audio = useStationAudio(station.track, hasStarted);
 
   const selectNearestStation = useCallback((index: number) => setStationIndex(index), []);
@@ -57,8 +57,8 @@ function App() {
   const moveStation = useCallback((direction: -1 | 1) => {
     location.stop();
     setStationIndex((current) => (
-      current + direction + audioStations.length
-    ) % audioStations.length);
+      current + direction + experienceStations.length
+    ) % experienceStations.length);
   }, [location]);
 
   const toggleAudio = useCallback(() => {
@@ -76,13 +76,15 @@ function App() {
 
   const distance = formatDistance(location.distance);
   const locationStatus = location.status === 'tracking'
-    ? `LIVE · ${distance ?? 'GPS'}`
+    ? location.isNearLine ? `LIVE · ${distance ?? 'GPS'}` : 'GPS · OFF LOOP'
     : location.status === 'locating'
       ? 'LOCATING'
       : location.status === 'denied'
         ? 'GPS DENIED'
         : location.status === 'error'
           ? 'GPS UNAVAILABLE'
+          : location.status === 'unsupported'
+            ? 'GPS UNSUPPORTED'
           : 'MANUAL';
 
   return (
@@ -135,9 +137,9 @@ function App() {
           </p>
 
           <div className="primary-actions">
-            <button className="play-button" type="button" onClick={toggleAudio}>
+            <button className="play-button" type="button" onClick={toggleAudio} disabled={!audio.isAvailable}>
               {audio.status === 'playing' ? <Pause size={18} /> : <Play size={18} />}
-              {audio.status === 'playing' ? 'PAUSE' : hasStarted ? 'RESUME' : 'ENTER LOOP'}
+              {!audio.isAvailable ? 'NO STATION AUDIO' : audio.status === 'playing' ? 'PAUSE' : hasStarted ? 'RESUME' : 'ENTER LOOP'}
             </button>
             <button
               className={`location-button ${location.status === 'tracking' ? 'is-active' : ''}`}
@@ -157,7 +159,7 @@ function App() {
         <section className="map-tool" aria-label="Yamanote sound zones">
           <div className="map-heading">
             <span>山手線 · SOUND MAP</span>
-            <span>{audioStations.length} ZONES</span>
+            <span>{experienceStations.length} STATIONS</span>
           </div>
           <YamanoteMap
             activeIndex={stationIndex}
@@ -170,7 +172,7 @@ function App() {
       <footer className="transport-bar">
         <div className="transport-status">
           <span className={location.status === 'tracking' ? 'is-live' : ''}>{locationStatus}</span>
-          <span>{audio.status === 'loading' ? 'BUFFERING' : audio.status === 'playing' ? 'AUDIO ON' : 'AUDIO READY'}</span>
+          <span>{!audio.isAvailable ? 'NO STATION AUDIO' : audio.status === 'loading' ? 'BUFFERING' : audio.status === 'playing' ? 'AUDIO ON' : 'AUDIO READY'}</span>
         </div>
         <div className="transport-buttons">
           <button
@@ -186,6 +188,7 @@ function App() {
             className="icon-button main-transport"
             type="button"
             onClick={toggleAudio}
+            disabled={!audio.isAvailable}
             aria-label={audio.status === 'playing' ? 'Pause station audio' : 'Play station audio'}
             title={audio.status === 'playing' ? 'Pause' : 'Play'}
           >
@@ -205,6 +208,7 @@ function App() {
             className="icon-button"
             type="button"
             onClick={audio.toggleMute}
+            disabled={!audio.isAvailable}
             aria-label={audio.isMuted ? 'Unmute station audio' : 'Mute station audio'}
             title={audio.isMuted ? 'Unmute' : 'Mute'}
           >

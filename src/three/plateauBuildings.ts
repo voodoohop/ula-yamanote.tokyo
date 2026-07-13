@@ -23,7 +23,7 @@ function tuneBuildingModel(model: THREE.Object3D) {
     const materials = Array.isArray(object.material) ? object.material : [object.material];
     materials.forEach((material) => {
       if (!(material instanceof THREE.MeshStandardMaterial)) return;
-      material.color.multiplyScalar(0.3);
+      material.color.multiplyScalar(0.62);
       material.roughness = 0.94;
       material.metalness = 0.02;
       material.envMapIntensity = 0.18;

@@ -56,6 +56,9 @@ export function AboutPanel({ isOpen, onClose }: AboutPanelProps) {
         >
           Buildings · MLIT Project PLATEAU · CC BY 4.0
         </a>
+        <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">
+          Weather · Open-Meteo
+        </a>
         <a href="mailto:contact@ula-yamanote.tokyo">contact@ula-yamanote.tokyo</a>
       </aside>
     </div>

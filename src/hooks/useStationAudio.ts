@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-type AudioStatus = 'idle' | 'loading' | 'playing' | 'paused' | 'error';
+type AudioStatus = 'idle' | 'loading' | 'playing' | 'paused' | 'error' | 'unavailable';
 
 function trackUrl(track: string) {
   return `/assets/tracks/low/${track}-low.mp3`;
 }
 
-export function useStationAudio(track: string, isActive: boolean) {
+export function useStationAudio(track: string | null, isActive: boolean) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const shouldPlayRef = useRef(false);
   const [status, setStatus] = useState<AudioStatus>('idle');
@@ -37,6 +37,12 @@ export function useStationAudio(track: string, isActive: boolean) {
   }, []);
 
   const play = useCallback(async () => {
+    if (!track) {
+      audioRef.current?.pause();
+      setStatus('unavailable');
+      return;
+    }
+
     const audio = getAudio();
     const nextTrack = trackUrl(track);
 
@@ -58,6 +64,13 @@ export function useStationAudio(track: string, isActive: boolean) {
   }, [getAudio, track]);
 
   useEffect(() => {
+    if (!track) {
+      audioRef.current?.pause();
+      setStatus('unavailable');
+      return;
+    }
+
+    setStatus((current) => current === 'unavailable' ? 'idle' : current);
     if (isActive && shouldPlayRef.current) void play();
   }, [isActive, play, track]);
 
@@ -71,6 +84,11 @@ export function useStationAudio(track: string, isActive: boolean) {
   }, []);
 
   const toggle = useCallback(() => {
+    if (!track) {
+      setStatus('unavailable');
+      return;
+    }
+
     const audio = getAudio();
     if (audio.paused) {
       void play();
@@ -78,7 +96,7 @@ export function useStationAudio(track: string, isActive: boolean) {
       shouldPlayRef.current = false;
       audio.pause();
     }
-  }, [getAudio, play]);
+  }, [getAudio, play, track]);
 
   const toggleMute = useCallback(() => {
     const audio = getAudio();
@@ -86,5 +104,5 @@ export function useStationAudio(track: string, isActive: boolean) {
     setIsMuted(audio.muted);
   }, [getAudio]);
 
-  return { status, isMuted, toggle, toggleMute };
+  return { status, isAvailable: track !== null, isMuted, toggle, toggleMute };
 }

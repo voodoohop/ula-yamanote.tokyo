@@ -13,13 +13,14 @@ import {
 } from 'lucide-react';
 import { AboutPanel } from '../components/AboutPanel';
 import { ExperienceModeSwitch } from '../components/ExperienceModeSwitch';
-import { audioStations } from '../data/stations';
+import { experienceStations } from '../data/stations';
 import { useStationAudio } from '../hooks/useStationAudio';
 import { useStationLocation } from '../hooks/useStationLocation';
+import { useTokyoEnvironment } from '../hooks/useTokyoEnvironment';
 import { CityScene } from './CityScene';
 import './three.css';
 
-const TOKYO_STATION_INDEX = audioStations.findIndex((station) => station.name === 'Tokyo');
+const TOKYO_STATION_INDEX = experienceStations.findIndex((station) => station.name === 'Tokyo');
 const AUTO_ADVANCE_MS = 90_000;
 type SceneStatus = 'loading' | 'ready' | 'error';
 
@@ -41,10 +42,11 @@ export function DenshaExperience() {
   const [sceneAttempt, setSceneAttempt] = useState(0);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [clock, setClock] = useState(() => new Date());
+  const environment = useTokyoEnvironment(clock);
 
-  const station = audioStations[stationIndex];
-  const previousStation = audioStations[(stationIndex - 1 + audioStations.length) % audioStations.length];
-  const nextStation = audioStations[(stationIndex + 1) % audioStations.length];
+  const station = experienceStations[stationIndex];
+  const previousStation = experienceStations[(stationIndex - 1 + experienceStations.length) % experienceStations.length];
+  const nextStation = experienceStations[(stationIndex + 1) % experienceStations.length];
   const audio = useStationAudio(station.track, hasStarted);
 
   const selectNearestStation = useCallback((index: number) => setStationIndex(index), []);
@@ -56,12 +58,12 @@ export function DenshaExperience() {
   }, []);
 
   useEffect(() => {
-    if (!isRiding || location.status === 'tracking') return;
+    if (!isRiding || (location.status === 'tracking' && location.isNearLine)) return;
     const timer = window.setInterval(() => {
-      setStationIndex((current) => (current + 1) % audioStations.length);
+      setStationIndex((current) => (current + 1) % experienceStations.length);
     }, AUTO_ADVANCE_MS);
     return () => window.clearInterval(timer);
-  }, [isRiding, location.status]);
+  }, [isRiding, location.isNearLine, location.status]);
 
   useEffect(() => {
     if (!isAboutOpen) return;
@@ -85,8 +87,8 @@ export function DenshaExperience() {
   const moveStation = useCallback((direction: -1 | 1) => {
     location.stop();
     setStationIndex((current) => (
-      current + direction + audioStations.length
-    ) % audioStations.length);
+      current + direction + experienceStations.length
+    ) % experienceStations.length);
   }, [location]);
 
   const toggleLocation = useCallback(() => {
@@ -98,20 +100,27 @@ export function DenshaExperience() {
   }, [location]);
 
   const locationLabel = location.status === 'tracking'
-    ? `GPS · ${location.distance === null ? 'LIVE' : `${Math.round(location.distance)} M`}`
+    ? location.isNearLine
+      ? `GPS · ${location.distance === null ? 'LIVE' : `${Math.round(location.distance)} M`}`
+      : 'GPS · OFF LOOP'
     : location.status === 'locating'
       ? 'LOCATING'
       : location.status === 'denied'
         ? 'GPS DENIED'
+        : location.status === 'error'
+          ? 'GPS UNAVAILABLE'
+          : location.status === 'unsupported'
+            ? 'GPS UNSUPPORTED'
         : 'AUTO LOOP';
 
   return (
-    <div className={`three-experience ${isRiding ? 'is-riding' : 'is-intro'}`}>
+    <div className={`three-experience ${isRiding ? 'is-riding' : 'is-intro'} ${environment.isDay ? 'is-day' : 'is-night'} weather-${environment.precipitationKind}`}>
       <CityScene
         key={sceneAttempt}
         isRiding={isRiding}
         isPaused={audio.status === 'paused'}
         stationName={station.name}
+        environment={environment}
         onReady={() => setSceneStatus('ready')}
         onError={() => setSceneStatus('error')}
       />
@@ -172,7 +181,9 @@ export function DenshaExperience() {
         <main className="three-ride-interface">
           <div className="three-line-status">
             <span><i /> 山手線</span>
-            <span>{tokyoTime(clock)} JST</span>
+            <span>
+              {tokyoTime(clock)} JST · {environment.temperature === null ? '' : `${Math.round(environment.temperature)}°C `}{environment.label}
+            </span>
             <span>{locationLabel}</span>
           </div>
 
@@ -201,7 +212,7 @@ export function DenshaExperience() {
           <footer className="three-controls">
             <div className="three-control-status">
               <span className={location.status === 'tracking' ? 'is-live' : ''}>{locationLabel}</span>
-              <span>{audio.status === 'error' ? 'AUDIO ERROR' : audio.status === 'loading' ? 'BUFFERING' : 'STATION AUDIO'}</span>
+              <span>{!audio.isAvailable ? 'NO STATION AUDIO' : audio.status === 'error' ? 'AUDIO ERROR' : audio.status === 'loading' ? 'BUFFERING' : 'STATION AUDIO'}</span>
             </div>
             <div className="three-transport">
               <button
@@ -217,6 +228,7 @@ export function DenshaExperience() {
                 className="icon-button main-transport"
                 type="button"
                 onClick={toggleAudio}
+                disabled={!audio.isAvailable}
                 aria-label={audio.status === 'playing' ? 'Pause station audio' : 'Play station audio'}
                 title={audio.status === 'playing' ? 'Pause' : 'Play'}
               >
@@ -245,6 +257,7 @@ export function DenshaExperience() {
                 className="icon-button"
                 type="button"
                 onClick={audio.toggleMute}
+                disabled={!audio.isAvailable}
                 aria-label={audio.isMuted ? 'Unmute station audio' : 'Mute station audio'}
                 title={audio.isMuted ? 'Unmute' : 'Mute'}
               >

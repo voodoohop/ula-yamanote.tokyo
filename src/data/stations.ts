@@ -53,11 +53,11 @@ export const stationTrackMap: { [key: string]: string } = {
   'Tamachi': '25tamachi'
 };
 
-export interface AudioStation extends Station {
-  track: string;
+export interface ExperienceStation extends Station {
+  track: string | null;
 }
 
-export const audioStations: AudioStation[] = stations.flatMap((station) => {
-  const track = stationTrackMap[station.name];
-  return track ? [{ ...station, track }] : [];
-});
+export const experienceStations: ExperienceStation[] = stations.map((station) => ({
+  ...station,
+  track: stationTrackMap[station.name] ?? null,
+}));
