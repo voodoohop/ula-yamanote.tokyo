@@ -39,6 +39,16 @@ export function AboutPanel({ isOpen, onClose }: AboutPanelProps) {
           passage into the hidden rhythms of the Yamanote Line.
         </p>
         <p className="privacy-note">Location stays in your browser and is used only to select the nearest sound zone.</p>
+        <p className="privacy-note">
+          3D rail geometry is created from Japan&apos;s 2025 National Land Numerical Information railway data.
+        </p>
+        <a
+          href="https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N02-2025.html"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Railway data · MLIT Japan
+        </a>
         <a href="mailto:contact@ula-yamanote.tokyo">contact@ula-yamanote.tokyo</a>
       </aside>
     </div>

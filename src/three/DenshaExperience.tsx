@@ -108,8 +108,7 @@ export function DenshaExperience() {
       <CityScene
         isRiding={isRiding}
         isPaused={audio.status === 'paused'}
-        stationIndex={stationIndex}
-        stationCount={audioStations.length}
+        stationName={station.name}
         onReady={() => setIsSceneReady(true)}
       />
       <div className="three-scene-tint" aria-hidden="true" />
