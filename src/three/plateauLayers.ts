@@ -11,7 +11,7 @@ export const PLATEAU_ROADS_URL = 'https://api.plateauview.mlit.go.jp/datacatalog
 type PlateauLayerName = 'buildings' | 'roads';
 
 interface PlateauLayersOptions {
-  camera: THREE.Camera;
+  camera: THREE.PerspectiveCamera;
   renderer: THREE.WebGLRenderer;
   onReady: (layer: PlateauLayerName) => void;
   onStatus: (layer: PlateauLayerName, status: string) => void;
@@ -89,6 +89,7 @@ export function createPlateauLayers({
   const group = new THREE.Group();
   group.name = 'plateau-city-layers';
   const dracoLoader = new DRACOLoader();
+  const selectionCamera = camera.clone();
   const radians = Math.PI / 180;
   const isCompact = window.matchMedia('(max-width: 700px)').matches;
 
@@ -111,10 +112,10 @@ export function createPlateauLayers({
       azimuth: Math.PI,
     }));
     tiles.errorTarget = definition.errorTargetOverview * (isCompact ? 1.35 : 1);
-    // Keep PLATEAU's own parent geometry visible until the adjacent child tiles
-    // are ready. This avoids holes as the ride camera crosses tile boundaries.
+    // The Tokyo composite uses empty additive nodes around municipal tilesets.
+    // Loading their ancestors can leave every renderable descendant inactive.
     tiles.loadSiblings = true;
-    tiles.loadAncestors = true;
+    tiles.loadAncestors = false;
     tiles.lruCache.minSize = isCompact ? 48 : Math.min(80, definition.cacheSize);
     tiles.lruCache.maxSize = isCompact
       ? Math.round(definition.cacheSize * 0.58)
@@ -127,8 +128,8 @@ export function createPlateauLayers({
       : definition.cacheBytes;
     tiles.downloadQueue.maxJobs = isCompact ? 4 : 8;
     tiles.parseQueue.maxJobs = isCompact ? 1 : 2;
-    tiles.setCamera(camera);
-    tiles.setResolutionFromRenderer(camera, renderer);
+    tiles.setCamera(selectionCamera);
+    tiles.setResolutionFromRenderer(selectionCamera, renderer);
 
     tiles.addEventListener('load-model', ({ scene }) => tuneModel(scene, definition.name));
     tiles.addEventListener('tile-visibility-change', ({ scene, visible }) => {
@@ -152,10 +153,14 @@ export function createPlateauLayers({
   return {
     group,
     resize() {
-      layers.forEach(({ tiles }) => tiles.setResolutionFromRenderer(camera, renderer));
+      layers.forEach(({ tiles }) => tiles.setResolutionFromRenderer(selectionCamera, renderer));
     },
     update(isRiding: boolean) {
-      camera.updateMatrixWorld();
+      selectionCamera.copy(camera, false);
+      selectionCamera.near = isRiding ? 1 : 10;
+      selectionCamera.far = isRiding ? 6_000 : 40_000;
+      selectionCamera.updateProjectionMatrix();
+      selectionCamera.updateMatrixWorld();
       layers.forEach(({ definition, tiles }) => {
         tiles.errorTarget = isRiding
           ? definition.errorTargetRide * (isCompact ? 1.35 : 1)
