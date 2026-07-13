@@ -21,7 +21,6 @@ import { CityScene } from './CityScene';
 import './three.css';
 
 const TOKYO_STATION_INDEX = experienceStations.findIndex((station) => station.name === 'Tokyo');
-const AUTO_ADVANCE_MS = 90_000;
 type SceneStatus = 'loading' | 'ready' | 'error';
 
 function tokyoTime(date: Date) {
@@ -58,14 +57,6 @@ export function DenshaExperience() {
   }, []);
 
   useEffect(() => {
-    if (!isRiding || (location.status === 'tracking' && location.isNearLine)) return;
-    const timer = window.setInterval(() => {
-      setStationIndex((current) => (current + 1) % experienceStations.length);
-    }, AUTO_ADVANCE_MS);
-    return () => window.clearInterval(timer);
-  }, [isRiding, location.isNearLine, location.status]);
-
-  useEffect(() => {
     if (!isAboutOpen) return;
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setIsAboutOpen(false);
@@ -99,6 +90,11 @@ export function DenshaExperience() {
     }
   }, [location]);
 
+  const followSceneStation = useCallback((stationName: string) => {
+    const index = experienceStations.findIndex((candidate) => candidate.name === stationName);
+    if (index >= 0) setStationIndex((current) => current === index ? current : index);
+  }, []);
+
   const locationLabel = location.status === 'tracking'
     ? location.isNearLine
       ? `GPS · ${location.distance === null ? 'LIVE' : `${Math.round(location.distance)} M`}`
@@ -118,9 +114,10 @@ export function DenshaExperience() {
       <CityScene
         key={sceneAttempt}
         isRiding={isRiding}
-        isPaused={audio.status === 'paused'}
+        isPaused={audio.status === 'paused' || (location.status === 'tracking' && location.isNearLine)}
         stationName={station.name}
         environment={environment}
+        onStationChange={followSceneStation}
         onReady={() => setSceneStatus('ready')}
         onError={() => setSceneStatus('error')}
       />
@@ -178,7 +175,10 @@ export function DenshaExperience() {
             <small>ULA YAMANOTE · 3D LOOP</small>
           </h1>
           <div className="three-intro-rule" aria-hidden="true" />
-          <p className="three-intro-station">東京 <span>Tokyo · Zone 03</span></p>
+          <p className="three-intro-station">
+            {station.japaneseName}
+            <span>{station.name} · Zone {String(stationIndex + 1).padStart(2, '0')}</span>
+          </p>
           <button className="three-board-button" type="button" onClick={board} disabled={sceneStatus !== 'ready'}>
             <TrainFront size={19} />
             BOARD

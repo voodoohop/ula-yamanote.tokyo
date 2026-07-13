@@ -19,6 +19,7 @@ interface CitySceneProps {
   isPaused: boolean;
   stationName: string;
   environment: TokyoEnvironment;
+  onStationChange: (stationName: string) => void;
   onReady: () => void;
   onError: () => void;
 }
@@ -210,6 +211,7 @@ export function CityScene({
   isPaused,
   stationName,
   environment,
+  onStationChange,
   onReady,
   onError,
 }: CitySceneProps) {
@@ -219,8 +221,10 @@ export function CityScene({
   const readyRef = useRef(false);
   const onReadyRef = useRef(onReady);
   const onErrorRef = useRef(onError);
+  const onStationChangeRef = useRef(onStationChange);
   const environmentRef = useRef(environment);
   const progressRef = useRef(getStationProgress(stationName));
+  const reportedStationRef = useRef(stationName);
 
   useEffect(() => {
     ridingRef.current = isRiding;
@@ -231,8 +235,14 @@ export function CityScene({
   }, [isPaused]);
 
   useEffect(() => {
+    if (reportedStationRef.current === stationName) return;
+    reportedStationRef.current = stationName;
     progressRef.current = getStationProgress(stationName);
   }, [stationName]);
+
+  useEffect(() => {
+    onStationChangeRef.current = onStationChange;
+  }, [onStationChange]);
 
   useEffect(() => {
     onReadyRef.current = onReady;
@@ -365,6 +375,20 @@ export function CityScene({
         }
 
         const progress = progressRef.current;
+        let nearestStation = yamanoteRouteStations[0];
+        let nearestDistance = Number.POSITIVE_INFINITY;
+        yamanoteRouteStations.forEach((candidate) => {
+          const directDistance = Math.abs(progress - candidate.progress);
+          const distance = Math.min(directDistance, 1 - directDistance);
+          if (distance < nearestDistance) {
+            nearestStation = candidate;
+            nearestDistance = distance;
+          }
+        });
+        if (nearestStation.name !== reportedStationRef.current) {
+          reportedStationRef.current = nearestStation.name;
+          onStationChangeRef.current(nearestStation.name);
+        }
         const trainPoint = railway.curve.getPointAt(progress);
         railway.curve.getTangentAt(progress, tangent).normalize();
         railway.overview.visible = !ridingRef.current;
