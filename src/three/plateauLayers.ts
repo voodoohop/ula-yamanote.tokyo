@@ -45,6 +45,9 @@ const layerDefinitions: LayerDefinition[] = [
   },
 ];
 
+const LOCAL_DATA_SETTLE_MS = 600;
+const LOCAL_DATA_RADIUS = 2_000;
+
 function tuneModel(model: THREE.Object3D, layer: PlateauLayerName) {
   model.traverse((object) => {
     if (!(object instanceof THREE.Mesh)) return;
@@ -80,6 +83,19 @@ function hasGeometry(model: THREE.Object3D) {
   return hasRenderableGeometry;
 }
 
+function getTileScene(tile: unknown) {
+  return (tile as { engineData?: { scene?: THREE.Object3D } }).engineData?.scene;
+}
+
+function hasNearbyGeometry(tiles: TilesRenderer, focus: THREE.Vector3) {
+  return [...tiles.visibleTiles].some((tile) => {
+    const scene = getTileScene(tile);
+    return scene
+      && hasGeometry(scene)
+      && new THREE.Box3().setFromObject(scene).distanceToPoint(focus) <= LOCAL_DATA_RADIUS;
+  });
+}
+
 export function createPlateauLayers({
   camera,
   renderer,
@@ -89,7 +105,8 @@ export function createPlateauLayers({
   const group = new THREE.Group();
   group.name = 'plateau-city-layers';
   const dracoLoader = new DRACOLoader();
-  const selectionCamera = camera.clone();
+  const viewCamera = camera.clone();
+  const neighborhoodCamera = new THREE.PerspectiveCamera(90, 1, 10, 2_000);
   const radians = Math.PI / 180;
   const isCompact = window.matchMedia('(max-width: 700px)').matches;
 
@@ -101,6 +118,8 @@ export function createPlateauLayers({
   const layers = layerDefinitions.map((definition) => {
     const tiles = new TilesRenderer(definition.url);
     let isReady = false;
+    let lastReadyCheck = 0;
+    let readyCandidateSince = 0;
     const loadTimeout = window.setTimeout(() => {
       if (!isReady) onStatus(definition.name, 'load-error');
     }, 30_000);
@@ -116,6 +135,7 @@ export function createPlateauLayers({
     // Loading their ancestors can leave every renderable descendant inactive.
     tiles.loadSiblings = true;
     tiles.loadAncestors = false;
+    tiles.autoDisableRendererCulling = false;
     tiles.lruCache.minSize = isCompact ? 48 : Math.min(80, definition.cacheSize);
     tiles.lruCache.maxSize = isCompact
       ? Math.round(definition.cacheSize * 0.58)
@@ -128,16 +148,12 @@ export function createPlateauLayers({
       : definition.cacheBytes;
     tiles.downloadQueue.maxJobs = isCompact ? 4 : 8;
     tiles.parseQueue.maxJobs = isCompact ? 1 : 2;
-    tiles.setCamera(selectionCamera);
-    tiles.setResolutionFromRenderer(selectionCamera, renderer);
+    tiles.setCamera(viewCamera);
+    tiles.setCamera(neighborhoodCamera);
+    tiles.setResolutionFromRenderer(viewCamera, renderer);
+    tiles.setResolution(neighborhoodCamera, isCompact ? 500 : 1_000, isCompact ? 500 : 1_000);
 
     tiles.addEventListener('load-model', ({ scene }) => tuneModel(scene, definition.name));
-    tiles.addEventListener('tile-visibility-change', ({ scene, visible }) => {
-      if (!visible || isReady || !hasGeometry(scene)) return;
-      isReady = true;
-      window.clearTimeout(loadTimeout);
-      onReady(definition.name);
-    });
     tiles.addEventListener('load-root-tileset', () => {
       onStatus(definition.name, 'root-loaded');
     });
@@ -147,25 +163,56 @@ export function createPlateauLayers({
     });
 
     group.add(tiles.group);
-    return { definition, loadTimeout, tiles };
+    return {
+      definition,
+      loadTimeout,
+      tiles,
+      updateReadiness(focus: THREE.Vector3, now: number) {
+        if (isReady || now - lastReadyCheck < 250) return;
+        lastReadyCheck = now;
+        const { downloading, parsing, queued } = tiles.stats;
+        if (downloading + parsing + queued > 0 || !hasNearbyGeometry(tiles, focus)) {
+          readyCandidateSince = 0;
+          return;
+        }
+        if (readyCandidateSince === 0) {
+          readyCandidateSince = now;
+        } else if (now - readyCandidateSince >= LOCAL_DATA_SETTLE_MS) {
+          isReady = true;
+          window.clearTimeout(loadTimeout);
+          onReady(definition.name);
+        }
+      },
+    };
   });
 
   return {
     group,
     resize() {
-      layers.forEach(({ tiles }) => tiles.setResolutionFromRenderer(selectionCamera, renderer));
+      layers.forEach(({ tiles }) => tiles.setResolutionFromRenderer(viewCamera, renderer));
     },
-    update(isRiding: boolean) {
-      selectionCamera.copy(camera, false);
-      selectionCamera.near = isRiding ? 1 : 10;
-      selectionCamera.far = isRiding ? 6_000 : 40_000;
-      selectionCamera.updateProjectionMatrix();
-      selectionCamera.updateMatrixWorld();
-      layers.forEach(({ definition, tiles }) => {
+    update(isRiding: boolean, focus: THREE.Vector3 | null) {
+      viewCamera.copy(camera, false);
+      viewCamera.near = isRiding ? 1 : 10;
+      viewCamera.far = isRiding ? 6_000 : 40_000;
+      viewCamera.updateProjectionMatrix();
+      viewCamera.updateMatrixWorld();
+      if (focus) {
+        neighborhoodCamera.position.copy(focus);
+        neighborhoodCamera.position.y += isCompact ? 1_000 : 1_500;
+        neighborhoodCamera.far = isCompact ? 1_400 : 2_000;
+        neighborhoodCamera.lookAt(focus);
+        neighborhoodCamera.updateProjectionMatrix();
+        neighborhoodCamera.updateMatrixWorld();
+      }
+      const now = performance.now();
+      layers.forEach((layer) => {
+        const { definition, tiles } = layer;
         tiles.errorTarget = isRiding
           ? definition.errorTargetRide * (isCompact ? 1.35 : 1)
           : definition.errorTargetOverview * (isCompact ? 1.35 : 1);
         tiles.update();
+        if (focus) layer.updateReadiness(focus, now);
       });
     },
     dispose() {

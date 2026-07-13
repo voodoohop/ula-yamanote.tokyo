@@ -463,7 +463,7 @@ export function CityScene({
       railGlow.intensity = currentEnvironment.isDay ? 18 : 45;
       weatherParticles.update(delta, camera, currentEnvironment, ridingRef.current);
       terrain.update(currentEnvironment);
-      plateau.update(ridingRef.current);
+      plateau.update(ridingRef.current, railway?.train.position ?? null);
       renderer.render(scene, camera);
 
       animationFrame = window.requestAnimationFrame(render);
