@@ -47,6 +47,8 @@ const layerDefinitions: LayerDefinition[] = [
 
 const LOCAL_DATA_SETTLE_MS = 600;
 const LOCAL_DATA_RADIUS = 2_000;
+const CAMERA_CLEARANCE = 12;
+const CAMERA_RAY_HEIGHT = 1_000;
 
 function tuneModel(model: THREE.Object3D, layer: PlateauLayerName) {
   model.traverse((object) => {
@@ -107,8 +109,14 @@ export function createPlateauLayers({
   const dracoLoader = new DRACOLoader();
   const viewCamera = camera.clone();
   const neighborhoodCamera = new THREE.PerspectiveCamera(90, 1, 10, 2_000);
+  const cameraRaycaster = new THREE.Raycaster();
+  const rayDirection = new THREE.Vector3();
+  const rayOrigin = new THREE.Vector3();
+  const down = new THREE.Vector3(0, -1, 0);
   const radians = Math.PI / 180;
   const isCompact = window.matchMedia('(max-width: 700px)').matches;
+
+  (cameraRaycaster as THREE.Raycaster & { firstHitOnly: boolean }).firstHitOnly = true;
 
   dracoLoader.setDecoderPath({
     js: '/draco/draco_wasm_wrapper.js',
@@ -185,9 +193,40 @@ export function createPlateauLayers({
       },
     };
   });
+  const buildingTiles = layers.find(({ definition }) => definition.name === 'buildings')!.tiles;
+
+  const findBuildingTop = (point: THREE.Vector3) => {
+    const intersections: THREE.Intersection[] = [];
+    rayOrigin.set(point.x, CAMERA_RAY_HEIGHT, point.z);
+    cameraRaycaster.set(rayOrigin, down);
+    cameraRaycaster.near = 0;
+    cameraRaycaster.far = CAMERA_RAY_HEIGHT * 2;
+    buildingTiles.raycast(cameraRaycaster, intersections);
+    return intersections[0]?.point.y ?? null;
+  };
 
   return {
     group,
+    getCameraClearanceHeight(position: THREE.Vector3, target: THREE.Vector3) {
+      let clearanceHeight = findBuildingTop(position);
+      rayDirection.subVectors(target, position);
+      const targetDistance = rayDirection.length();
+      if (targetDistance > 2) {
+        const intersections: THREE.Intersection[] = [];
+        rayDirection.divideScalar(targetDistance);
+        cameraRaycaster.set(position, rayDirection);
+        cameraRaycaster.near = 1;
+        cameraRaycaster.far = targetDistance - 1;
+        buildingTiles.raycast(cameraRaycaster, intersections);
+        if (intersections[0]) {
+          const obstructionHeight = findBuildingTop(intersections[0].point);
+          if (obstructionHeight !== null) {
+            clearanceHeight = Math.max(clearanceHeight ?? -Infinity, obstructionHeight);
+          }
+        }
+      }
+      return clearanceHeight === null ? null : clearanceHeight + CAMERA_CLEARANCE;
+    },
     resize() {
       layers.forEach(({ tiles }) => tiles.setResolutionFromRenderer(viewCamera, renderer));
     },

@@ -345,6 +345,9 @@ export function CityScene({
     const nightMoon = new THREE.Color(0xd7e4ff);
     let animationFrame = 0;
     let previousFrameTime = 0;
+    let lastClearanceCheck = 0;
+    let clearanceHeight: number | null = null;
+    let clearanceTarget: number | null = null;
 
     const resize = () => {
       const { clientWidth, clientHeight } = container;
@@ -405,8 +408,24 @@ export function CityScene({
           desiredCamera.y += 18;
           lookAt.copy(ahead);
           lookAt.y += 7;
+          const baselineHeight = desiredCamera.y;
+          if (clearanceHeight === null) clearanceHeight = baselineHeight;
+          if (elapsed - lastClearanceCheck >= 0.25) {
+            lastClearanceCheck = elapsed;
+            clearanceTarget = Math.max(
+              baselineHeight,
+              plateau.getCameraClearanceHeight(desiredCamera, lookAt) ?? baselineHeight,
+            );
+          }
+          const targetHeight = Math.max(baselineHeight, clearanceTarget ?? baselineHeight);
+          const clearanceEase = targetHeight > clearanceHeight ? 0.12 : 0.025;
+          clearanceHeight += (targetHeight - clearanceHeight) * clearanceEase;
+          desiredCamera.y = Math.max(baselineHeight, clearanceHeight);
           camera.position.lerp(desiredCamera, 0.065);
         } else {
+          clearanceHeight = null;
+          clearanceTarget = null;
+          lastClearanceCheck = 0;
           const orbit = elapsed * 0.045;
           desiredCamera.set(
             Math.cos(orbit) * 7_000 - 1_600,
