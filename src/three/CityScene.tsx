@@ -11,6 +11,9 @@ import {
 import { createPlateauLayers } from './plateauLayers';
 import { createTokyoTerrain } from './tokyoTerrain';
 
+const OVERVIEW_LOOP_DURATION_SECONDS = 12 * 60;
+const RIDE_LOOP_DURATION_SECONDS = 24 * 60;
+
 interface CitySceneProps {
   isRiding: boolean;
   isPaused: boolean;
@@ -355,9 +358,10 @@ export function CityScene({
 
       if (railway) {
         if (!pausedRef.current && !reducedMotion) {
-          progressRef.current = (
-            progressRef.current + delta * (ridingRef.current ? 0.0065 : 0.0025)
-          ) % 1;
+          const loopDuration = ridingRef.current
+            ? RIDE_LOOP_DURATION_SECONDS
+            : OVERVIEW_LOOP_DURATION_SECONDS;
+          progressRef.current = (progressRef.current + delta / loopDuration) % 1;
         }
 
         const progress = progressRef.current;

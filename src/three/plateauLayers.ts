@@ -111,7 +111,10 @@ export function createPlateauLayers({
       azimuth: Math.PI,
     }));
     tiles.errorTarget = definition.errorTargetOverview * (isCompact ? 1.35 : 1);
-    tiles.loadSiblings = false;
+    // Keep PLATEAU's own parent geometry visible until the adjacent child tiles
+    // are ready. This avoids holes as the ride camera crosses tile boundaries.
+    tiles.loadSiblings = true;
+    tiles.loadAncestors = true;
     tiles.lruCache.minSize = isCompact ? 48 : Math.min(80, definition.cacheSize);
     tiles.lruCache.maxSize = isCompact
       ? Math.round(definition.cacheSize * 0.58)
@@ -122,7 +125,7 @@ export function createPlateauLayers({
     tiles.lruCache.maxBytesSize = isCompact
       ? Math.round(definition.cacheBytes * 0.58)
       : definition.cacheBytes;
-    tiles.downloadQueue.maxJobs = isCompact ? 4 : 6;
+    tiles.downloadQueue.maxJobs = isCompact ? 4 : 8;
     tiles.parseQueue.maxJobs = isCompact ? 1 : 2;
     tiles.setCamera(camera);
     tiles.setResolutionFromRenderer(camera, renderer);
