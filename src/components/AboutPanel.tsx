@@ -54,7 +54,14 @@ export function AboutPanel({ isOpen, onClose }: AboutPanelProps) {
           target="_blank"
           rel="noreferrer"
         >
-          Buildings · MLIT Project PLATEAU · CC BY 4.0
+          Buildings & roads · MLIT Project PLATEAU · CC BY 4.0
+        </a>
+        <a
+          href="https://docs.plateauview.mlit.go.jp/datasets/terrain/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Terrain · PLATEAU | Mapterhorn | GSI
         </a>
         <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">
           Weather · Open-Meteo

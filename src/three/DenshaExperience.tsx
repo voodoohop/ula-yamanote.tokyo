@@ -126,6 +126,13 @@ export function DenshaExperience() {
       />
       <div className="three-scene-tint" aria-hidden="true" />
       <div className="three-scene-noise" aria-hidden="true" />
+      <div className="three-attribution">
+        <a href="https://www.mlit.go.jp/plateau/" target="_blank" rel="noreferrer">PLATEAU</a>
+        <span>|</span>
+        <a href="https://mapterhorn.com/" target="_blank" rel="noreferrer">Mapterhorn</a>
+        <span>|</span>
+        <a href="https://www.gsi.go.jp/" target="_blank" rel="noreferrer">GSI</a>
+      </div>
 
       <header className="three-header">
         <a className="three-brand" href="/3d" aria-label="Ura Yamanote 3D home">

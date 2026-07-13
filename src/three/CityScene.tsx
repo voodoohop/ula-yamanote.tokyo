@@ -4,10 +4,12 @@ import { yamanoteRouteStations } from '../data/yamanoteRoute.generated';
 import type { TokyoEnvironment } from '../hooks/useTokyoEnvironment';
 import {
   createYamanoteCurve,
+  type ElevationSampler,
   getStationProgress,
   projectLngLat,
 } from './yamanoteGeometry';
-import { createPlateauBuildings } from './plateauBuildings';
+import { createPlateauLayers } from './plateauLayers';
+import { createTokyoTerrain } from './tokyoTerrain';
 
 interface CitySceneProps {
   isRiding: boolean;
@@ -91,8 +93,8 @@ function createOffsetCurve(centerCurve: THREE.Curve<THREE.Vector3>, offset: numb
   return new THREE.CatmullRomCurve3(points, true, 'centripetal', 0.5);
 }
 
-function buildRailway(scene: THREE.Scene) {
-  const rideCurve = createYamanoteCurve();
+function buildRailway(scene: THREE.Scene, sampleElevation: ElevationSampler) {
+  const rideCurve = createYamanoteCurve(sampleElevation);
   const innerCurve = createOffsetCurve(rideCurve, -0.53);
   const outerCurve = createOffsetCurve(rideCurve, 0.53);
   const railMaterial = new THREE.MeshStandardMaterial({
@@ -262,7 +264,8 @@ export function CityScene({
     renderer.domElement.className = 'three-city-canvas';
     renderer.domElement.dataset.scene = 'ura-yamanote-city';
     renderer.domElement.dataset.buildings = 'plateau-loading';
-    renderer.domElement.dataset.plateau = 'loading';
+    renderer.domElement.dataset.roads = 'plateau-loading';
+    renderer.domElement.dataset.terrain = 'gsi-loading';
     container.appendChild(renderer.domElement);
 
     const hemisphere = new THREE.HemisphereLight(0x8391c7, 0x101216, 2.2);
@@ -272,22 +275,45 @@ export function CityScene({
     railGlow.position.set(0, 90, 0);
     scene.add(hemisphere, skyLight, railGlow);
 
-    const railway = buildRailway(scene);
-    const plateau = createPlateauBuildings({
+    let railway: ReturnType<typeof buildRailway> | null = null;
+    const readyLayers = new Set<string>();
+    let hasReportedError = false;
+    const markReady = (layer: 'buildings' | 'roads' | 'terrain') => {
+      readyLayers.add(layer);
+      if (readyRef.current || readyLayers.size !== 3) return;
+      readyRef.current = true;
+      onReadyRef.current();
+    };
+    const reportError = () => {
+      if (readyRef.current || hasReportedError) return;
+      hasReportedError = true;
+      onErrorRef.current();
+    };
+    const plateau = createPlateauLayers({
       camera,
       renderer,
-      onReady: () => {
-        renderer.domElement.dataset.buildings = 'plateau';
-        if (readyRef.current) return;
-        readyRef.current = true;
-        onReadyRef.current();
+      onReady: (layer) => {
+        renderer.domElement.dataset[layer] = 'plateau';
+        markReady(layer);
       },
-      onStatus: (status) => {
-        renderer.domElement.dataset.plateau = status;
-        if (status === 'load-error' && !readyRef.current) onErrorRef.current();
+      onStatus: (layer, status) => {
+        renderer.domElement.dataset[layer] = status;
+        if (status === 'load-error') reportError();
+      },
+    });
+    const terrain = createTokyoTerrain({
+      onReady: (sampleElevation) => {
+        railway = buildRailway(scene, sampleElevation);
+        renderer.domElement.dataset.terrain = 'gsi';
+        markReady('terrain');
+      },
+      onError: () => {
+        renderer.domElement.dataset.terrain = 'load-error';
+        reportError();
       },
     });
     scene.add(plateau.group);
+    scene.add(terrain.group);
     const weatherParticles = createWeatherParticles(scene);
     const lookAt = new THREE.Vector3();
     const desiredCamera = new THREE.Vector3();
@@ -327,23 +353,41 @@ export function CityScene({
       const currentEnvironment = environmentRef.current;
       const cloudAmount = currentEnvironment.cloudCover / 100;
 
-      if (!pausedRef.current && !reducedMotion) {
-        progressRef.current = (progressRef.current + delta * (ridingRef.current ? 0.0065 : 0.0025)) % 1;
-      }
+      if (railway) {
+        if (!pausedRef.current && !reducedMotion) {
+          progressRef.current = (
+            progressRef.current + delta * (ridingRef.current ? 0.0065 : 0.0025)
+          ) % 1;
+        }
 
-      const progress = progressRef.current;
-      const trainPoint = railway.curve.getPointAt(progress);
-      railway.curve.getTangentAt(progress, tangent).normalize();
-      railway.overview.visible = !ridingRef.current;
-      railway.train.position.copy(trainPoint);
-      railway.train.rotation.y = Math.atan2(tangent.x, tangent.z);
+        const progress = progressRef.current;
+        const trainPoint = railway.curve.getPointAt(progress);
+        railway.curve.getTangentAt(progress, tangent).normalize();
+        railway.overview.visible = !ridingRef.current;
+        railway.train.position.copy(trainPoint);
+        railway.train.rotation.y = Math.atan2(tangent.x, tangent.z);
+        railGlow.visible = true;
+        railGlow.position.copy(trainPoint);
+        railGlow.position.y += 16;
 
-      if (ridingRef.current) {
-        const behind = railway.curve.getPointAt((progress - 0.0028 + 1) % 1);
-        const ahead = railway.curve.getPointAt((progress + 0.0022) % 1);
-        desiredCamera.copy(behind).add(new THREE.Vector3(0, 18, 0));
-        lookAt.copy(ahead).add(new THREE.Vector3(0, 7, 0));
-        camera.position.lerp(desiredCamera, 0.065);
+        if (ridingRef.current) {
+          const behind = railway.curve.getPointAt((progress - 0.0028 + 1) % 1);
+          const ahead = railway.curve.getPointAt((progress + 0.0022) % 1);
+          desiredCamera.copy(behind);
+          desiredCamera.y += 18;
+          lookAt.copy(ahead);
+          lookAt.y += 7;
+          camera.position.lerp(desiredCamera, 0.065);
+        } else {
+          const orbit = elapsed * 0.045;
+          desiredCamera.set(
+            Math.cos(orbit) * 7_000 - 1_600,
+            15_000,
+            Math.sin(orbit) * 7_000 + 300,
+          );
+          camera.position.lerp(desiredCamera, 0.018);
+          lookAt.set(-1_500, 120, 300);
+        }
       } else {
         const orbit = elapsed * 0.045;
         desiredCamera.set(
@@ -353,10 +397,10 @@ export function CityScene({
         );
         camera.position.lerp(desiredCamera, 0.018);
         lookAt.set(-1_500, 120, 300);
+        railGlow.visible = false;
       }
 
       camera.lookAt(lookAt);
-      railGlow.position.copy(trainPoint).add(new THREE.Vector3(0, 16, 0));
       targetBackground
         .copy(currentEnvironment.isDay ? clearDay : nightBackground)
         .lerp(currentEnvironment.isDay ? overcastDay : cloudyNight, cloudAmount);
@@ -390,6 +434,7 @@ export function CityScene({
       ) * 0.035;
       railGlow.intensity = currentEnvironment.isDay ? 18 : 45;
       weatherParticles.update(delta, camera, currentEnvironment, ridingRef.current);
+      terrain.update(currentEnvironment);
       plateau.update(ridingRef.current);
       renderer.render(scene, camera);
 
@@ -401,7 +446,9 @@ export function CityScene({
       window.cancelAnimationFrame(animationFrame);
       resizeObserver.disconnect();
       scene.remove(plateau.group);
+      scene.remove(terrain.group);
       plateau.dispose();
+      terrain.dispose();
       disposeScene(scene);
       renderer.dispose();
       renderer.forceContextLoss();
