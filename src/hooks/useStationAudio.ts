@@ -19,9 +19,18 @@ export function useStationAudio(track: string, isActive: boolean) {
       audio.preload = 'metadata';
       audio.volume = 0.82;
       audio.addEventListener('playing', () => setStatus('playing'));
-      audio.addEventListener('pause', () => setStatus((current) => current === 'error' ? current : 'paused'));
-      audio.addEventListener('waiting', () => setStatus('loading'));
-      audio.addEventListener('error', () => setStatus('error'));
+      audio.addEventListener('pause', () => {
+        if (!shouldPlayRef.current) {
+          setStatus((current) => current === 'error' ? current : 'paused');
+        }
+      });
+      audio.addEventListener('waiting', () => {
+        if (shouldPlayRef.current) setStatus('loading');
+      });
+      audio.addEventListener('error', () => {
+        shouldPlayRef.current = false;
+        setStatus('error');
+      });
       audioRef.current = audio;
     }
     return audioRef.current;
@@ -31,13 +40,14 @@ export function useStationAudio(track: string, isActive: boolean) {
     const audio = getAudio();
     const nextTrack = trackUrl(track);
 
+    shouldPlayRef.current = true;
+
     if (audio.dataset.track !== track) {
       audio.dataset.track = track;
       audio.src = nextTrack;
       audio.load();
     }
 
-    shouldPlayRef.current = true;
     setStatus('loading');
     try {
       await audio.play();
@@ -54,6 +64,7 @@ export function useStationAudio(track: string, isActive: boolean) {
   useEffect(() => () => {
     const audio = audioRef.current;
     if (!audio) return;
+    shouldPlayRef.current = false;
     audio.pause();
     audio.removeAttribute('src');
     audio.load();

@@ -11,6 +11,7 @@ import {
   VolumeX,
 } from 'lucide-react';
 import { AboutPanel } from './components/AboutPanel';
+import { ExperienceModeSwitch } from './components/ExperienceModeSwitch';
 import { YamanoteMap } from './components/YamanoteMap';
 import { audioStations } from './data/stations';
 import { useStationAudio } from './hooks/useStationAudio';
@@ -97,6 +98,7 @@ function App() {
           <strong>ウラ山手</strong>
           <span>ULA YAMANOTE</span>
         </a>
+        <ExperienceModeSwitch activeMode="2d" />
         <button
           className="icon-button header-button"
           type="button"
