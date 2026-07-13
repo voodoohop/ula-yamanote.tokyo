@@ -1,0 +1,63 @@
+# Ura Yamanote
+
+An audio-reactive Yamanote Line experience with two views:
+
+- `/` is the compact 2D station and sound interface.
+- `/3d` streams the same loop through geographically aligned Tokyo data.
+
+## Development
+
+```sh
+npm install
+npm run dev -- --host 127.0.0.1
+```
+
+Validation:
+
+```sh
+npm run build
+npm run lint
+npm run data:yamanote
+```
+
+`npm run data:yamanote` downloads the current configured MLIT archive and
+regenerates `src/data/yamanoteRoute.generated.ts`. The generator is deterministic
+for a given archive.
+
+## Geographic data
+
+The application uses source data directly or generates small application-owned
+indexes from official downloads. It does not copy JIVX application code or JIVX
+processed data assets.
+
+- Rail alignment and station order: [MLIT National Land Numerical Information](https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N02-2025.html),
+  railway data N02-25.
+- Buildings: [Project PLATEAU](https://www.mlit.go.jp/plateau/) Tokyo LOD1 composite 3D Tiles.
+- Roads: Project PLATEAU Tokyo transportation LOD3 composite 3D Tiles.
+- Terrain: [PLATEAU-Terrain](https://docs.plateauview.mlit.go.jp/datasets/terrain/)
+  Mapbox Terrain-RGB with `gsigeo2011` correction. The
+  service is derived from GSI elevation models and supplies ellipsoidal heights
+  aligned with geocoded PLATEAU data.
+- Weather: [Open-Meteo](https://open-meteo.com/) current conditions for central Tokyo.
+- Location: browser Geolocation API; coordinates stay in the browser and are
+  compared locally with the 30 station coordinates.
+
+The 3D scene does not substitute generated buildings, roads, or terrain when a
+source is unavailable. Its loading screen remains visible and offers a retry.
+
+## Rendering
+
+`3d-tiles-renderer` streams PLATEAU tiles using camera-driven level of detail and
+bounded caches. Mobile viewports use smaller tile caches, fewer concurrent
+downloads, and a coarser screen-space error target. The terrain layer loads only
+the 18 zoom-13 tiles surrounding the Yamanote loop, then samples those elevations
+to build the rail curve above the local ground profile.
+
+## Attribution
+
+- Railway data: Ministry of Land, Infrastructure, Transport and Tourism, Japan.
+- Buildings and roads: MLIT Project PLATEAU, CC BY 4.0.
+- Terrain: PLATEAU | Mapterhorn | Geospatial Information Authority of Japan.
+- Weather: Open-Meteo.
+
+Required terrain attribution is also displayed persistently in the 3D view.
