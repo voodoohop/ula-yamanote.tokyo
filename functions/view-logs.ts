@@ -8,7 +8,7 @@ interface VisitorLog {
   timestamp: string
 }
 
-const handler: Handler = async (event, context) => {
+const handler: Handler = async (event) => {
   // Basic auth check
   const authHeader = event.headers.authorization
   if (!authHeader || !authHeader.startsWith('Bearer ') || authHeader.split(' ')[1] !== process.env.LOGS_ACCESS_TOKEN) {

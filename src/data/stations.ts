@@ -216,3 +216,12 @@ export const stationTrackMap: { [key: string]: string } = {
   'Hamamatsucho': '24hamamatsucho',
   'Tamachi': '25tamachi'
 };
+
+export interface AudioStation extends Station {
+  track: string;
+}
+
+export const audioStations: AudioStation[] = stations.flatMap((station) => {
+  const track = stationTrackMap[station.name];
+  return track ? [{ ...station, track }] : [];
+});

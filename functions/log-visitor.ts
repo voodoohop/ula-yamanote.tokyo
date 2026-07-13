@@ -16,7 +16,7 @@ interface VisitorLog {
   timestamp: string
 }
 
-const handler: Handler = async (event, context) => {
+const handler: Handler = async (event) => {
   const ip = event.headers['x-forwarded-for']?.split(',')[0] || event.headers['client-ip']
   const userAgent = event.headers['user-agent']
   const timestamp = new Date().toISOString()
