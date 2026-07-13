@@ -1,5 +1,6 @@
 import { KeyboardEvent } from 'react';
 import { experienceStations } from '../data/stations';
+import { yamanoteRoute } from '../data/yamanoteRoute.generated';
 
 interface YamanoteMapProps {
   activeIndex: number;
@@ -9,16 +10,40 @@ interface YamanoteMapProps {
 
 const MAP_SIZE = 420;
 const CENTER = MAP_SIZE / 2;
-const RADIUS_X = 154;
-const RADIUS_Y = 126;
+const MAP_PADDING = 44;
+const longitudeScale = Math.cos(
+  yamanoteRoute.reduce((sum, [, latitude]) => sum + latitude, 0)
+  / yamanoteRoute.length
+  * Math.PI / 180,
+);
 
-const points = experienceStations.map((_, index) => {
-  const angle = -Math.PI / 2 + (index / experienceStations.length) * Math.PI * 2;
+const geographicRoute = yamanoteRoute.map(([longitude, latitude]) => ({
+  x: longitude * longitudeScale,
+  y: -latitude,
+}));
+const xValues = geographicRoute.map(({ x }) => x);
+const yValues = geographicRoute.map(({ y }) => y);
+const minX = Math.min(...xValues);
+const maxX = Math.max(...xValues);
+const minY = Math.min(...yValues);
+const maxY = Math.max(...yValues);
+const scale = Math.min(
+  (MAP_SIZE - MAP_PADDING * 2) / (maxX - minX),
+  (MAP_SIZE - MAP_PADDING * 2) / (maxY - minY),
+);
+
+function project(longitude: number, latitude: number) {
   return {
-    x: CENTER + Math.cos(angle) * RADIUS_X,
-    y: CENTER + Math.sin(angle) * RADIUS_Y,
+    x: CENTER + (longitude * longitudeScale - (minX + maxX) / 2) * scale,
+    y: CENTER + (-latitude - (minY + maxY) / 2) * scale,
   };
-});
+}
+
+const routePath = yamanoteRoute.map(([longitude, latitude], index) => {
+  const point = project(longitude, latitude);
+  return `${index === 0 ? 'M' : 'L'} ${point.x.toFixed(2)} ${point.y.toFixed(2)}`;
+}).join(' ');
+const points = experienceStations.map((station) => project(station.lng, station.lat));
 
 export function YamanoteMap({ activeIndex, isTracking, onSelect }: YamanoteMapProps) {
   const activePoint = points[activeIndex];
@@ -39,8 +64,8 @@ export function YamanoteMap({ activeIndex, isTracking, onSelect }: YamanoteMapPr
       role="img"
       aria-label={`Yamanote sound map, ${experienceStations[activeIndex].name} selected`}
     >
-      <ellipse className="route-shadow" cx={CENTER} cy={CENTER} rx={RADIUS_X} ry={RADIUS_Y} />
-      <ellipse className="route-line" cx={CENTER} cy={CENTER} rx={RADIUS_X} ry={RADIUS_Y} />
+      <path className="route-shadow" d={`${routePath} Z`} />
+      <path className="route-line" d={`${routePath} Z`} />
 
       {points.map((point, index) => {
         const station = experienceStations[index];
