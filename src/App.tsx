@@ -74,9 +74,12 @@ function App() {
     }
   }, [location]);
 
-  const distance = formatDistance(location.distance);
+  const stationDistance = formatDistance(location.distance);
+  const lineDistance = formatDistance(location.lineDistance);
   const locationStatus = location.status === 'tracking'
-    ? location.isNearLine ? `LIVE · ${distance ?? 'GPS'}` : 'GPS · OFF LOOP'
+    ? location.isNearLine
+      ? `LIVE · ${stationDistance ?? 'GPS'}`
+      : `OFF LOOP${lineDistance ? ` · ${lineDistance}` : ''}`
     : location.status === 'locating'
       ? 'LOCATING'
       : location.status === 'denied'
@@ -163,7 +166,7 @@ function App() {
           </div>
           <YamanoteMap
             activeIndex={stationIndex}
-            isTracking={location.status === 'tracking'}
+            isTracking={location.status === 'tracking' && location.isNearLine}
             onSelect={selectStation}
           />
         </section>

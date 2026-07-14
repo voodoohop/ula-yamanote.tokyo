@@ -4,7 +4,6 @@ import type { TokyoEnvironment } from '../hooks/useTokyoEnvironment';
 import { projectLngLat } from './yamanoteGeometry';
 
 const TERRAIN_ZOOM = 13;
-const TERRAIN_SEGMENTS = 64;
 const TERRAIN_WORKERS = 5;
 const ROUTE_PADDING_DEGREES = 0.018;
 const TERRAIN_URL = 'https://tile.plateauview.mlit.go.jp/mapbox/{z}/{x}/{y}.png?geoid=gsigeo2011';
@@ -12,6 +11,7 @@ const TERRAIN_URL = 'https://tile.plateauview.mlit.go.jp/mapbox/{z}/{x}/{y}.png?
 interface TokyoTerrainOptions {
   onError: () => void;
   onReady: (sampleElevation: (longitude: number, latitude: number) => number) => void;
+  segments: number;
 }
 
 interface TileCoordinate {
@@ -96,18 +96,19 @@ function createTerrainMesh(
   tile: TileCoordinate,
   image: ImageData,
   material: THREE.MeshStandardMaterial,
+  segments: number,
 ) {
-  const verticesPerSide = TERRAIN_SEGMENTS + 1;
+  const verticesPerSide = segments + 1;
   const positions = new Float32Array(verticesPerSide * verticesPerSide * 3);
-  const indices = new Uint16Array(TERRAIN_SEGMENTS * TERRAIN_SEGMENTS * 6);
+  const indices = new Uint16Array(segments * segments * 6);
   let positionOffset = 0;
   let indexOffset = 0;
 
-  for (let row = 0; row <= TERRAIN_SEGMENTS; row += 1) {
-    const v = row / TERRAIN_SEGMENTS;
+  for (let row = 0; row <= segments; row += 1) {
+    const v = row / segments;
     const latitude = tileYToLatitude(tile.y + v, tile.z);
-    for (let column = 0; column <= TERRAIN_SEGMENTS; column += 1) {
-      const u = column / TERRAIN_SEGMENTS;
+    for (let column = 0; column <= segments; column += 1) {
+      const u = column / segments;
       const longitude = tileXToLongitude(tile.x + u, tile.z);
       const point = projectLngLat(longitude, latitude, decodeTerrainHeight(image, u, v));
       positions[positionOffset] = point.x;
@@ -115,7 +116,7 @@ function createTerrainMesh(
       positions[positionOffset + 2] = point.z;
       positionOffset += 3;
 
-      if (row === TERRAIN_SEGMENTS || column === TERRAIN_SEGMENTS) continue;
+      if (row === segments || column === segments) continue;
       const topLeft = row * verticesPerSide + column;
       const bottomLeft = (row + 1) * verticesPerSide + column;
       indices[indexOffset] = topLeft;
@@ -139,7 +140,7 @@ function createTerrainMesh(
   return mesh;
 }
 
-export function createTokyoTerrain({ onError, onReady }: TokyoTerrainOptions) {
+export function createTokyoTerrain({ onError, onReady, segments }: TokyoTerrainOptions) {
   const group = new THREE.Group();
   group.name = 'gsi-derived-tokyo-terrain';
   const controller = new AbortController();
@@ -162,7 +163,7 @@ export function createTokyoTerrain({ onError, onReady }: TokyoTerrainOptions) {
       const image = await loadTerrainImage(tile, controller.signal);
       if (disposed) return;
       images.set(`${tile.x}/${tile.y}`, image);
-      group.add(createTerrainMesh(tile, image, material));
+      group.add(createTerrainMesh(tile, image, material, segments));
     }
   };
 

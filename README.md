@@ -18,6 +18,7 @@ Validation:
 npm run build
 npm run lint
 npm run data:yamanote
+npm run verify:data
 ```
 
 `npm run data:yamanote` downloads the current configured MLIT archive and
@@ -40,7 +41,8 @@ processed data assets.
   aligned with geocoded PLATEAU data.
 - Weather: [Open-Meteo](https://open-meteo.com/) current conditions for central Tokyo.
 - Location: browser Geolocation API; coordinates stay in the browser and are
-  compared locally with the 30 station coordinates.
+  projected into the same Tokyo-local metre frame as the 3D scene, then compared
+  locally with the official rail segments and 30 station progress points.
 
 The 3D scene does not substitute generated buildings, roads, or terrain when a
 source is unavailable. Its loading screen remains visible and offers a retry.
@@ -49,9 +51,13 @@ source is unavailable. Its loading screen remains visible and offers a retry.
 
 `3d-tiles-renderer` streams PLATEAU tiles using camera-driven level of detail and
 bounded caches. Mobile viewports use smaller tile caches, fewer concurrent
-downloads, and a coarser screen-space error target. The terrain layer loads only
-the 18 zoom-13 tiles surrounding the Yamanote loop, then samples those elevations
-to build the rail curve above the local ground profile.
+downloads, coarser road prefetching, a native 1x canvas, fewer weather particles,
+and a lighter terrain mesh. The terrain layer loads only the 18 zoom-13 tiles
+surrounding the Yamanote loop, then samples the source elevations independently
+of mesh resolution to build the rail curve above the local ground profile.
+
+Only the low-bitrate station tracks referenced by the application are published;
+unused 320 kbps source copies are not included in the deploy artifact.
 
 ## Attribution
 

@@ -33,6 +33,13 @@ function tokyoTime(date: Date) {
   }).format(date);
 }
 
+function formatGpsDistance(distance: number | null) {
+  if (distance === null) return null;
+  return distance >= 1_000
+    ? `${(distance / 1_000).toFixed(1)} KM`
+    : `${Math.round(distance)} M`;
+}
+
 export function DenshaExperience() {
   const [stationIndex, setStationIndex] = useState(Math.max(TOKYO_STATION_INDEX, 0));
   const [isRiding, setIsRiding] = useState(false);
@@ -97,8 +104,8 @@ export function DenshaExperience() {
 
   const locationLabel = location.status === 'tracking'
     ? location.isNearLine
-      ? `GPS · ${location.distance === null ? 'LIVE' : `${Math.round(location.distance)} M`}`
-      : 'GPS · OFF LOOP'
+      ? `GPS · ${formatGpsDistance(location.distance) ?? 'LIVE'}`
+      : `OFF LOOP${location.lineDistance === null ? '' : ` · ${formatGpsDistance(location.lineDistance)}`}`
     : location.status === 'locating'
       ? 'LOCATING'
       : location.status === 'denied'

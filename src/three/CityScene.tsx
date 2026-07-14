@@ -24,8 +24,7 @@ interface CitySceneProps {
   onError: () => void;
 }
 
-function createWeatherParticles(scene: THREE.Scene) {
-  const count = 700;
+function createWeatherParticles(scene: THREE.Scene, count: number) {
   const positions = new Float32Array(count * 3);
   let seed = 1985;
   const random = () => {
@@ -261,6 +260,7 @@ export function CityScene({
     if (!container) return;
 
     const scene = new THREE.Scene();
+    const isCompact = window.matchMedia('(max-width: 700px)').matches;
     const background = new THREE.Color(0x07080c);
     const fog = new THREE.FogExp2(0x090b12, 0.0001);
     scene.background = background;
@@ -269,8 +269,11 @@ export function CityScene({
     const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 60_000);
     camera.position.set(7_800, 12_500, 9_600);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    const renderer = new THREE.WebGLRenderer({
+      antialias: !isCompact,
+      powerPreference: 'high-performance',
+    });
+    renderer.setPixelRatio(isCompact ? 1 : Math.min(window.devicePixelRatio, 1.5));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.28;
@@ -315,6 +318,7 @@ export function CityScene({
       },
     });
     const terrain = createTokyoTerrain({
+      segments: isCompact ? 48 : 64,
       onReady: (sampleElevation) => {
         railway = buildRailway(scene, sampleElevation);
         renderer.domElement.dataset.terrain = 'gsi';
@@ -327,7 +331,7 @@ export function CityScene({
     });
     scene.add(plateau.group);
     scene.add(terrain.group);
-    const weatherParticles = createWeatherParticles(scene);
+    const weatherParticles = createWeatherParticles(scene, isCompact ? 320 : 700);
     const lookAt = new THREE.Vector3();
     const desiredCamera = new THREE.Vector3();
     const tangent = new THREE.Vector3();

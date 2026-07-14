@@ -3,7 +3,7 @@ import { ReorientationPlugin } from '3d-tiles-renderer/src/three/plugins/Reorien
 import { TilesRenderer } from '3d-tiles-renderer/src/three/renderer/tiles/TilesRenderer.js';
 import * as THREE from 'three';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-import { TOKYO_ORIGIN } from './yamanoteGeometry';
+import { TOKYO_ORIGIN } from '../data/yamanoteCoordinates';
 
 export const PLATEAU_BUILDINGS_URL = 'https://api.plateauview.mlit.go.jp/datacatalog/3dtiles/13-bldg-lod1-latest/tileset.json';
 export const PLATEAU_ROADS_URL = 'https://api.plateauview.mlit.go.jp/datacatalog/3dtiles/13-tran-lod3-latest/tileset.json';
@@ -23,6 +23,8 @@ interface LayerDefinition {
   errorTargetOverview: number;
   errorTargetRide: number;
   name: PlateauLayerName;
+  neighborhoodResolutionCompact: number;
+  neighborhoodResolutionDesktop: number;
   url: string;
 }
 
@@ -34,6 +36,8 @@ const layerDefinitions: LayerDefinition[] = [
     errorTargetRide: 56,
     cacheSize: 340,
     cacheBytes: 140 * 1024 * 1024,
+    neighborhoodResolutionCompact: 500,
+    neighborhoodResolutionDesktop: 1_000,
   },
   {
     name: 'roads',
@@ -42,6 +46,8 @@ const layerDefinitions: LayerDefinition[] = [
     errorTargetRide: 36,
     cacheSize: 220,
     cacheBytes: 80 * 1024 * 1024,
+    neighborhoodResolutionCompact: 280,
+    neighborhoodResolutionDesktop: 520,
   },
 ];
 
@@ -159,7 +165,10 @@ export function createPlateauLayers({
     tiles.setCamera(viewCamera);
     tiles.setCamera(neighborhoodCamera);
     tiles.setResolutionFromRenderer(viewCamera, renderer);
-    tiles.setResolution(neighborhoodCamera, isCompact ? 500 : 1_000, isCompact ? 500 : 1_000);
+    const neighborhoodResolution = isCompact
+      ? definition.neighborhoodResolutionCompact
+      : definition.neighborhoodResolutionDesktop;
+    tiles.setResolution(neighborhoodCamera, neighborhoodResolution, neighborhoodResolution);
 
     tiles.addEventListener('load-model', ({ scene }) => tuneModel(scene, definition.name));
     tiles.addEventListener('load-root-tileset', () => {
@@ -233,7 +242,11 @@ export function createPlateauLayers({
     update(isRiding: boolean, focus: THREE.Vector3 | null) {
       viewCamera.copy(camera, false);
       viewCamera.near = isRiding ? 1 : 10;
-      viewCamera.far = isRiding ? 6_000 : 40_000;
+      if (isRiding) {
+        viewCamera.far = isCompact ? 4_000 : 6_000;
+      } else {
+        viewCamera.far = isCompact ? 25_000 : 40_000;
+      }
       viewCamera.updateProjectionMatrix();
       viewCamera.updateMatrixWorld();
       if (focus) {

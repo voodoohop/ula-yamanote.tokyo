@@ -1,4 +1,4 @@
-import { yamanoteRouteStations } from './yamanoteRoute.generated';
+import { yamanoteRouteStations } from './yamanoteRoute.generated.ts';
 
 export interface Station {
   name: string;
