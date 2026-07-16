@@ -58,8 +58,10 @@ export function useStationAudio(track: string | null, isActive: boolean) {
     try {
       await audio.play();
       setStatus('playing');
-    } catch {
-      setStatus('error');
+    } catch (error) {
+      shouldPlayRef.current = false;
+      const name = error instanceof DOMException ? error.name : '';
+      setStatus(name === 'NotAllowedError' || name === 'AbortError' ? 'paused' : 'error');
     }
   }, [getAudio, track]);
 

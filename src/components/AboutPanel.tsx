@@ -50,18 +50,18 @@ export function AboutPanel({ isOpen, onClose }: AboutPanelProps) {
           Railway data · MLIT Japan
         </a>
         <a
-          href="https://www.mlit.go.jp/plateau/"
+          href="https://github.com/indigo-lab/plateau-tokyo23ku-building-mvt-2020"
           target="_blank"
           rel="noreferrer"
         >
-          Buildings & roads · MLIT Project PLATEAU · CC BY 4.0
+          Buildings · Project PLATEAU Tokyo 23 wards · CC BY 4.0
         </a>
         <a
-          href="https://docs.plateauview.mlit.go.jp/datasets/terrain/"
+          href="https://github.com/Project-PLATEAU-Admin/plateau-mb-terrain-converter"
           target="_blank"
           rel="noreferrer"
         >
-          Terrain · PLATEAU | Mapterhorn | GSI
+          Terrain · PLATEAU Terrain-RGB
         </a>
         <a href="https://open-meteo.com/" target="_blank" rel="noreferrer">
           Weather · Open-Meteo

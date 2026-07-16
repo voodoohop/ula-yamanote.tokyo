@@ -152,7 +152,7 @@ export function DenshaExperience() {
       {sceneStatus !== 'ready' && (
         <div className={`three-loading ${sceneStatus === 'error' ? 'is-error' : ''}`} role="status">
           <span />
-          {sceneStatus === 'error' ? 'OFFICIAL TOKYO DATA UNAVAILABLE' : 'STREAMING OFFICIAL TOKYO DATA'}
+          {sceneStatus === 'error' ? 'TOKYO MAP DATA UNAVAILABLE' : 'STREAMING TOKYO MAP DATA'}
           {sceneStatus === 'error' && (
             <button
               type="button"
