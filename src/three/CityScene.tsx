@@ -37,6 +37,12 @@ const PLATEAU_BUILDINGS_URL = 'https://api.plateauview.mlit.go.jp/datacatalog/3d
 const PLATEAU_ROADS_URL = 'https://api.plateauview.mlit.go.jp/datacatalog/3dtiles/13-tran-lod3-latest/tileset.json';
 const PLATEAU_TERRAIN_URL = 'https://tile.plateauview.mlit.go.jp/terrain';
 const GSI_BASE_URL = 'https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png';
+const DATA_CREDIT_HTML = [
+  '<a href="https://www.mlit.go.jp/plateau/" target="_blank">PLATEAU</a>',
+  '<a href="https://mapterhorn.com/" target="_blank">Mapterhorn</a>',
+  '<a href="https://www.gsi.go.jp/" target="_blank">国土地理院</a>',
+  '<a href="https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N02-2025.html" target="_blank">MLIT rail data</a>',
+].join(' | ');
 const OVERVIEW_LOOP_DURATION_SECONDS = 12 * 60;
 const RIDE_LOOP_DURATION_SECONDS = 24 * 60;
 const ROUTE_TERRAIN_LEVEL = 14;
@@ -118,8 +124,7 @@ function tilesetOptions(isCompact: boolean, kind: 'buildings' | 'roads') {
       ? isBuildings ? 96 : 64
       : isBuildings ? 256 : 128) * 1024 * 1024,
     maximumCacheOverflowBytes: (isCompact ? 32 : 64) * 1024 * 1024,
-    cullRequestsWhileMoving: true,
-    cullRequestsWhileMovingMultiplier: 36,
+    cullRequestsWhileMoving: false,
     dynamicScreenSpaceError: true,
     dynamicScreenSpaceErrorDensity: 2.0e-4,
     dynamicScreenSpaceErrorFactor: isBuildings ? 12 : 18,
@@ -241,6 +246,8 @@ export function CityScene({
     viewer.scene.highDynamicRange = true;
     viewer.shadows = !isCompact;
     viewer.terrainShadows = isCompact ? ShadowMode.DISABLED : ShadowMode.RECEIVE_ONLY;
+    viewer.creditDisplay.addStaticCredit(new Credit(DATA_CREDIT_HTML, true));
+    viewer.clock.currentTime = JulianDate.now();
 
     const canvas = viewer.canvas;
     canvas.classList.add('three-city-canvas');
@@ -265,7 +272,6 @@ export function CityScene({
     let disposed = false;
     let hasReportedReady = false;
     let hasReportedError = false;
-    let animationFrame = 0;
     let previousFrameTime = 0;
     let previousCameraTime = 0;
     let environmentSignature = '';
@@ -375,8 +381,9 @@ export function CityScene({
     );
     viewer.camera.lookAtTransform(Matrix4.IDENTITY);
 
-    const render = (frameTime: number) => {
+    const updateScene = () => {
       if (disposed) return;
+      const frameTime = performance.now();
       const delta = previousFrameTime === 0
         ? 0.016
         : Math.min((frameTime - previousFrameTime) / 1000, 0.05);
@@ -403,7 +410,6 @@ export function CityScene({
         onStationChangeRef.current(nearestStation.name);
       }
 
-      viewer.clock.currentTime = JulianDate.now();
       const pose = getRoutePose(progressRef.current);
       const elevation = routeElevations === null
         ? undefined
@@ -425,7 +431,9 @@ export function CityScene({
           viewer.camera.lookAt(
             Cartesian3.fromDegrees(...OVERVIEW_CENTER),
             new HeadingPitchRange(
-              (frameTime * 0.000035) % (Math.PI * 2),
+              reducedMotion
+                ? CesiumMath.toRadians(-18)
+                : (frameTime * 0.000035) % (Math.PI * 2),
               CesiumMath.toRadians(-58),
               isCompact ? 20_000 : 15_500,
             ),
@@ -434,14 +442,13 @@ export function CityScene({
         viewer.camera.lookAtTransform(Matrix4.IDENTITY);
         applyEnvironment();
       }
-      animationFrame = window.requestAnimationFrame(render);
     };
-    animationFrame = window.requestAnimationFrame(render);
+    viewer.scene.preRender.addEventListener(updateScene);
 
     return () => {
       disposed = true;
       window.clearTimeout(loadTimeout);
-      window.cancelAnimationFrame(animationFrame);
+      viewer.scene.preRender.removeEventListener(updateScene);
       viewer.destroy();
     };
   }, []);

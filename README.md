@@ -55,6 +55,9 @@ building and road caches, and lowers screen resolution and tile detail on compac
 viewports. Station and train elevations are sampled from the same official
 terrain provider used for rendering.
 
+The Cesium engine, widget styles, workers, and supporting assets are loaded only
+after entering `/3d`; the 2D entry path does not download the 3D runtime.
+
 Only the low-bitrate station tracks referenced by the application are published;
 unused 320 kbps source copies are not included in the deploy artifact.
 

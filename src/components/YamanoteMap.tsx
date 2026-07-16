@@ -61,7 +61,7 @@ export function YamanoteMap({ activeIndex, isTracking, onSelect }: YamanoteMapPr
     <svg
       className="yamanote-map"
       viewBox={`0 0 ${MAP_SIZE} ${MAP_SIZE}`}
-      role="img"
+      role="group"
       aria-label={`Yamanote sound map, ${experienceStations[activeIndex].name} selected`}
     >
       <path className="route-shadow" d={`${routePath} Z`} />
@@ -77,6 +77,7 @@ export function YamanoteMap({ activeIndex, isTracking, onSelect }: YamanoteMapPr
             role="button"
             tabIndex={0}
             aria-label={`Select ${station.name}`}
+            aria-pressed={isActive}
             onClick={() => onSelect(index)}
             onKeyDown={(event) => selectWithKeyboard(event, index)}
           >

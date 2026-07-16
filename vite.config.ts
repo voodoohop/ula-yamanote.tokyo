@@ -1,10 +1,24 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import cesium from 'vite-plugin-cesium';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
+
+const cesiumSource = 'node_modules/cesium/Build/Cesium';
+const cesiumBaseUrl = 'cesium';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), cesium()],
+  plugins: [
+    react(),
+    viteStaticCopy({
+      targets: ['Assets', 'ThirdParty', 'Widgets', 'Workers'].map((directory) => ({
+        src: `${cesiumSource}/${directory}`,
+        dest: cesiumBaseUrl,
+      })),
+    }),
+  ],
+  define: {
+    CESIUM_BASE_URL: JSON.stringify(`/${cesiumBaseUrl}/`),
+  },
   base: '/',
   build: {
     outDir: 'dist',

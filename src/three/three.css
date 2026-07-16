@@ -70,7 +70,7 @@
 
 .three-header {
   position: absolute;
-  z-index: 6;
+  z-index: 8;
   top: max(14px, env(safe-area-inset-top));
   left: 16px;
   right: 16px;
@@ -432,9 +432,12 @@
 }
 
 @media (max-width: 700px) {
-  .three-attribution {
+  .three-city-scene .cesium-viewer-bottom {
     left: 8px;
-    bottom: 5px;
+    bottom: max(112px, calc(env(safe-area-inset-bottom) + 104px));
+  }
+
+  .three-city-scene .cesium-widget-credits {
     font-size: 7px;
   }
 
