@@ -45,24 +45,26 @@
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.45'/%3E%3C/svg%3E");
 }
 
-.three-attribution {
-  position: absolute;
+.three-city-scene .cesium-viewer-bottom {
   z-index: 5;
   left: 12px;
   bottom: 8px;
-  display: flex;
-  gap: 5px;
+  padding: 0;
+}
+
+.three-city-scene .cesium-widget-credits {
   color: rgba(222, 227, 232, 0.5);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 8px;
+  text-shadow: none;
 }
 
-.three-attribution a {
+.three-city-scene .cesium-widget-credits a {
   color: inherit;
   text-decoration: none;
 }
 
-.three-attribution a:hover {
+.three-city-scene .cesium-widget-credits a:hover {
   color: #f1f3ef;
 }
 

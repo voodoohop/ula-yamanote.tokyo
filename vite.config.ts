@@ -1,9 +1,10 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import cesium from 'vite-plugin-cesium';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), cesium()],
   base: '/',
   build: {
     outDir: 'dist',
@@ -12,9 +13,8 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes('/node_modules/3d-tiles-renderer/')) return 'three-tiles';
-          if (id.includes('/node_modules/three/examples/jsm/')) return 'three-addons';
-          if (id.includes('/node_modules/three/')) return 'three';
+          if (id.includes('/node_modules/cesium/')) return 'cesium';
+          if (id.includes('/node_modules/@cesium/')) return 'cesium';
         },
       },
     },
